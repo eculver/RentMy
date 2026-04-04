@@ -4,7 +4,7 @@
   "lastSession": {
     "taskId": "1.6",
     "status": "completed",
-    "commitSha": "TBD",
+    "commitSha": "091a4f2",
     "timestamp": "2026-04-04T00:00:00Z"
   },
   "phases": [
@@ -112,7 +112,7 @@
     {
       "id": 1,
       "name": "Users + Listings (Supply)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [],
       "tasks": [
         {
@@ -230,7 +230,7 @@
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
           ],
-          "commitSha": "TBD",
+          "commitSha": "091a4f2",
           "handoff": "thoughts/handoffs/phase-1-supply/task-16-profile-screen.md",
           "verificationPassed": true
         }

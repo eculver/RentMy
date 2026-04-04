@@ -15,7 +15,7 @@
 - [x] Search screen (RN) — task 2.4
 - [x] Map screen (RN) — task 2.5
 - [x] Listing detail screen (RN) — task 2.6
-- [ ] Checkout screen (RN) — task 2.7
+- [x] Checkout screen (RN) — task 2.7
 
 ---
 
@@ -93,16 +93,25 @@ Implemented:
 - No calendar library — read-only time slots rendered as a plain list
 - HoldExplainer gated on `!isHost` — irrelevant and confusing to show to the listing owner
 
-### Task 2.7 (still needed) — Checkout screen (RN)
-- Hold estimate: `GET /api/v1/listings/{id}/hold-estimate` (no auth)
-- Response: `{itemValue: int64, holdAmount: int64, guaranteeGap: int64}` — all in cents
+### Task 2.7 — Checkout screen (RN) [COMPLETED]
+**Commit:** c202cc4 | **Branch:** task-2.7-checkout-screen
 
-### Task 2.7 — Checkout screen (RN)
-- Setup payment: `POST /api/v1/payments/setup` → `{customerId, clientSecret}`
-  - Pass `clientSecret` to `@stripe/stripe-react-native` PaymentSheet
-- Create booking: `POST /api/v1/bookings` → `{transactionId, holdAmount, rentalFee, totalImpact, ...}`
-  - Body: `{listingId, paymentMethodId, scheduledStart (RFC3339), scheduledEnd (RFC3339)}`
-  - Renter must have called `/payments/setup` first (ErrNoPaymentMethod if not)
+Implemented:
+- `checkoutStore` (Zustand) — scheduledStart/End, paymentMethodId, holdAmount, rentalFee, totalImpact
+- `DurationPicker` — +/- 1-hour step controls, 7-day ceiling enforced, duration label computed
+- `CostBreakdown` — rental fee, hold (expandable info), total card impact line items; amounts from cents
+- `PaymentMethodSelector` — calls `POST /api/v1/payments/setup`, opens Stripe PaymentSheet
+- `checkout.tsx` — KYC gate (stubbed for Phase 4), duration picker, cost breakdown, payment method, "Confirm Booking" → `POST /api/v1/bookings`
+- `confirmation.tsx` — success checkmark, booking summary, "Message Host" + "View My Bookings" CTAs
+- Wrapped app root in `<StripeProvider>` with `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- Installed `@stripe/stripe-react-native` via `npx expo install`
+- `npx tsc --noEmit` → exit 0
+
+**Key decisions:**
+- Step controls (not calendar library) — avoids 200KB dep for a read-only Phase 2 duration selector
+- Client-side rental fee estimate from listing pricing × duration (backend recalculates on booking)
+- `router.replace` to confirmation so back button doesn't return to completed checkout
+- KYC gate written but inert in Phase 2 (field not in User type yet)
 
 ### Task 3.1 — BookingService (backend)
 - `ScheduleHostPayout` in PaymentService must be called when a booking transitions to COMPLETED

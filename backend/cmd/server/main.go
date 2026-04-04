@@ -19,6 +19,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
+	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
 	"github.com/giits/rentmy/backend/internal/platform/config"
 	"github.com/giits/rentmy/backend/internal/platform/httpserver"
@@ -66,9 +67,15 @@ func run() error {
 		return fmt.Errorf("running river migrations: %w", err)
 	}
 
+	// Build Stripe adapter and payment repository early so the payout worker
+	// can be registered before the River client starts.
+	stripeAdapter := payment.NewStripeAdapter(cfg.StripeSecretKey)
+	paymentRepo := payment.NewRepository(pool)
+
 	// Register River workers.
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
+	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -167,11 +174,22 @@ func run() error {
 	})
 	discoveryHandler := discovery.NewHandler(discoverySvc)
 
+	// paymentRepo is created early (before River starts) to register the payout worker.
+	// Reuse it here to build the payment service.
+	paymentSvc := payment.NewService(paymentRepo, stripeAdapter, riverClient, payment.Config{
+		TakeRateBPS:         cfg.TakeRateBPS,
+		GuaranteeRateBPS:    cfg.GuaranteeRateBPS,
+		DamageReserveRate:   cfg.DamageReserveRate,
+		PayoutDelayNewHostH: cfg.PayoutDelayNewHostH,
+	})
+	paymentHandler := payment.NewHandler(paymentSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
 	listingHandler.Mount(apiV1, authMW)
 	discoveryHandler.Mount(apiV1, authMW)
+	paymentHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

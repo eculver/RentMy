@@ -68,6 +68,17 @@ type Config struct {
 	DefaultFeedRadiusMeters int `env:"DEFAULT_FEED_RADIUS_METERS" envDefault:"30000"`
 	MaxFeedLimit            int `env:"MAX_FEED_LIMIT" envDefault:"50"`
 	MaxMapLimit             int `env:"MAX_MAP_LIMIT" envDefault:"200"`
+
+	// Stripe keys (test mode placeholders safe for development).
+	StripeSecretKey      string `env:"STRIPE_SECRET_KEY" envDefault:"sk_test_placeholder"`
+	StripePublishableKey string `env:"STRIPE_PUBLISHABLE_KEY" envDefault:"pk_test_placeholder"`
+	StripeWebhookSecret  string `env:"STRIPE_WEBHOOK_SECRET" envDefault:"whsec_placeholder"`
+
+	// Payment config (PRD section 7 defaults).
+	TakeRateBPS         int `env:"TAKE_RATE_BPS" envDefault:"2000"`          // 20%
+	GuaranteeRateBPS    int `env:"GUARANTEE_RATE_BPS" envDefault:"1000"`     // 10% of platform fee
+	DamageReserveRate   int `env:"DAMAGE_RESERVE_RATE_BPS" envDefault:"4000"` // 40% of hold
+	PayoutDelayNewHostH int `env:"PAYOUT_DELAY_NEW_HOST_HOURS" envDefault:"48"`
 }
 
 // IsProd reports whether the application is running in a production environment.

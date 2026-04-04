@@ -55,6 +55,7 @@ require (
 	github.com/riverqueue/river/rivershared v0.32.0 // indirect
 	github.com/riverqueue/river/rivertype v0.32.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
+	github.com/stripe/stripe-go/v81 v81.4.0 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.2.0 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect

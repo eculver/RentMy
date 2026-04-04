@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-04-04T00:00:00Z",
   "lastSession": {
-    "taskId": "2.4",
+    "taskId": "2.5",
     "status": "completed",
-    "commitSha": "dc0755a",
+    "commitSha": "2321ffb",
     "timestamp": "2026-04-04T00:00:00Z"
   },
   "phases": [
@@ -320,7 +320,7 @@
         {
           "id": "2.5",
           "name": "Map screen (RN)",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "2.1"
@@ -329,7 +329,10 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
-          ]
+          ],
+          "commitSha": "2321ffb",
+          "handoff": "thoughts/handoffs/phase-2-demand/task-25-map-screen.md",
+          "verificationPassed": true
         },
         {
           "id": "2.6",

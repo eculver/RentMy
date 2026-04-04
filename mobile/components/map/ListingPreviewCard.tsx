@@ -43,7 +43,18 @@ export default function ListingPreviewCard({
 
       {/* Main tappable area */}
       <Pressable
-        onPress={() => router.push(`/listing/${listing.id}` as never)}
+        onPress={() =>
+          router.push({
+            pathname: "/listing/[id]" as never,
+            params: {
+              id: listing.id,
+              hostName: listing.hostName,
+              hostReputation: String(listing.hostReputation),
+              thumbnailUrl: listing.thumbnailUrl ?? "",
+              driveTimeMin: String(listing.driveTimeMin),
+            },
+          })
+        }
         className="flex-row flex-1"
       >
         {/* Thumbnail */}

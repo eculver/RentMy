@@ -95,7 +95,18 @@ export default function FeedScreen() {
           renderItem={({ item }) => (
             <ListingFeedCard
               listing={item}
-              onPress={() => router.push(`/listing/${item.id}` as never)}
+              onPress={() =>
+                router.push({
+                  pathname: "/listing/[id]" as never,
+                  params: {
+                    id: item.id,
+                    hostName: item.hostName,
+                    hostReputation: String(item.hostReputation),
+                    thumbnailUrl: item.thumbnailUrl ?? "",
+                    driveTimeMin: String(item.driveTimeMin),
+                  },
+                })
+              }
             />
           )}
           ListEmptyComponent={<EmptyState />}

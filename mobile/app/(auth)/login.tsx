@@ -1,27 +1,116 @@
-import { View, Text, Pressable } from "react-native";
-import { Link } from "expo-router";
+import { useState } from "react";
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { router } from "expo-router";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { HTTPError } from "ky";
 import { useAuthStore } from "../../lib/auth";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
+
+const schema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type FormData = z.infer<typeof schema>;
 
 export default function LoginScreen() {
-  const login = useAuthStore((s) => s.login);
+  const loginWithCredentials = useAuthStore((s) => s.loginWithCredentials);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const onSubmit = async (data: FormData) => {
+    setApiError(null);
+    try {
+      await loginWithCredentials(data.email, data.password);
+    } catch (err) {
+      if (err instanceof HTTPError && err.response.status === 401) {
+        setApiError("Invalid email or password.");
+      } else {
+        setApiError("Something went wrong. Please try again.");
+      }
+    }
+  };
 
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="text-3xl font-bold mb-2">RentMy</Text>
-      <Text className="text-gray-500 mb-8">Rent anything nearby, fast</Text>
-
-      <Pressable
-        className="w-full bg-primary-600 py-4 rounded-xl items-center mb-4"
-        onPress={() => login("dev-token", { id: "dev", name: "Dev User", email: "dev@rentmy.app" })}
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-white font-semibold text-lg">Sign In (Dev)</Text>
-      </Pressable>
+        <View className="flex-1 items-center justify-center bg-white px-6 py-12">
+          <Text className="text-3xl font-bold mb-2">RentMy</Text>
+          <Text className="text-gray-500 mb-8">Rent anything nearby, fast</Text>
 
-      <Link href="/register" asChild>
-        <Pressable className="py-2">
-          <Text className="text-primary-600 font-medium">Create an account</Text>
-        </Pressable>
-      </Link>
-    </View>
+          <View className="w-full">
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Email"
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.email?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Password"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  autoComplete="current-password"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.password?.message}
+                />
+              )}
+            />
+
+            {apiError && (
+              <Text className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
+            )}
+
+            <Button
+              title="Sign In"
+              onPress={handleSubmit(onSubmit)}
+              loading={isSubmitting}
+            />
+          </View>
+
+          <View className="mt-4">
+            <Button
+              title="Create an account"
+              variant="ghost"
+              onPress={() => router.push("/register")}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

@@ -39,6 +39,8 @@ func (h *Handler) Mount(r chi.Router, authMW func(http.Handler) http.Handler) {
 		r.Post("/bookings/{id}/accept", h.acceptBooking)
 		r.Post("/bookings/{id}/decline", h.declineBooking)
 		r.Post("/bookings/{id}/cancel", h.cancelBooking)
+		r.Post("/bookings/{id}/check-in", h.checkIn)
+		r.Post("/bookings/{id}/check-out", h.checkOut)
 	})
 }
 
@@ -230,6 +232,54 @@ func (h *Handler) cancelBooking(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.svc.Cancel(r.Context(), CancelInput{BookingID: id, CancellerID: userID}); err != nil {
 		writeTransitionError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// checkIn handles POST /api/v1/bookings/:id/check-in.
+// Transitions the booking ACCEPTED → ACTIVE once both parties have verified proximity.
+func (h *Handler) checkIn(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+
+	if err := h.svc.CheckIn(r.Context(), id, userID); err != nil {
+		switch {
+		case errors.Is(err, ErrHandoffIncomplete):
+			writeError(w, http.StatusUnprocessableEntity, err.Error())
+		default:
+			writeTransitionError(w, err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// checkOut handles POST /api/v1/bookings/:id/check-out.
+// Transitions the booking ACTIVE → COMPLETED once both parties have verified proximity.
+func (h *Handler) checkOut(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+
+	if err := h.svc.CheckOut(r.Context(), id, userID); err != nil {
+		switch {
+		case errors.Is(err, ErrHandoffIncomplete):
+			writeError(w, http.StatusUnprocessableEntity, err.Error())
+		default:
+			writeTransitionError(w, err)
+		}
 		return
 	}
 

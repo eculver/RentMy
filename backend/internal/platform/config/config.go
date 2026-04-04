@@ -80,6 +80,15 @@ type Config struct {
 	DamageReserveRate   int `env:"DAMAGE_RESERVE_RATE_BPS" envDefault:"4000"` // 40% of hold
 	PayoutDelayNewHostH int `env:"PAYOUT_DELAY_NEW_HOST_HOURS" envDefault:"48"`
 
+	// Proximity config (PRD section 12).
+	GPSThresholdMeters  float64 `env:"GPS_THRESHOLD_METERS" envDefault:"100"`
+	PINValidityMinutes  int     `env:"PIN_VALIDITY_MINUTES" envDefault:"30"`
+
+	// Twilio credentials for SMS PIN fallback.
+	TwilioAccountSID  string `env:"TWILIO_ACCOUNT_SID" envDefault:""`
+	TwilioAuthToken   string `env:"TWILIO_AUTH_TOKEN" envDefault:""`
+	TwilioFromNumber  string `env:"TWILIO_FROM_NUMBER" envDefault:""`
+
 	// Booking config (PRD sections 7, 9, 18).
 	AutoDeclineTimeoutH            int `env:"AUTO_DECLINE_TIMEOUT_HOURS" envDefault:"2"`
 	FraudNewAccountDays            int `env:"FRAUD_NEW_ACCOUNT_DAYS" envDefault:"30"`

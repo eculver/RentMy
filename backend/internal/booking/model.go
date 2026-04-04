@@ -16,6 +16,7 @@ var (
 	ErrListingNotAvailable  = errors.New("listing is not available for the requested period")
 	ErrFraudBlocked         = errors.New("booking blocked by fraud velocity rules")
 	ErrDurationExceedsLimit = errors.New("booking duration exceeds 7-day maximum")
+	ErrHandoffIncomplete    = errors.New("handoff incomplete — both parties must complete proximity verification")
 )
 
 // Status represents the lifecycle state of a booking.

@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
 	"github.com/giits/rentmy/backend/internal/platform/config"
@@ -148,9 +149,14 @@ func run() error {
 	mediaSvc := media.NewService(mediaRepo, s3Client, cfg.S3Endpoint)
 	mediaHandler := media.NewHandler(mediaSvc)
 
+	listingRepo := listing.NewRepository(pool)
+	listingSvc := listing.NewService(listingRepo)
+	listingHandler := listing.NewHandler(listingSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
+	listingHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

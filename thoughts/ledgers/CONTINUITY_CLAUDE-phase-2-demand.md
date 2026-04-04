@@ -11,10 +11,10 @@
 - [x] Host payout scheduled (task 2.2 — River job)
 - [x] Hold allocation ledger (task 2.2)
 - [x] Guarantee fund active (task 2.2)
-- [ ] Feed screen (RN) — task 2.3
-- [ ] Search screen (RN) — task 2.4
-- [ ] Map screen (RN) — task 2.5
-- [ ] Listing detail screen (RN) — task 2.6
+- [x] Feed screen (RN) — task 2.3
+- [x] Search screen (RN) — task 2.4
+- [x] Map screen (RN) — task 2.5
+- [x] Listing detail screen (RN) — task 2.6
 - [ ] Checkout screen (RN) — task 2.7
 
 ---
@@ -75,7 +75,25 @@ Implemented:
 - API: `GET /api/v1/discovery/map?sw_lat=&sw_lng=&ne_lat=&ne_lng=&limit=`
 - Fuzzed coords in `lat`/`lng` fields of each `RankedListing`
 
-### Task 2.6 — Listing detail screen (RN)
+### Task 2.6 — Listing detail screen (RN) [COMPLETED]
+**Commit:** 53fcce0 | **Branch:** task-2.6-listing-detail-screen
+
+Implemented:
+- `useListing(id)` hook — fetches `GET /api/v1/listings/:id`
+- `PhotoGallery` — horizontal swipeable FlatList with pagination dots; accepts `string[]` of photo URLs
+- `HostInfoCard` — avatar (initials), star rating from 0–1000 reputation score, member since, verified badge
+- `HoldExplainer` — amber card showing tiered hold amount, authorization explanation, RentMy Protection row when guaranteeGap > 0
+- `AvailabilityCalendar` — parses raw availability JSON; shows "Available anytime" for empty slots, formatted time ranges otherwise
+- `mobile/app/(tabs)/(feed)/listing/[id].tsx` — full detail screen with back button, photo gallery, all sections, fixed "Rent Now" / "Edit Listing" CTA
+- Updated navigation in feed, search, and map preview card to pass `hostName`, `hostReputation`, `thumbnailUrl`, `driveTimeMin` as route params (avoids needing a host profile API endpoint)
+- `npx tsc --noEmit` → exit 0
+
+**Key decisions:**
+- Host info via route params (no host profile API yet) — easy to upgrade when Phase 3+ adds one
+- No calendar library — read-only time slots rendered as a plain list
+- HoldExplainer gated on `!isHost` — irrelevant and confusing to show to the listing owner
+
+### Task 2.7 (still needed) — Checkout screen (RN)
 - Hold estimate: `GET /api/v1/listings/{id}/hold-estimate` (no auth)
 - Response: `{itemValue: int64, holdAmount: int64, guaranteeGap: int64}` — all in cents
 

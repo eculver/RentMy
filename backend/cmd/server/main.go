@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/media"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
 	"github.com/giits/rentmy/backend/internal/platform/config"
 	"github.com/giits/rentmy/backend/internal/platform/httpserver"
@@ -138,11 +139,19 @@ func run() error {
 	redisStore := localredis.NewStore(redisClient)
 	authMW := auth.Middleware(issuer)
 
-	// User service and routes.
+	// Build application services.
 	userRepo := user.NewRepository(pool)
 	userSvc := user.NewService(userRepo, issuer, redisStore)
 	userHandler := user.NewHandler(userSvc)
-	r.Mount("/api/v1", userHandler.Router(authMW))
+
+	mediaRepo := media.NewRepository(pool)
+	mediaSvc := media.NewService(mediaRepo, s3Client, cfg.S3Endpoint)
+	mediaHandler := media.NewHandler(mediaSvc)
+
+	// Build a single /api/v1 router and mount all service routes onto it.
+	apiV1 := userHandler.Router(authMW)
+	mediaHandler.Mount(apiV1, authMW)
+	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.
 	r.Route("/debug", func(r chi.Router) {

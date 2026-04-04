@@ -54,6 +54,20 @@ type Config struct {
 
 	// JWTRefreshTTL is the refresh token lifetime in seconds (default 7 days).
 	JWTRefreshTTL int `env:"JWT_REFRESH_TTL" envDefault:"604800"`
+
+	// OSRMBaseURL is the base URL for the OSRM routing service.
+	OSRMBaseURL string `env:"OSRM_BASE_URL" envDefault:"http://localhost:5000"`
+
+	// Ranking weights for the discovery feed (PRD section 13 defaults).
+	WeightAvailability float64 `env:"RANK_WEIGHT_AVAILABILITY" envDefault:"0.35"`
+	WeightProximity    float64 `env:"RANK_WEIGHT_PROXIMITY" envDefault:"0.30"`
+	WeightReputation   float64 `env:"RANK_WEIGHT_REPUTATION" envDefault:"0.20"`
+	WeightReliability  float64 `env:"RANK_WEIGHT_RELIABILITY" envDefault:"0.15"`
+
+	// Discovery defaults.
+	DefaultFeedRadiusMeters int `env:"DEFAULT_FEED_RADIUS_METERS" envDefault:"30000"`
+	MaxFeedLimit            int `env:"MAX_FEED_LIMIT" envDefault:"50"`
+	MaxMapLimit             int `env:"MAX_MAP_LIMIT" envDefault:"200"`
 }
 
 // IsProd reports whether the application is running in a production environment.

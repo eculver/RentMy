@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
@@ -153,10 +154,24 @@ func run() error {
 	listingSvc := listing.NewService(listingRepo)
 	listingHandler := listing.NewHandler(listingSvc)
 
+	driveTimeClient := discovery.NewDriveTimeClient(cfg.OSRMBaseURL, redisClient)
+	discoveryRepo := discovery.NewRepository(pool)
+	discoverySvc := discovery.NewService(discoveryRepo, driveTimeClient, discovery.Config{
+		WeightAvailability:  cfg.WeightAvailability,
+		WeightProximity:     cfg.WeightProximity,
+		WeightReputation:    cfg.WeightReputation,
+		WeightReliability:   cfg.WeightReliability,
+		DefaultRadiusMeters: cfg.DefaultFeedRadiusMeters,
+		MaxFeedLimit:        cfg.MaxFeedLimit,
+		MaxMapLimit:         cfg.MaxMapLimit,
+	})
+	discoveryHandler := discovery.NewHandler(discoverySvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
 	listingHandler.Mount(apiV1, authMW)
+	discoveryHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

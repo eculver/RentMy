@@ -56,6 +56,24 @@ services:
       timeout: 5s
       retries: 5
 
+  # OSRM self-hosted routing service (optional — requires pre-processed data).
+  # Run `scripts/osrm-prepare.sh` once to build /data/region.osrm, then start
+  # this service with: docker compose --profile osrm up -d
+  osrm:
+    profiles: ["osrm"]
+    image: osrm/osrm-backend:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - osrm_data:/data
+    command: osrm-routed --algorithm mld /data/region.osrm
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5000/nearest/v1/driving/-118.24,34.05 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   minio_data:
+  osrm_data:

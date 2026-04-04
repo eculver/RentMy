@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/giits/rentmy/backend/internal/payment"
+	"github.com/giits/rentmy/backend/internal/proximity"
 )
 
 // Config holds tunable parameters for the booking service.
@@ -33,21 +34,31 @@ func (c Config) autoDeclineAt() time.Time {
 	return time.Now().Add(c.AutoDeclineTimeout)
 }
 
+// proximitySvc is the interface the booking service uses to interact with
+// the proximity domain.  Using an interface breaks the import cycle and
+// allows tests to inject a stub.
+type proximitySvc interface {
+	GenerateCheckInPIN(ctx context.Context, transactionID, hostID string) (string, error)
+	CheckHandoffComplete(ctx context.Context, transactionID string, proofType proximity.ProofType) (bool, error)
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
-	repo        *Repository
-	paymentSvc  *payment.Service
-	riverClient riverInserter
-	cfg         Config
+	repo         *Repository
+	paymentSvc   *payment.Service
+	riverClient  riverInserter
+	proximitySvc proximitySvc
+	cfg          Config
 }
 
 // NewService creates a Service with the given dependencies and config.
-func NewService(repo *Repository, paymentSvc *payment.Service, riverClient riverInserter, cfg Config) *Service {
+func NewService(repo *Repository, paymentSvc *payment.Service, riverClient riverInserter, proximitySvc proximitySvc, cfg Config) *Service {
 	return &Service{
-		repo:        repo,
-		paymentSvc:  paymentSvc,
-		riverClient: riverClient,
-		cfg:         cfg,
+		repo:         repo,
+		paymentSvc:   paymentSvc,
+		riverClient:  riverClient,
+		proximitySvc: proximitySvc,
+		cfg:          cfg,
 	}
 }
 
@@ -114,7 +125,8 @@ func (s *Service) CreateBooking(ctx context.Context, in CreateInput) (payment.Bo
 	return result, nil
 }
 
-// Accept transitions a booking from REQUESTED to ACCEPTED.
+// Accept transitions a booking from REQUESTED to ACCEPTED and generates the
+// check-in PIN that the host will display to the renter at handoff.
 // Only the listing's host is authorized to accept.
 func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 	booking, err := s.repo.FindByID(ctx, in.BookingID)
@@ -136,7 +148,83 @@ func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 		return err
 	}
 
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit accept: %w", err)
+	}
+
+	// Generate and store the check-in PIN for the proximity handoff.
+	// This is best-effort: if it fails the booking is still accepted and the
+	// host can trigger the SMS fallback endpoint to regenerate.
+	if _, err := s.proximitySvc.GenerateCheckInPIN(ctx, in.BookingID, in.HostID); err != nil {
+		// Log and continue — booking acceptance is already committed.
+		_ = err
+	}
+
+	return nil
+}
+
+// CheckIn transitions an ACCEPTED booking to ACTIVE once both parties have
+// completed GPS + PIN proximity verification (PRD §17: ACCEPTED → ACTIVE).
+func (s *Service) CheckIn(ctx context.Context, bookingID, requesterID string) error {
+	booking, err := s.repo.FindByID(ctx, bookingID)
+	if err != nil {
+		return err
+	}
+
+	if booking.RenterID != requesterID && booking.HostID != requesterID {
+		return ErrNotAuthorized
+	}
+
+	complete, err := s.proximitySvc.CheckHandoffComplete(ctx, bookingID, proximity.ProofTypeCheckIn)
+	if err != nil {
+		return fmt.Errorf("check handoff complete: %w", err)
+	}
+	if !complete {
+		return ErrHandoffIncomplete
+	}
+
+	dbTx, err := s.repo.BeginTx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() { _ = dbTx.Rollback(ctx) }()
+
+	if err := s.repo.UpdateStatus(ctx, dbTx, bookingID, StatusActive); err != nil {
+		return err
+	}
+	return dbTx.Commit(ctx)
+}
+
+// CheckOut transitions an ACTIVE booking to COMPLETED once both parties have
+// completed GPS proximity verification for the return handoff (PRD §17: ACTIVE → COMPLETED).
+func (s *Service) CheckOut(ctx context.Context, bookingID, requesterID string) error {
+	booking, err := s.repo.FindByID(ctx, bookingID)
+	if err != nil {
+		return err
+	}
+
+	if booking.RenterID != requesterID && booking.HostID != requesterID {
+		return ErrNotAuthorized
+	}
+
+	complete, err := s.proximitySvc.CheckHandoffComplete(ctx, bookingID, proximity.ProofTypeCheckOut)
+	if err != nil {
+		return fmt.Errorf("check handoff complete: %w", err)
+	}
+	if !complete {
+		return ErrHandoffIncomplete
+	}
+
+	dbTx, err := s.repo.BeginTx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() { _ = dbTx.Rollback(ctx) }()
+
+	if err := s.repo.UpdateStatus(ctx, dbTx, bookingID, StatusCompleted); err != nil {
+		return err
+	}
+	return dbTx.Commit(ctx)
 }
 
 // Decline transitions a booking from REQUESTED to DECLINED.

@@ -29,6 +29,7 @@ import (
 	localredis "github.com/giits/rentmy/backend/internal/platform/redis"
 	riverpkg "github.com/giits/rentmy/backend/internal/platform/river"
 	locals3 "github.com/giits/rentmy/backend/internal/platform/s3"
+	"github.com/giits/rentmy/backend/internal/proximity"
 	"github.com/giits/rentmy/backend/internal/user"
 	"github.com/giits/rentmy/backend/migrations"
 )
@@ -189,9 +190,22 @@ func run() error {
 	})
 	paymentHandler := payment.NewHandler(paymentSvc)
 
+	// Build Proximity service.
+	// Twilio SMS client is nil when credentials are absent (safe for dev/test).
+	var smsSender proximity.SMSSender
+	if cfg.TwilioAccountSID != "" && cfg.TwilioAuthToken != "" && cfg.TwilioFromNumber != "" {
+		smsSender = proximity.NewTwilioClient(cfg.TwilioAccountSID, cfg.TwilioAuthToken, cfg.TwilioFromNumber)
+	}
+	proximityRepo := proximity.NewRepository(pool)
+	proximitySvc := proximity.NewService(proximityRepo, smsSender, proximity.Config{
+		GPSThresholdMeters:  cfg.GPSThresholdMeters,
+		PINValidityDuration: time.Duration(cfg.PINValidityMinutes) * time.Minute,
+	})
+	proximityHandler := proximity.NewHandler(proximitySvc)
+
 	// bookingRepo is created early (before River starts) to register the auto-decline worker.
 	// Reuse it here to build the booking service.
-	bookingSvc := booking.NewService(bookingRepo, paymentSvc, riverClient, booking.Config{
+	bookingSvc := booking.NewService(bookingRepo, paymentSvc, riverClient, proximitySvc, booking.Config{
 		AutoDeclineTimeout:         time.Duration(cfg.AutoDeclineTimeoutH) * time.Hour,
 		FraudNewAccountDays:        cfg.FraudNewAccountDays,
 		FraudFirstNTransactions:    cfg.FraudFirstNTransactions,
@@ -210,6 +224,7 @@ func run() error {
 	discoveryHandler.Mount(apiV1, authMW)
 	paymentHandler.Mount(apiV1, authMW)
 	bookingHandler.Mount(apiV1, authMW)
+	proximityHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

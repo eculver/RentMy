@@ -32,7 +32,7 @@ export interface SearchFilters {
   maxPrice?: number;
 }
 
-interface MapBounds {
+export interface MapBounds {
   swLat: number;
   swLng: number;
   neLat: number;

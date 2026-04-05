@@ -38,8 +38,9 @@ type VerificationAttempt struct {
 
 // StartVerificationResult is returned by StartVerification.
 type StartVerificationResult struct {
-	SessionID  string `json:"sessionId"`
-	SessionURL string `json:"sessionUrl"`
+	SessionID          string `json:"sessionId"`
+	SessionURL         string `json:"sessionUrl"`
+	EphemeralKeySecret string `json:"ephemeralKeySecret,omitempty"` // Stripe client_secret; empty for idempotent returns
 }
 
 // VerificationStatusResult is returned by GetStatus.

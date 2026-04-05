@@ -18,6 +18,7 @@ import { api } from "../../../../../lib/api";
 import DurationPicker from "../../../../../components/checkout/DurationPicker";
 import CostBreakdown from "../../../../../components/checkout/CostBreakdown";
 import PaymentMethodSelector from "../../../../../components/checkout/PaymentMethodSelector";
+import KYCGate from "../../../../../components/verification/KYCGate";
 
 type CheckoutParams = {
   id: string;
@@ -54,13 +55,12 @@ function estimateRentalFee(
   return 0;
 }
 
-export default function CheckoutScreen() {
+function CheckoutContent({ id }: { id: string }) {
   const router = useRouter();
-  const { id } = useLocalSearchParams<CheckoutParams>();
   const user = useAuthStore((s) => s.user);
 
-  const { data: holdEstimate } = useHoldEstimate(id ?? null);
-  const { data: listingData } = useListing(id ?? null);
+  const { data: holdEstimate } = useHoldEstimate(id);
+  const { data: listingData } = useListing(id);
   const listing = listingData?.listing;
 
   const {
@@ -69,7 +69,6 @@ export default function CheckoutScreen() {
     paymentMethodId,
     holdAmount,
     rentalFee,
-    totalImpact,
     setSchedule,
     setPaymentMethod,
     setAmounts,
@@ -77,12 +76,6 @@ export default function CheckoutScreen() {
   } = useCheckoutStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // KYC gate — user.identityStatus is not yet in the Phase 2 User type;
-  // the field will be populated in Phase 4. We stub the check here.
-  const identityStatus = (user as unknown as { identityStatus?: string })
-    ?.identityStatus;
-  const isVerified = identityStatus == null || identityStatus === "VERIFIED";
 
   const handleScheduleChange = (start: Date, end: Date) => {
     setSchedule(start, end);
@@ -101,7 +94,6 @@ export default function CheckoutScreen() {
   };
 
   const canConfirm =
-    isVerified &&
     scheduledStart != null &&
     scheduledEnd != null &&
     scheduledEnd.getTime() > scheduledStart.getTime() &&
@@ -109,7 +101,7 @@ export default function CheckoutScreen() {
     !isSubmitting;
 
   const handleConfirm = async () => {
-    if (!canConfirm || !id || !user) return;
+    if (!canConfirm || !user) return;
 
     setIsSubmitting(true);
     try {
@@ -139,35 +131,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  if (!isVerified) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color="#111827" />
-          </Pressable>
-          <Text className="text-lg font-semibold text-gray-900 ml-2">
-            Checkout
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="shield-outline" size={56} color="#f59e0b" />
-          <Text className="text-xl font-bold text-gray-900 text-center mt-4">
-            Identity verification required
-          </Text>
-          <Text className="text-sm text-gray-500 text-center mt-2">
-            Please verify your identity to rent items on RentMy.
-          </Text>
-          <Pressable className="mt-6 px-6 py-3 bg-sky-600 rounded-2xl">
-            <Text className="text-white font-semibold">Verify Identity</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const displayHold = holdEstimate?.holdAmount ?? holdAmount;
-  const displayTotal = displayHold + rentalFee;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -246,5 +210,15 @@ export default function CheckoutScreen() {
         </Pressable>
       </View>
     </SafeAreaView>
+  );
+}
+
+export default function CheckoutScreen() {
+  const { id } = useLocalSearchParams<CheckoutParams>();
+
+  return (
+    <KYCGate>
+      <CheckoutContent id={id ?? ""} />
+    </KYCGate>
   );
 }

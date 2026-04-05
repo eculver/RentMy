@@ -39,8 +39,9 @@ type StripeIdentityAdapter interface {
 
 // StripeSessionResult holds the data returned when creating a new verification session.
 type StripeSessionResult struct {
-	SessionID  string
-	SessionURL string
+	SessionID          string
+	SessionURL         string
+	EphemeralKeySecret string // Stripe client_secret; used by the mobile Stripe Identity SDK
 }
 
 // UserService is the subset of user.Service that the VerificationAgent needs.
@@ -147,8 +148,9 @@ func (s *Service) StartVerification(ctx context.Context, userID string) (StartVe
 
 	slog.Info("verification session created", "userId", userID, "sessionId", session.SessionID)
 	return StartVerificationResult{
-		SessionID:  session.SessionID,
-		SessionURL: session.SessionURL,
+		SessionID:          session.SessionID,
+		SessionURL:         session.SessionURL,
+		EphemeralKeySecret: session.EphemeralKeySecret,
 	}, nil
 }
 

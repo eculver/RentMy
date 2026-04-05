@@ -18,6 +18,7 @@ import (
 
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/router"
+	"github.com/giits/rentmy/backend/internal/agent/verification"
 	"github.com/giits/rentmy/backend/internal/booking"
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
@@ -91,11 +92,8 @@ func run() error {
 	} else {
 		slog.Warn("ANTHROPIC_API_KEY not set — AI agents disabled")
 	}
-	_ = modelRouter // will be injected into agents in Phase 4.2+
-
 	decisionRepo := decision.NewRepository(pool)
 	decisionSvc := decision.NewService(decisionRepo)
-	_ = decisionSvc // will be injected into agents in Phase 4.2+
 
 	// Build Stripe adapter and payment repository early so the payout worker
 	// can be registered before the River client starts.
@@ -118,6 +116,18 @@ func run() error {
 		ReturnReminderBefore: time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
 
+	// Build verification repo and a pre-river service (nil riverClient) so the
+	// timeout worker can be registered before River starts.
+	verificationRepo := verification.NewRepository(pool)
+	verificationStripeAdapter := verification.NewStripeIdentityAdapter(
+		cfg.StripeSecretKey, cfg.StripeIdentityWebhookSecret,
+	)
+	// nil riverClient and userSvc are filled in after River/Redis start.
+	verificationSvcPre := verification.NewService(
+		verificationRepo, verificationStripeAdapter, modelRouter, decisionSvc, nil, nil,
+	)
+	verificationTimeoutWorker := verification.NewVerificationTimeoutWorker(verificationRepo, verificationSvcPre)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -125,6 +135,7 @@ func run() error {
 	river.AddWorker(workers, notification.NewPickupApproachingWorker(notificationSvc))
 	river.AddWorker(workers, notification.NewReturnApproachingWorker(notificationSvc))
 	river.AddWorker(workers, notification.NewQuietHoursDeferredWorker(notificationSvc))
+	river.AddWorker(workers, verificationTimeoutWorker)
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -275,6 +286,17 @@ func run() error {
 	messagingSvc := messaging.NewService(messagingRepo, pusherClient, notificationSvc)
 	messagingHandler := messaging.NewHandler(messagingSvc)
 
+	// Build the VerificationAgent service (full version with riverClient and userSvc).
+	verificationSvc := verification.NewService(
+		verificationRepo,
+		verificationStripeAdapter,
+		modelRouter,
+		decisionSvc,
+		userSvc,
+		riverClient,
+	)
+	verificationHandler := verification.NewHandler(verificationSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
@@ -285,6 +307,7 @@ func run() error {
 	proximityHandler.Mount(apiV1, authMW)
 	notificationHandler.Mount(apiV1, authMW)
 	messagingHandler.Mount(apiV1, authMW)
+	verificationHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

@@ -143,6 +143,30 @@ func (r *Repository) Update(ctx context.Context, id string, in UpdateInput) (*Us
 	return u, nil
 }
 
+// UpdateIdentityStatus sets the identity_status for the given user ID.
+func (r *Repository) UpdateIdentityStatus(ctx context.Context, id string, status IdentityStatus) error {
+	const q = `UPDATE users SET identity_status = $2 WHERE id = $1`
+	_, err := r.pool.Exec(ctx, q, id, string(status))
+	if err != nil {
+		return fmt.Errorf("updating identity status: %w", err)
+	}
+	return nil
+}
+
+// AddReputationScore adds delta (positive or negative) to the user's reputation_score,
+// clamping the result to the [0, 1000] range.
+func (r *Repository) AddReputationScore(ctx context.Context, id string, delta int) error {
+	const q = `
+		UPDATE users
+		SET reputation_score = GREATEST(0, LEAST(1000, reputation_score + $2))
+		WHERE id = $1`
+	_, err := r.pool.Exec(ctx, q, id, delta)
+	if err != nil {
+		return fmt.Errorf("adding reputation score: %w", err)
+	}
+	return nil
+}
+
 // scanUser reads a user row from a pgx.Row or pgx.Rows scanner.
 func scanUser(row pgx.Row) (*User, error) {
 	var (

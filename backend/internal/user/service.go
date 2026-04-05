@@ -23,6 +23,8 @@ type RepositoryInterface interface {
 	FindByEmail(ctx context.Context, email string) (*User, string, error)
 	UpdateLastActive(ctx context.Context, id string) error
 	Update(ctx context.Context, id string, in UpdateInput) (*User, error)
+	UpdateIdentityStatus(ctx context.Context, id string, status IdentityStatus) error
+	AddReputationScore(ctx context.Context, id string, delta int) error
 }
 
 // RedisStore is the subset of redis operations the Service needs for refresh tokens.
@@ -185,6 +187,24 @@ func (s *Service) UpdateProfile(ctx context.Context, userID string, in UpdateInp
 		return nil, fmt.Errorf("updating profile: %w", err)
 	}
 	return u, nil
+}
+
+// UpdateIdentityStatus sets the identity_status for the given user.
+// Called by the VerificationAgent after a KYC outcome is determined.
+func (s *Service) UpdateIdentityStatus(ctx context.Context, userID string, status IdentityStatus) error {
+	if err := s.repo.UpdateIdentityStatus(ctx, userID, status); err != nil {
+		return fmt.Errorf("updating identity status: %w", err)
+	}
+	return nil
+}
+
+// AddReputationScore adds delta to the user's reputation_score (clamped 0–1000).
+// Called by the VerificationAgent to award the one-time KYC bonus.
+func (s *Service) AddReputationScore(ctx context.Context, userID string, delta int) error {
+	if err := s.repo.AddReputationScore(ctx, userID, delta); err != nil {
+		return fmt.Errorf("adding reputation score: %w", err)
+	}
+	return nil
 }
 
 // storeRefresh stores a refresh token in Redis keyed by userID.

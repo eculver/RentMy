@@ -20,6 +20,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
+	"github.com/giits/rentmy/backend/internal/messaging"
 	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
@@ -240,7 +241,13 @@ func run() error {
 		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
 		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
+	bookingSvc.WithPusher(pusherClient)
 	bookingHandler := booking.NewHandler(bookingSvc, paymentSvc)
+
+	// Build MessagingService.
+	messagingRepo := messaging.NewRepository(pool)
+	messagingSvc := messaging.NewService(messagingRepo, pusherClient, notificationSvc)
+	messagingHandler := messaging.NewHandler(messagingSvc)
 
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
@@ -251,6 +258,7 @@ func run() error {
 	bookingHandler.Mount(apiV1, authMW)
 	proximityHandler.Mount(apiV1, authMW)
 	notificationHandler.Mount(apiV1, authMW)
+	messagingHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

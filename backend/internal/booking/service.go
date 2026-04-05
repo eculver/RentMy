@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/giits/rentmy/backend/internal/messaging"
 	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/proximity"
@@ -54,6 +55,12 @@ type notificationSvc interface {
 	Notify(ctx context.Context, userID string, t notification.Type, title, body string, data map[string]string) error
 }
 
+// pusherSvc is the interface the booking service uses to publish real-time
+// booking status events on transaction channels.
+type pusherSvc interface {
+	Trigger(channel, event string, data interface{}) error
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
 	repo            *Repository
@@ -61,6 +68,7 @@ type Service struct {
 	riverClient     riverInserter
 	proximitySvc    proximitySvc
 	notificationSvc notificationSvc
+	pusherSvc       pusherSvc
 	cfg             Config
 }
 
@@ -73,6 +81,27 @@ func NewService(repo *Repository, paymentSvc *payment.Service, riverClient river
 		proximitySvc:    proximitySvc,
 		notificationSvc: notificationSvc,
 		cfg:             cfg,
+	}
+}
+
+// WithPusher attaches a Pusher client so the service can fire booking-status-changed
+// events on transaction channels. Call this after constructing the service.
+func (s *Service) WithPusher(p pusherSvc) *Service {
+	s.pusherSvc = p
+	return s
+}
+
+// triggerStatusChanged fires a Pusher booking-status-changed event on the
+// transaction channel. Failures are logged and never returned to the caller.
+func (s *Service) triggerStatusChanged(ctx context.Context, transactionID string, status Status) {
+	if s.pusherSvc == nil {
+		return
+	}
+	channel := messaging.TransactionChannel(transactionID)
+	data := map[string]string{"transactionId": transactionID, "status": string(status)}
+	if err := s.pusherSvc.Trigger(channel, messaging.EventBookingStatusChanged, data); err != nil {
+		slog.WarnContext(ctx, "booking: pusher status change failed",
+			"transactionId", transactionID, "status", status, "error", err)
 	}
 }
 
@@ -176,6 +205,9 @@ func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 		return fmt.Errorf("commit accept: %w", err)
 	}
 
+	// Notify real-time subscribers of the status change (best-effort).
+	s.triggerStatusChanged(ctx, in.BookingID, StatusAccepted)
+
 	// Generate and store the check-in PIN for the proximity handoff.
 	// This is best-effort: if it fails the booking is still accepted and the
 	// host can trigger the SMS fallback endpoint to regenerate.
@@ -241,7 +273,11 @@ func (s *Service) CheckIn(ctx context.Context, bookingID, requesterID string) er
 	if err := s.repo.UpdateStatus(ctx, dbTx, bookingID, StatusActive); err != nil {
 		return err
 	}
-	return dbTx.Commit(ctx)
+	if err := dbTx.Commit(ctx); err != nil {
+		return err
+	}
+	s.triggerStatusChanged(ctx, bookingID, StatusActive)
+	return nil
 }
 
 // CheckOut transitions an ACTIVE booking to COMPLETED once both parties have
@@ -273,7 +309,11 @@ func (s *Service) CheckOut(ctx context.Context, bookingID, requesterID string) e
 	if err := s.repo.UpdateStatus(ctx, dbTx, bookingID, StatusCompleted); err != nil {
 		return err
 	}
-	return dbTx.Commit(ctx)
+	if err := dbTx.Commit(ctx); err != nil {
+		return err
+	}
+	s.triggerStatusChanged(ctx, bookingID, StatusCompleted)
+	return nil
 }
 
 // Decline transitions a booking from REQUESTED to DECLINED.
@@ -298,7 +338,12 @@ func (s *Service) Decline(ctx context.Context, in DeclineInput) error {
 		return err
 	}
 
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	s.triggerStatusChanged(ctx, in.BookingID, StatusDeclined)
+	return nil
 }
 
 // Cancel transitions a booking to CANCELLED for either the renter or the host,
@@ -344,6 +389,9 @@ func (s *Service) Cancel(ctx context.Context, in CancelInput) error {
 	if err := dbTx.Commit(ctx); err != nil {
 		return err
 	}
+
+	// Notify real-time subscribers of the status change (best-effort).
+	s.triggerStatusChanged(ctx, in.BookingID, StatusCancelled)
 
 	// Notify the other party about the cancellation (best-effort).
 	if s.notificationSvc != nil {

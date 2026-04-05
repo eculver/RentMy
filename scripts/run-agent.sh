@@ -46,7 +46,7 @@ fi
 # Detect Graphite availability (non-fatal — falls back to vanilla git)
 if [[ -x "$GT" ]]; then
   # gt binary exists; verify it can operate in this repo
-  if "$GT" log --oneline -1 > /dev/null 2>&1; then
+  if "$GT" ls --quiet > /dev/null 2>&1; then
     USE_GT=true
   else
     echo "WARNING: Graphite CLI found but repo not initialized. Falling back to vanilla git."

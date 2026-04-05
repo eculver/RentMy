@@ -697,7 +697,7 @@
         {
           "id": "5.1",
           "name": "Backend integration test infrastructure",
-          "status": "pending",
+          "status": "completed",
           "domain": "backend",
           "dependencies": [],
           "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-51",
@@ -708,12 +708,13 @@
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 120s"
-          ]
+          ],
+          "commitSha": "c737f10"
         },
         {
           "id": "5.2",
           "name": "Mobile test infrastructure",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [],
           "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-52",

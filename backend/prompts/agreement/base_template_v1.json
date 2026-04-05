@@ -1,0 +1,53 @@
+{
+  "version": "1",
+  "effective_date": "2025-01-01",
+  "sections": [
+    {
+      "id": "parties",
+      "title": "1. Parties",
+      "text": "This Rental Agreement (\"Agreement\") is entered into between the host (\"Host\") and the renter (\"Renter\") for the rental of the item described herein, facilitated by RentMy (\"Platform\"). Both parties agree to the terms set forth in this Agreement."
+    },
+    {
+      "id": "rental_period",
+      "title": "2. Rental Period",
+      "text": "The rental period begins at the time of item pickup confirmation and ends at the agreed return time. The Renter is responsible for returning the item by the agreed deadline. Late returns incur additional fees as specified in the Platform's pricing policy."
+    },
+    {
+      "id": "item_condition",
+      "title": "3. Item Condition",
+      "text": "The Renter acknowledges receiving the item in the condition documented at pickup. Photographs taken during the proximity handoff process serve as the condition record. The Renter agrees to return the item in the same condition, subject to normal wear and tear."
+    },
+    {
+      "id": "hold_and_damage",
+      "title": "4. Security Hold and Damage",
+      "text": "A security hold has been authorized on the Renter's payment method as described at checkout. If the item is damaged, lost, or stolen during the rental period, the Platform may charge the Renter's payment method up to the item's declared value. The Platform's guarantee fund may cover amounts exceeding the hold, and the Renter agrees to repay any such advances."
+    },
+    {
+      "id": "liability",
+      "title": "5. Liability",
+      "text": "The Renter assumes full liability for the item during the rental period. The Renter agrees to indemnify and hold harmless the Host and the Platform against any claims, damages, or losses arising from the Renter's use of the item. The Host is not responsible for injury or damage caused by misuse of the item."
+    },
+    {
+      "id": "prohibited_uses",
+      "title": "6. Prohibited Uses",
+      "text": "The Renter may not sublease, lend, or transfer the item to any third party. The item may not be used for any illegal purpose or in any manner inconsistent with its intended use. The Renter may not modify, alter, or disassemble the item."
+    },
+    {
+      "id": "cancellation",
+      "title": "7. Cancellation",
+      "text": "Cancellation terms are governed by the Platform's cancellation policy in effect at the time of booking. Hosts and Renters agree to abide by the Platform's dispute resolution process for any disagreements arising from cancellations."
+    },
+    {
+      "id": "governing_law",
+      "title": "8. Governing Law",
+      "text": "This Agreement is governed by the laws of the jurisdiction in which the rental transaction takes place. Any disputes not resolved through the Platform's dispute resolution process shall be subject to binding arbitration."
+    },
+    {
+      "id": "item_specific_clauses",
+      "title": "9. Item-Specific Terms",
+      "text": "The following item-specific terms supplement this Agreement and take precedence over general provisions in the event of a conflict.",
+      "dynamic": true,
+      "source": "agreement_agent"
+    }
+  ]
+}

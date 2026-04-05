@@ -84,6 +84,11 @@ type Config struct {
 	GPSThresholdMeters  float64 `env:"GPS_THRESHOLD_METERS" envDefault:"100"`
 	PINValidityMinutes  int     `env:"PIN_VALIDITY_MINUTES" envDefault:"30"`
 
+	// Anthropic API config (AI agents — Phase 4+).
+	AnthropicAPIKey      string `env:"ANTHROPIC_API_KEY" envDefault:""`
+	AnthropicFullModel   string `env:"ANTHROPIC_FULL_MODEL" envDefault:"claude-sonnet-4-6"`
+	AnthropicCheapModel  string `env:"ANTHROPIC_CHEAP_MODEL" envDefault:"claude-haiku-4-5"`
+
 	// Twilio credentials for SMS PIN fallback.
 	TwilioAccountSID  string `env:"TWILIO_ACCOUNT_SID" envDefault:""`
 	TwilioAuthToken   string `env:"TWILIO_AUTH_TOKEN" envDefault:""`

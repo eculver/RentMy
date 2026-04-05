@@ -18,6 +18,7 @@ import (
 
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/giits/rentmy/backend/internal/agent/risk"
 	"github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
 	"github.com/giits/rentmy/backend/internal/booking"
@@ -142,6 +143,12 @@ func run() error {
 	)
 	appraisalWorker := appraisal.NewAppraisalJobWorker(appraisalSvcPre)
 
+	// Build RiskAgent service and River workers.
+	riskRepo := risk.NewRepository(pool)
+	riskSvc := risk.NewService(riskRepo, decisionSvc)
+	monthlyReputationWorker := risk.NewMonthlyReputationWorker(riskSvc)
+	decayCheckWorker := risk.NewDecayCheckWorker(riskSvc)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -151,6 +158,8 @@ func run() error {
 	river.AddWorker(workers, notification.NewQuietHoursDeferredWorker(notificationSvc))
 	river.AddWorker(workers, verificationTimeoutWorker)
 	river.AddWorker(workers, appraisalWorker)
+	river.AddWorker(workers, monthlyReputationWorker)
+	river.AddWorker(workers, decayCheckWorker)
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -313,7 +322,7 @@ func run() error {
 		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
 		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
-	bookingSvc.WithPusher(pusherClient)
+	bookingSvc.WithPusher(pusherClient).WithRiskAgent(riskSvc)
 	bookingHandler := booking.NewHandler(bookingSvc, paymentSvc)
 
 	// Build MessagingService.
@@ -332,6 +341,9 @@ func run() error {
 	)
 	verificationHandler := verification.NewHandler(verificationSvc)
 
+	// Build the RiskAgent HTTP handler.
+	riskHandler := risk.NewHandler(riskSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
@@ -344,6 +356,7 @@ func run() error {
 	messagingHandler.Mount(apiV1, authMW)
 	verificationHandler.Mount(apiV1, authMW)
 	appraisalHandler.Mount(apiV1, authMW)
+	riskHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

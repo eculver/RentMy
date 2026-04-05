@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
@@ -24,12 +25,14 @@ func (AutoDeclineJobArgs) Kind() string { return "booking_auto_decline" }
 // If the booking is no longer REQUESTED (host accepted/declined), this is a no-op.
 type AutoDeclineJobWorker struct {
 	river.WorkerDefaults[AutoDeclineJobArgs]
-	repo *Repository
+	repo            *Repository
+	notificationSvc notificationSvc
 }
 
 // NewAutoDeclineJobWorker creates a new AutoDeclineJobWorker.
-func NewAutoDeclineJobWorker(repo *Repository) *AutoDeclineJobWorker {
-	return &AutoDeclineJobWorker{repo: repo}
+// notificationSvc may be nil (notifications disabled for testing).
+func NewAutoDeclineJobWorker(repo *Repository, notificationSvc notificationSvc) *AutoDeclineJobWorker {
+	return &AutoDeclineJobWorker{repo: repo, notificationSvc: notificationSvc}
 }
 
 // Work executes the auto-decline transition.
@@ -65,6 +68,20 @@ func (w *AutoDeclineJobWorker) Work(ctx context.Context, job *river.Job[AutoDecl
 	}
 
 	slog.Info("booking auto-declined", "transactionId", id)
+
+	// Notify both parties (best-effort; failure does not roll back the decline).
+	if w.notificationSvc != nil {
+		data := map[string]string{"transactionId": id}
+		for _, userID := range []string{booking.RenterID, booking.HostID} {
+			if err := w.notificationSvc.Notify(ctx, userID, notification.TypeBookingAutoDeclined,
+				"Booking auto-declined",
+				"The booking was automatically declined because the host did not respond in time.",
+				data,
+			); err != nil {
+				slog.Warn("auto-decline notification failed", "userID", userID, "error", err)
+			}
+		}
+	}
 	return nil
 }
 

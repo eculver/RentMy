@@ -97,6 +97,11 @@ type Config struct {
 	FraudDamageClaimWindowDays     int `env:"FRAUD_DAMAGE_CLAIM_WINDOW_DAYS" envDefault:"60"`
 	HostCancelLateBPS              int `env:"HOST_CANCEL_LATE_BPS" envDefault:"2500"`           // 25%
 	HostCancelVeryLateBPS          int `env:"HOST_CANCEL_VERY_LATE_BPS" envDefault:"5000"`      // 50%
+
+	// Notification config (PRD section 16).
+	ExpoPushAccessToken    string `env:"EXPO_PUSH_ACCESS_TOKEN" envDefault:""`
+	PickupReminderMinutes  int    `env:"PICKUP_REMINDER_MINUTES" envDefault:"30"`
+	ReturnReminderMinutes  int    `env:"RETURN_REMINDER_MINUTES" envDefault:"30"`
 }
 
 // IsProd reports whether the application is running in a production environment.

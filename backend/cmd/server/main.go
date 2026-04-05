@@ -20,6 +20,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
+	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/platform/auth"
 	"github.com/giits/rentmy/backend/internal/platform/config"
@@ -75,13 +76,28 @@ func run() error {
 	paymentRepo := payment.NewRepository(pool)
 
 	// Register River workers.
-	// bookingRepo is created early so the auto-decline worker can be registered before River starts.
+	// bookingRepo and notificationRepo are created early so workers can be registered before River starts.
 	bookingRepo := booking.NewRepository(pool)
+	notificationRepo := notification.NewRepository(pool)
+
+	// Build notification push client (nil access token is safe for dev/test).
+	notificationPushClient := notification.NewPushClient(cfg.ExpoPushAccessToken)
+	// riverClient is not yet available at worker-registration time; notificationSvc is wired after River starts.
+	// We use a pointer-to-pointer trick: register a placeholder worker, then swap the service in below.
+	// Instead, we build notificationSvc before River starts (without riverClient), then re-create with riverClient after.
+	// Simpler: build a pre-river notificationSvc with nil riverClient; scheduled jobs work after River starts.
+	notificationSvc := notification.NewService(notificationRepo, notificationPushClient, nil, notification.Config{
+		PickupReminderBefore: time.Duration(cfg.PickupReminderMinutes) * time.Minute,
+		ReturnReminderBefore: time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
+	})
 
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
-	river.AddWorker(workers, booking.NewAutoDeclineJobWorker(bookingRepo))
+	river.AddWorker(workers, booking.NewAutoDeclineJobWorker(bookingRepo, notificationSvc))
+	river.AddWorker(workers, notification.NewPickupApproachingWorker(notificationSvc))
+	river.AddWorker(workers, notification.NewReturnApproachingWorker(notificationSvc))
+	river.AddWorker(workers, notification.NewQuietHoursDeferredWorker(notificationSvc))
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -203,9 +219,16 @@ func run() error {
 	})
 	proximityHandler := proximity.NewHandler(proximitySvc)
 
+	// Re-create notificationSvc now that riverClient is available, so scheduled jobs can be enqueued.
+	notificationSvc = notification.NewService(notificationRepo, notificationPushClient, riverClient, notification.Config{
+		PickupReminderBefore: time.Duration(cfg.PickupReminderMinutes) * time.Minute,
+		ReturnReminderBefore: time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
+	})
+	notificationHandler := notification.NewHandler(notificationSvc)
+
 	// bookingRepo is created early (before River starts) to register the auto-decline worker.
 	// Reuse it here to build the booking service.
-	bookingSvc := booking.NewService(bookingRepo, paymentSvc, riverClient, proximitySvc, booking.Config{
+	bookingSvc := booking.NewService(bookingRepo, paymentSvc, riverClient, proximitySvc, notificationSvc, booking.Config{
 		AutoDeclineTimeout:         time.Duration(cfg.AutoDeclineTimeoutH) * time.Hour,
 		FraudNewAccountDays:        cfg.FraudNewAccountDays,
 		FraudFirstNTransactions:    cfg.FraudFirstNTransactions,
@@ -214,6 +237,8 @@ func run() error {
 		FraudDamageClaimWindowDays: cfg.FraudDamageClaimWindowDays,
 		HostCancelLateBPS:          cfg.HostCancelLateBPS,
 		HostCancelVeryLateBPS:      cfg.HostCancelVeryLateBPS,
+		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
+		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
 	bookingHandler := booking.NewHandler(bookingSvc, paymentSvc)
 
@@ -225,6 +250,7 @@ func run() error {
 	paymentHandler.Mount(apiV1, authMW)
 	bookingHandler.Mount(apiV1, authMW)
 	proximityHandler.Mount(apiV1, authMW)
+	notificationHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

@@ -15,27 +15,27 @@
 
 ## Integration Tests (testcontainers-go — real Postgres + Redis)
 
-Tests live in `backend/tests/integration/`. Infrastructure set up in Phase 7.
+Tests live in `backend/tests/integration/`. Infrastructure set up in Phase 5.
 
 | Phase | What to Test | Test File |
 |-------|-------------|-----------|
-| 7 (retro) | Register → Login → Get Profile. Upload photo → verify in S3 → retrieve thumbnail. Create listing → verify in DB with media | `user_api_test.go`, `listing_api_test.go` |
-| 7 (retro) | Search → results ranked correctly. Create booking → hold authorized (Stripe test mode). Guarantee fund contribution recorded | `discovery_api_test.go`, `payment_api_test.go` |
-| 7 (retro) | Full booking lifecycle: request → accept → check-in → check-out → complete. Auto-decline fires after timeout. Cancellation charges correct fee. Fraud velocity blocks violating booking | `booking_api_test.go` |
-| 7 (retro) | Listing creation → AI autofill (mock LLM). KYC flow → identity status updated. Risk score computed on booking | `agent_api_test.go` |
-| 5 | Return photos → CV preprocessing → LLM diff → dispute filed → escalation gate → hold captured. Reputation updated after completed transaction. Outcome linking fires 48h after close | `dispute_api_test.go`, `reputation_api_test.go` |
-| 6 | OpsAgent cron → health report generated → alert fired (Slack webhook mock). End-to-end referral: create code → referred user signs up → completes rental → both get $20 | `ops_api_test.go`, `referral_api_test.go` |
+| 5 (retro) | Register → Login → Get Profile. Upload photo → verify in S3 → retrieve thumbnail. Create listing → verify in DB with media | `user_api_test.go`, `listing_api_test.go` |
+| 5 (retro) | Search → results ranked correctly. Create booking → hold authorized (Stripe test mode). Guarantee fund contribution recorded | `discovery_api_test.go`, `payment_api_test.go` |
+| 5 (retro) | Full booking lifecycle: request → accept → check-in → check-out → complete. Auto-decline fires after timeout. Cancellation charges correct fee. Fraud velocity blocks violating booking | `booking_api_test.go` |
+| 5 (retro) | Listing creation → AI autofill (mock LLM). KYC flow → identity status updated. Risk score computed on booking | `agent_api_test.go` |
+| 6 | Return photos → CV preprocessing → LLM diff → dispute filed → escalation gate → hold captured. Reputation updated after completed transaction. Outcome linking fires 48h after close | `dispute_api_test.go`, `reputation_api_test.go` |
+| 7 | OpsAgent cron → health report generated → alert fired (Slack webhook mock). End-to-end referral: create code → referred user signs up → completes rental → both get $20 | `ops_api_test.go`, `referral_api_test.go` |
 
 ## Mobile Component Tests (Jest + RNTL + MSW)
 
-Tests live in `mobile/__tests__/`. Infrastructure set up in Phase 7.
+Tests live in `mobile/__tests__/`. Infrastructure set up in Phase 5.
 
 | Phase | What to Test | Test File |
 |-------|-------------|-----------|
-| 7 (retro) | Auth screens: login/register validation, navigation. Listing creation: form fields, submission. Feed/search: data rendering, pagination | `screens/auth.test.tsx`, `screens/listing-create.test.tsx`, `screens/feed.test.tsx` |
-| 7 (retro) | Booking flow: price breakdown, submission. Map: marker rendering | `screens/booking.test.tsx`, `screens/map.test.tsx` |
-| 5 | Post-rental flow: photo return, dispute filing, rating submission | `screens/post-rental.test.tsx` |
-| 6 | Referral UI: code display, sharing, status | `screens/referral.test.tsx` |
+| 5 (retro) | Auth screens: login/register validation, navigation. Listing creation: form fields, submission. Feed/search: data rendering, pagination | `screens/auth.test.tsx`, `screens/listing-create.test.tsx`, `screens/feed.test.tsx` |
+| 5 (retro) | Booking flow: price breakdown, submission. Map: marker rendering | `screens/booking.test.tsx`, `screens/map.test.tsx` |
+| 6 | Post-rental flow: photo return, dispute filing, rating submission | `screens/post-rental.test.tsx` |
+| 7 | Referral UI: code display, sharing, status | `screens/referral.test.tsx` |
 
 **Rule:** Every new task that adds backend endpoints or mobile screens MUST add corresponding tests. Tests are part of the task deliverable, not optional.
 

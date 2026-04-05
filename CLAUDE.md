@@ -14,10 +14,10 @@ RentMy is a mobile-only, hyperlocal P2P rental marketplace. Small AI-native team
 | `/packer` | VM images (Packer) |
 | `/ansible` | Configuration management |
 | `/scripts` | Helper/utility scripts (bash or Go) |
-| `/ops` | Internal ops dashboard (Vite + React, Phase 6) |
+| `/ops` | Internal ops dashboard (Vite + React, Phase 7) |
 | `/migrations` | Database migrations (goose SQL files) |
 
-**Current state:** Phases 0-4 complete. Phase 7 (Test Infrastructure) runs next, then Phases 5-6. See `.claude/progress.json` for exact task status.
+**Current state:** Phases 0-4 complete. Phase 5 (Test Infrastructure) runs next, then Phases 6-7. See `.claude/progress.json` for exact task status.
 
 ---
 

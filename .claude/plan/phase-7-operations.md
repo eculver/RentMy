@@ -1,8 +1,8 @@
-# Phase 6 — Operations + Growth Implementation Plan
+# Phase 7 — Operations + Growth Implementation Plan
 
 > **Scope:** Wk 13-16. Ops visibility, fraud detection, agent learning, referral growth. Platform is launch-ready.
 > **Exit criteria:** Ops dashboard shows real-time metrics + agent calibration, fraud detection active (WiFi compound-only), human review queue operational, referral system pays $20/$20 on first completed rental, alerts fire to Slack/PagerDuty.
-> **Blockers:** Phase 5 complete (full transaction lifecycle working)
+> **Blockers:** Phase 6 complete (full transaction lifecycle working)
 
 ## Resolved Decisions
 
@@ -146,7 +146,7 @@ backend/internal/
 
 ## Implementation Steps
 
-### Step 6.1 — OpsAgent (backend)
+### Step 7.1 — OpsAgent (backend)
 
 **Create:**
 - `backend/internal/agent/ops/model.go` — Domain types:
@@ -214,7 +214,7 @@ curl -sf http://localhost:8080/api/v1/ops/alerts/rules \
 kill %1
 ```
 
-### Step 6.2 — FraudAgent (backend)
+### Step 7.2 — FraudAgent (backend)
 
 **Create:**
 - `backend/internal/agent/fraud/model.go` — Domain types:
@@ -271,7 +271,7 @@ curl -sf http://localhost:8080/api/v1/ops/fraud/flags \
 # Should return 200 with paginated fraud flags
 ```
 
-### Step 6.3 — Ops Dashboard (web)
+### Step 7.3 — Ops Dashboard (web)
 
 **Create:**
 - Vite project in `/ops`:
@@ -359,7 +359,7 @@ cd ops && npm run dev &
 kill %1
 ```
 
-### Step 6.4 — Referral System (backend + RN)
+### Step 7.4 — Referral System (backend + RN)
 
 **Create:**
 - `backend/internal/referral/model.go` — Domain types:
@@ -435,7 +435,7 @@ curl -sf -X POST http://localhost:8080/api/v1/referrals/apply \
 # 4. Both users receive $20 payout (verify via payout records)
 ```
 
-### Step 6.5 — Agent Learning Endpoints (backend)
+### Step 7.5 — Agent Learning Endpoints (backend)
 
 **Create:**
 - `backend/internal/agent/ops/learning.go` — Agent learning metric calculations:
@@ -485,7 +485,7 @@ curl -sf "http://localhost:8080/api/v1/ops/agents/metrics?agent_type=DISPUTE" \
 # Should return: {primaryMetric: "Human override rate", primaryValue: 0.12, ...}
 ```
 
-### Step 6.6 — Human Review Queue (backend)
+### Step 7.6 — Human Review Queue (backend)
 
 **Create:**
 - `backend/internal/agent/ops/review.go` — Review queue logic:
@@ -745,13 +745,13 @@ INSERT INTO alert_rules (id, metric_name, operator, threshold, severity, channel
 
 | Step | What | Day | Depends On |
 |------|------|-----|------------|
-| 6.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | Phase 5 complete |
+| 6.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | Phase 6 complete |
 | 6.2 | FraudAgent + signals + patterns (backend) | Day 3-6 | 6.1 (shares ops alert routing) |
 | 6.3 | Ops dashboard (web) | Day 5-10 | 6.1, 6.2 (needs API endpoints to render) |
-| 6.4 | Referral system (backend + RN) | Day 5-8 | Phase 5 complete (needs transaction completion hook) |
+| 6.4 | Referral system (backend + RN) | Day 5-8 | Phase 6 complete (needs transaction completion hook) |
 | 6.5 | Agent learning endpoints (backend) | Day 7-9 | 6.1 (extends ops handler) |
 | 6.6 | Human review queue (backend) | Day 8-10 | 6.1, 6.2 (review items created by agent escalations) |
 
 Steps 6.1 and 6.4 are independent and can start in parallel (ops metrics vs. referral system).
-Step 6.3 (dashboard) can start UI scaffolding on Day 5 while backend endpoints are still being built — mock data first, wire to real API as endpoints land.
+Step 7.3 (dashboard) can start UI scaffolding on Day 5 while backend endpoints are still being built — mock data first, wire to real API as endpoints land.
 Steps 6.5 and 6.6 extend 6.1's handler and can be developed in parallel with each other once 6.1 is complete.

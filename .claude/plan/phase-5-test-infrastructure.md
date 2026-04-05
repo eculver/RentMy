@@ -1,16 +1,16 @@
-# Phase 7 — Test Infrastructure + Retroactive Coverage
+# Phase 5 — Test Infrastructure + Retroactive Coverage
 
 ## Goal
 
-Set up integration and component testing infrastructure, then write retroactive tests for Phases 1-4. This phase exists because Phases 1-4 were built without integration tests. Going forward (Phases 5-6), every task includes tests as part of the task itself.
+Set up integration and component testing infrastructure, then write retroactive tests for Phases 1-4. This phase exists because Phases 1-4 were built without integration tests. Going forward (Phases 6-7), every task includes tests as part of the task itself.
 
 ## Execution Order
 
-Phase 7 tasks run **before** Phase 5. Tasks 7.1 and 7.2 set up infrastructure; 7.3-7.5 add retroactive coverage; 7.6 wires tests into CI.
+Tasks 5.1 and 5.2 set up infrastructure; 5.3-5.5 add retroactive coverage; 5.6 wires tests into CI.
 
 ---
 
-## Step 7.1 — Backend Integration Test Infrastructure
+## Step 5.1 — Backend Integration Test Infrastructure
 
 **Goal:** Set up testcontainers-go so integration tests can run against real Postgres + Redis.
 
@@ -53,7 +53,7 @@ The smoke test must pass. Docker must be running for testcontainers.
 
 ---
 
-## Step 7.2 — Mobile Test Infrastructure
+## Step 5.2 — Mobile Test Infrastructure
 
 **Goal:** Set up Jest + React Native Testing Library + MSW so mobile screen/component tests can run.
 
@@ -119,7 +119,7 @@ Both smoke tests must pass.
 
 ---
 
-## Step 7.3 — Phase 1-2 Backend Integration Tests
+## Step 5.3 — Phase 1-2 Backend Integration Tests
 
 **Goal:** Test the user, media, listing, discovery, and payment API surfaces end-to-end.
 
@@ -162,7 +162,7 @@ All new tests must pass. Existing unit tests must still pass.
 
 ---
 
-## Step 7.4 — Phase 3-4 Backend Integration Tests
+## Step 5.4 — Phase 3-4 Backend Integration Tests
 
 **Goal:** Test the booking lifecycle, proximity, notifications, messaging, and AI agent surfaces.
 
@@ -200,7 +200,7 @@ cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s
 
 ---
 
-## Step 7.5 — Phase 1-4 Mobile Component Tests
+## Step 5.5 — Phase 1-4 Mobile Component Tests
 
 **Goal:** Write screen tests for the core mobile screens built in Phases 1-4.
 
@@ -247,7 +247,7 @@ cd mobile && npx jest --verbose
 
 ---
 
-## Step 7.6 — CI Pipeline Update
+## Step 5.6 — CI Pipeline Update
 
 **Goal:** Add integration tests and mobile tests to GitHub Actions CI.
 

@@ -687,19 +687,23 @@
       ]
     },
     {
-      "id": 7,
+      "id": 5,
       "name": "Test Infrastructure + Retroactive Coverage",
       "status": "pending",
-      "blockedBy": [4],
+      "blockedBy": [
+        4
+      ],
       "tasks": [
         {
-          "id": "7.1",
+          "id": "5.1",
           "name": "Backend integration test infrastructure",
           "status": "pending",
           "domain": "backend",
           "dependencies": [],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-71",
-          "prdRefs": ["cross-cutting.md (Testing)"],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-51",
+          "prdRefs": [
+            "cross-cutting.md (Testing)"
+          ],
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
@@ -707,61 +711,73 @@
           ]
         },
         {
-          "id": "7.2",
+          "id": "5.2",
           "name": "Mobile test infrastructure",
           "status": "pending",
           "domain": "mobile",
           "dependencies": [],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-72",
-          "prdRefs": ["cross-cutting.md (Testing)"],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-52",
+          "prdRefs": [
+            "cross-cutting.md (Testing)"
+          ],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest --passWithNoTests"
           ]
         },
         {
-          "id": "7.3",
+          "id": "5.3",
           "name": "Phase 1-2 backend integration tests",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-73",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-53",
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
-          "id": "7.4",
+          "id": "5.4",
           "name": "Phase 3-4 backend integration tests",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1", "7.3"],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-74",
+          "dependencies": [
+            "5.1",
+            "5.3"
+          ],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-54",
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
-          "id": "7.5",
+          "id": "5.5",
           "name": "Phase 1-4 mobile component tests",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["7.2"],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-75",
+          "dependencies": [
+            "5.2"
+          ],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-55",
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx jest --verbose"
           ]
         },
         {
-          "id": "7.6",
+          "id": "5.6",
           "name": "CI pipeline update for tests",
           "status": "pending",
           "domain": "infra",
-          "dependencies": ["7.1", "7.2"],
-          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-76",
+          "dependencies": [
+            "5.1",
+            "5.2"
+          ],
+          "planRef": ".claude/plan/phase-5-test-infrastructure.md#step-56",
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 300s",
@@ -771,18 +787,22 @@
       ]
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "Returns, Disputes, Trust",
       "status": "pending",
-      "blockedBy": [7],
+      "blockedBy": [
+        5
+      ],
       "tasks": [
         {
-          "id": "5.1",
+          "id": "6.1",
           "name": "Photo diff pipeline",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-51",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-61",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a711 (photo diff pipeline, two-stage)"
           ],
@@ -794,12 +814,15 @@
           ]
         },
         {
-          "id": "5.2",
+          "id": "6.2",
           "name": "DisputeAgent with escalation gate",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["5.1", "7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-52",
+          "dependencies": [
+            "6.1",
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-62",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a720 (escalation gate)",
             "rentmy-prd-v8.md \u00a77 (hold allocation)"
@@ -812,12 +835,14 @@
           ]
         },
         {
-          "id": "5.3",
+          "id": "6.3",
           "name": "LateReturnAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-53",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-63",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a719 (late return escalation)"
           ],
@@ -829,12 +854,15 @@
           ]
         },
         {
-          "id": "5.4",
+          "id": "6.4",
           "name": "Rating system (backend + RN)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1", "7.2"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-54",
+          "dependencies": [
+            "5.1",
+            "5.2"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-64",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a715 (rating bubbles)"
           ],
@@ -848,12 +876,15 @@
           ]
         },
         {
-          "id": "5.5",
+          "id": "6.5",
           "name": "Reputation score recalculation",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["5.4", "7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-55",
+          "dependencies": [
+            "6.4",
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-65",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a78 (reputation scoring)"
           ],
@@ -865,12 +896,14 @@
           ]
         },
         {
-          "id": "5.6",
+          "id": "6.6",
           "name": "Guarantee fund accounting",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-56",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-66",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
           ],
@@ -882,12 +915,17 @@
           ]
         },
         {
-          "id": "5.7",
+          "id": "6.7",
           "name": "Outcome linking (Agent Learning Framework)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["5.2", "5.3", "5.5", "7.1"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-57",
+          "dependencies": [
+            "6.2",
+            "6.3",
+            "6.5",
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-67",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a731 (agent learning framework)"
           ],
@@ -899,12 +937,16 @@
           ]
         },
         {
-          "id": "5.8",
+          "id": "6.8",
           "name": "Post-rental flow (RN)",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["5.2", "5.4", "7.2"],
-          "planRef": ".claude/plan/phase-5-closing-loop.md#step-58",
+          "dependencies": [
+            "6.2",
+            "6.4",
+            "5.2"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-68",
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
@@ -914,18 +956,22 @@
       ]
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "Operations + Growth",
       "status": "pending",
-      "blockedBy": [5],
+      "blockedBy": [
+        6
+      ],
       "tasks": [
         {
-          "id": "6.1",
+          "id": "7.1",
           "name": "OpsAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-6-operations.md#step-61",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-7-operations.md#step-71",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a725 (ops metrics, alerts)"
           ],
@@ -937,12 +983,14 @@
           ]
         },
         {
-          "id": "6.2",
+          "id": "7.2",
           "name": "FraudAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1"],
-          "planRef": ".claude/plan/phase-6-operations.md#step-62",
+          "dependencies": [
+            "5.1"
+          ],
+          "planRef": ".claude/plan/phase-7-operations.md#step-72",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a79 (fraud signals, WiFi compound-only)"
           ],
@@ -954,12 +1002,15 @@
           ]
         },
         {
-          "id": "6.3",
+          "id": "7.3",
           "name": "Ops dashboard (web)",
           "status": "pending",
           "domain": "web",
-          "dependencies": ["6.1", "6.2"],
-          "planRef": ".claude/plan/phase-6-operations.md#step-63",
+          "dependencies": [
+            "7.1",
+            "7.2"
+          ],
+          "planRef": ".claude/plan/phase-7-operations.md#step-73",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a725 (dashboard metrics)",
             "rentmy-prd-v8.md \u00a731 (agent learning dashboard)"
@@ -970,12 +1021,15 @@
           ]
         },
         {
-          "id": "6.4",
+          "id": "7.4",
           "name": "Referral system (backend + RN)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": ["7.1", "7.2"],
-          "planRef": ".claude/plan/phase-6-operations.md#step-64",
+          "dependencies": [
+            "5.1",
+            "5.2"
+          ],
+          "planRef": ".claude/plan/phase-7-operations.md#step-74",
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go vet ./...",

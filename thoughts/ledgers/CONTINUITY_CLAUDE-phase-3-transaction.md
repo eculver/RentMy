@@ -14,8 +14,8 @@ Full booking lifecycle: request → accept → check-in handoff → rental → r
 | 3.2 | ProximityService (backend) | ✅ completed | 12dc136 | GPS + PIN handoff, Twilio SMS fallback |
 | 3.3 | NotificationService (backend) | ✅ completed | c7a4b09 | Expo push, preferences, quiet hours |
 | 3.4 | MessagingService (backend) | ✅ completed | fd737f5 | Pusher real-time chat, booking status events |
-| 3.5 | Booking flow (RN) | pending | — | Host accept/decline, renter cancel screens |
-| 3.6 | Handoff screens (RN) | pending | — | Check-in/out with angle-enforced photos |
+| 3.5 | Booking flow (RN) | ✅ completed | 00c487a | Booking request, status, Pusher real-time, cancel modal |
+| 3.6 | Handoff screens (RN) | ✅ completed | eb43ac1 | Check-in/out GPS+PIN+photos, active rental timer |
 | 3.7 | Messaging screen (RN) | pending | — | Real-time chat UI |
 
 ---
@@ -85,3 +85,29 @@ Created `backend/internal/messaging/` package with in-transaction chat.
 
 **Open wiring for future tasks:**
 - Task 3.7 (Messaging screen RN) consumes the messaging API + Pusher channel for real-time chat UI.
+
+### Task 3.5 — Booking flow (RN)
+
+Created booking request, booking status, and real-time Pusher screens.
+
+**Key facts for future sessions:**
+- `booking-request.tsx` accepts `id`, `title`, `pricePerHour`, `pricePerDay`, `hostName` params from feed card.
+- `booking-status.tsx` subscribes to `private-transaction-{id}` Pusher channel for real-time updates.
+- `usePusher` hook creates one Pusher connection per invocation; disconnects on unmount.
+- `useBooking(id)` is the shared domain hook; exports `Booking` type used by all booking components.
+- `BookingCard`, `IncomingRequest`, `CancelConfirmation` components created in `mobile/components/booking/`.
+- `useRenterBookings` / `useHostBookings` hooks ready for a future bookings list screen.
+- Pusher auth endpoint (`/api/v1/pusher/auth`) still missing from backend; `usePusher` fails silently.
+
+### Task 3.6 — Handoff screens (RN)
+
+Created check-in, check-out, and active rental screens.
+
+**Key facts for future sessions:**
+- `useProximity(transactionId, proofType, isRenter)` is the central handoff state machine: GPS + PIN + photos.
+- `canComplete = gpsVerified && (isRenter ? pinVerified : true) && photos.length >= 3`.
+- `AngleEnforcedCamera` from Phase 1 is reused for both check-in and check-out photo capture.
+- `PINDisplay` fetches host's PIN from `GET /api/v1/bookings/:id/proximity`; `PINEntry` submits via `POST /api/v1/proximity/pin`.
+- Photo upload is deferred: `mediaIds: []` sent to check-in/out endpoints. Photo enforcement is client-side only.
+- `active-rental.tsx` has countdown timer and late return warning; "Report Issue" is a stub (Phase 5.2).
+- `booking-status.tsx` updated: ACCEPTED shows "Navigate to Pickup" (expo-linking to Maps); ACTIVE shows "Start Check-out" and "View Rental".

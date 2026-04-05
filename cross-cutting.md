@@ -5,11 +5,28 @@ These aren't a phase — they're woven into every phase as the relevant services
 ---
 
 ## Testing Strategy
-- Unit tests for all business logic (risk scoring, reputation calculation, tiered holds, cancellation fees, hold allocation caps)
-- Integration tests for service interactions (BookingService → PaymentService → ProximityService → HoldAllocation)
-- Agent decision quality tests: golden set of inputs → expected classifications (build the set as you go, expand with real data). After Phase 5, the outcome linking pipeline provides real-world validation data
-- E2E tests for critical path: register → list → discover → book → handoff → return → payout
-- State machine tests: every valid transition succeeds, every invalid transition is rejected
+
+### Infrastructure
+- **Backend integration tests:** testcontainers-go (real Postgres + Redis), in `backend/tests/integration/`
+- **Mobile component tests:** Jest + React Native Testing Library + MSW, in `mobile/__tests__/`
+- **CI:** Integration tests and mobile tests run in GitHub Actions on every PR
+
+### Per-Task Requirements
+Every task MUST include tests as part of the deliverable:
+- **Backend tasks:** unit tests for business logic (mocks/fakes) + integration tests for new endpoints (real DB)
+- **Mobile tasks:** component/screen tests (RNTL + MSW mocked API)
+- **All tasks:** existing tests must keep passing — test regressions block completion
+
+### Test Types
+- **Unit tests** for all business logic (risk scoring, reputation calculation, tiered holds, cancellation fees, hold allocation caps)
+- **Integration tests** for service interactions (BookingService → PaymentService → ProximityService → HoldAllocation) — tests hit real HTTP handlers with real Postgres
+- **Agent decision quality tests:** golden set of inputs → expected classifications (build the set as you go, expand with real data). After Phase 5, the outcome linking pipeline provides real-world validation data
+- **Mobile screen tests:** render real components, interact like a user, assert on visible output
+- **E2E tests** for critical path: register → list → discover → book → handoff → return → payout
+- **State machine tests:** every valid transition succeeds, every invalid transition is rejected
+
+### Phase 7 (Test Infrastructure)
+Phase 7 runs before Phase 5 and sets up all testing infrastructure plus retroactive tests for Phases 1-4. See `.claude/plan/phase-7-test-infrastructure.md`.
 
 ## Observability
 - Structured logging (zerolog or slog) from Phase 0

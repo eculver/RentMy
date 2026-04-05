@@ -687,19 +687,101 @@
       ]
     },
     {
+      "id": 7,
+      "name": "Test Infrastructure + Retroactive Coverage",
+      "status": "pending",
+      "blockedBy": [4],
+      "tasks": [
+        {
+          "id": "7.1",
+          "name": "Backend integration test infrastructure",
+          "status": "pending",
+          "domain": "backend",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-71",
+          "prdRefs": ["cross-cutting.md (Testing)"],
+          "verificationCommands": [
+            "cd backend && go vet ./...",
+            "cd backend && go build ./cmd/server",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 120s"
+          ]
+        },
+        {
+          "id": "7.2",
+          "name": "Mobile test infrastructure",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-72",
+          "prdRefs": ["cross-cutting.md (Testing)"],
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest --passWithNoTests"
+          ]
+        },
+        {
+          "id": "7.3",
+          "name": "Phase 1-2 backend integration tests",
+          "status": "pending",
+          "domain": "backend",
+          "dependencies": ["7.1"],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-73",
+          "prdRefs": [],
+          "verificationCommands": [
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
+          ]
+        },
+        {
+          "id": "7.4",
+          "name": "Phase 3-4 backend integration tests",
+          "status": "pending",
+          "domain": "backend",
+          "dependencies": ["7.1", "7.3"],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-74",
+          "prdRefs": [],
+          "verificationCommands": [
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
+          ]
+        },
+        {
+          "id": "7.5",
+          "name": "Phase 1-4 mobile component tests",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["7.2"],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-75",
+          "prdRefs": [],
+          "verificationCommands": [
+            "cd mobile && npx jest --verbose"
+          ]
+        },
+        {
+          "id": "7.6",
+          "name": "CI pipeline update for tests",
+          "status": "pending",
+          "domain": "infra",
+          "dependencies": ["7.1", "7.2"],
+          "planRef": ".claude/plan/phase-7-test-infrastructure.md#step-76",
+          "prdRefs": [],
+          "verificationCommands": [
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 300s",
+            "cd mobile && npx jest --ci"
+          ]
+        }
+      ]
+    },
+    {
       "id": 5,
       "name": "Returns, Disputes, Trust",
       "status": "pending",
-      "blockedBy": [
-        4
-      ],
+      "blockedBy": [7],
       "tasks": [
         {
           "id": "5.1",
           "name": "Photo diff pipeline",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-51",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a711 (photo diff pipeline, two-stage)"
@@ -707,7 +789,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -715,9 +798,7 @@
           "name": "DisputeAgent with escalation gate",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [
-            "5.1"
-          ],
+          "dependencies": ["5.1", "7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-52",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a720 (escalation gate)",
@@ -726,7 +807,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -734,7 +816,7 @@
           "name": "LateReturnAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-53",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a719 (late return escalation)"
@@ -742,7 +824,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -750,7 +833,7 @@
           "name": "Rating system (backend + RN)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1", "7.2"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-54",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a715 (rating bubbles)"
@@ -759,7 +842,9 @@
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
             "cd backend && go test ./... -v -count=1",
-            "cd mobile && npx tsc --noEmit"
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s",
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest"
           ]
         },
         {
@@ -767,9 +852,7 @@
           "name": "Reputation score recalculation",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [
-            "5.4"
-          ],
+          "dependencies": ["5.4", "7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-55",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a78 (reputation scoring)"
@@ -777,7 +860,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -785,7 +869,7 @@
           "name": "Guarantee fund accounting",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-56",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
@@ -793,7 +877,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -801,11 +886,7 @@
           "name": "Outcome linking (Agent Learning Framework)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [
-            "5.2",
-            "5.3",
-            "5.5"
-          ],
+          "dependencies": ["5.2", "5.3", "5.5", "7.1"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-57",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a731 (agent learning framework)"
@@ -813,7 +894,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -821,14 +903,12 @@
           "name": "Post-rental flow (RN)",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": [
-            "5.2",
-            "5.4"
-          ],
+          "dependencies": ["5.2", "5.4", "7.2"],
           "planRef": ".claude/plan/phase-5-closing-loop.md#step-58",
           "prdRefs": [],
           "verificationCommands": [
-            "cd mobile && npx tsc --noEmit"
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest"
           ]
         }
       ]
@@ -837,16 +917,14 @@
       "id": 6,
       "name": "Operations + Growth",
       "status": "pending",
-      "blockedBy": [
-        5
-      ],
+      "blockedBy": [5],
       "tasks": [
         {
           "id": "6.1",
           "name": "OpsAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1"],
           "planRef": ".claude/plan/phase-6-operations.md#step-61",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a725 (ops metrics, alerts)"
@@ -854,7 +932,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -862,7 +941,7 @@
           "name": "FraudAgent",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1"],
           "planRef": ".claude/plan/phase-6-operations.md#step-62",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a79 (fraud signals, WiFi compound-only)"
@@ -870,7 +949,8 @@
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
-            "cd backend && go test ./... -v -count=1"
+            "cd backend && go test ./... -v -count=1",
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ]
         },
         {
@@ -878,10 +958,7 @@
           "name": "Ops dashboard (web)",
           "status": "pending",
           "domain": "web",
-          "dependencies": [
-            "6.1",
-            "6.2"
-          ],
+          "dependencies": ["6.1", "6.2"],
           "planRef": ".claude/plan/phase-6-operations.md#step-63",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a725 (dashboard metrics)",
@@ -897,14 +974,16 @@
           "name": "Referral system (backend + RN)",
           "status": "pending",
           "domain": "backend",
-          "dependencies": [],
+          "dependencies": ["7.1", "7.2"],
           "planRef": ".claude/plan/phase-6-operations.md#step-64",
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go vet ./...",
             "cd backend && go build ./cmd/server",
             "cd backend && go test ./... -v -count=1",
-            "cd mobile && npx tsc --noEmit"
+            "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s",
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest"
           ]
         }
       ]

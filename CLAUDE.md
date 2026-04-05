@@ -367,6 +367,16 @@ git push -u origin task-1.1-user-service
 
 README.md files at every significant directory level. Keep them up to date. When you create a new directory, add a README.md explaining its purpose.
 
+**Root README.md:** The repo-level `README.md` is the project's public face. Update it whenever your task introduces changes that affect:
+- Project structure (new directories, renamed packages)
+- Setup instructions (new prerequisites, changed commands, new env vars)
+- Architecture (new services, infrastructure components)
+- Testing (new test types, changed test commands)
+- CI/CD (new jobs, changed triggers)
+- Roadmap (phase status changes)
+
+Check `README.md` before completing your task — if any of the above changed, update the relevant section. Do NOT rewrite the entire file; make targeted edits to keep the diff small.
+
 ---
 
 ## Guardrails

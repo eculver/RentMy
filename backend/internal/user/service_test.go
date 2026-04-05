@@ -70,6 +70,31 @@ func (f *fakeRepo) FindByEmail(_ context.Context, email string) (*user.User, str
 
 func (f *fakeRepo) UpdateLastActive(_ context.Context, _ string) error { return nil }
 
+func (f *fakeRepo) UpdateIdentityStatus(_ context.Context, id string, status user.IdentityStatus) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if u, ok := f.users[id]; ok {
+		u.IdentityStatus = status
+	}
+	return nil
+}
+
+func (f *fakeRepo) AddReputationScore(_ context.Context, id string, delta int) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if u, ok := f.users[id]; ok {
+		score := u.ReputationScore + delta
+		if score < 0 {
+			score = 0
+		}
+		if score > 1000 {
+			score = 1000
+		}
+		u.ReputationScore = score
+	}
+	return nil
+}
+
 func (f *fakeRepo) Update(_ context.Context, id string, in user.UpdateInput) (*user.User, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

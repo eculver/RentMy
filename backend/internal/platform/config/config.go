@@ -70,9 +70,10 @@ type Config struct {
 	MaxMapLimit             int `env:"MAX_MAP_LIMIT" envDefault:"200"`
 
 	// Stripe keys (test mode placeholders safe for development).
-	StripeSecretKey      string `env:"STRIPE_SECRET_KEY" envDefault:"sk_test_placeholder"`
-	StripePublishableKey string `env:"STRIPE_PUBLISHABLE_KEY" envDefault:"pk_test_placeholder"`
-	StripeWebhookSecret  string `env:"STRIPE_WEBHOOK_SECRET" envDefault:"whsec_placeholder"`
+	StripeSecretKey                string `env:"STRIPE_SECRET_KEY" envDefault:"sk_test_placeholder"`
+	StripePublishableKey           string `env:"STRIPE_PUBLISHABLE_KEY" envDefault:"pk_test_placeholder"`
+	StripeWebhookSecret            string `env:"STRIPE_WEBHOOK_SECRET" envDefault:"whsec_placeholder"`
+	StripeIdentityWebhookSecret    string `env:"STRIPE_IDENTITY_WEBHOOK_SECRET" envDefault:"whsec_identity_placeholder"`
 
 	// Payment config (PRD section 7 defaults).
 	TakeRateBPS         int `env:"TAKE_RATE_BPS" envDefault:"2000"`           // 20%

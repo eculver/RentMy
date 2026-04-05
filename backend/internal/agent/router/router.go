@@ -87,6 +87,12 @@ func New(cfg Config) (*AnthropicRouter, error) {
 	}, nil
 }
 
+// RenderPrompt renders the latest prompt template for the given agent name with data.
+// Returns the rendered text and the version string (e.g., "v1").
+func (r *AnthropicRouter) RenderPrompt(agentName string, data any) (string, string, error) {
+	return r.promptCache.Render(agentName, data)
+}
+
 // Route dispatches the input to the appropriate model tier based on the task.
 // TierNone tasks return immediately with an empty RouteOutput.
 func (r *AnthropicRouter) Route(ctx context.Context, input RouteInput, opts ...Option) (RouteOutput, error) {

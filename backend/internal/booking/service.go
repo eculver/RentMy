@@ -10,6 +10,8 @@ import (
 	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/proximity"
+
+	risk "github.com/giits/rentmy/backend/internal/agent/risk"
 )
 
 // Config holds tunable parameters for the booking service.
@@ -69,6 +71,7 @@ type Service struct {
 	proximitySvc    proximitySvc
 	notificationSvc notificationSvc
 	pusherSvc       pusherSvc
+	riskSvc         *risk.Service // nil-safe: when nil, risk checks are skipped
 	cfg             Config
 }
 
@@ -82,6 +85,12 @@ func NewService(repo *Repository, paymentSvc *payment.Service, riverClient river
 		notificationSvc: notificationSvc,
 		cfg:             cfg,
 	}
+}
+
+// WithRiskAgent attaches a RiskAgent service for per-transaction risk scoring.
+func (s *Service) WithRiskAgent(r *risk.Service) *Service {
+	s.riskSvc = r
+	return s
 }
 
 // WithPusher attaches a Pusher client so the service can fire booking-status-changed
@@ -144,6 +153,26 @@ func (s *Service) CreateBooking(ctx context.Context, in CreateInput) (payment.Bo
 	}
 	if fraudResult.Blocked {
 		return payment.BookingResult{}, fmt.Errorf("%w: %s", ErrFraudBlocked, fraudResult.BlockReason)
+	}
+
+	// Run RiskAgent scoring. Block the booking if the score is >= 71 (CRITICAL).
+	// The TransactionID is not yet known at this point; we pass empty string and
+	// the risk service will skip DB persistence (score is re-computed after booking
+	// creation if needed). The renter/host IDs and listing value are enough for
+	// the deterministic rules engine.
+	if s.riskSvc != nil {
+		riskResult, riskErr := s.riskSvc.ComputeRiskScore(ctx, risk.ComputeRiskInput{
+			RenterID: in.RenterID,
+			HostID:   hostID,
+		})
+		if riskErr != nil {
+			// Log and continue: a risk scoring failure must not block a booking.
+			slog.Warn("booking: risk scoring failed, proceeding without score",
+				"renterId", in.RenterID, "hostId", hostID, "error", riskErr)
+		} else if riskResult.Control == risk.ControlBlock {
+			return payment.BookingResult{}, fmt.Errorf("%w: risk score %d (CRITICAL)",
+				ErrFraudBlocked, riskResult.RiskScore)
+		}
 	}
 
 	// Delegate payment processing to the payment service.

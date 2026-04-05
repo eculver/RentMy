@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -128,6 +129,19 @@ func run() error {
 	)
 	verificationTimeoutWorker := verification.NewVerificationTimeoutWorker(verificationRepo, verificationSvcPre)
 
+	// Build a pre-river AppraisalService for worker registration.
+	// The real listingSvc and mediaSvc are not yet available; they are injected
+	// after all services are constructed below.
+	appraisalRepo := appraisal.NewRepository(pool)
+	// Placeholder services are replaced after listing/media services are built.
+	// The worker only calls Appraise(), which needs listingSvc and mediaSvc —
+	// we use a two-phase init: register worker with a service pointer, then
+	// swap deps via setters below.
+	appraisalSvcPre := appraisal.NewService(
+		appraisalRepo, nil, nil, modelRouter, decisionSvc, nil,
+	)
+	appraisalWorker := appraisal.NewAppraisalJobWorker(appraisalSvcPre)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -136,6 +150,7 @@ func run() error {
 	river.AddWorker(workers, notification.NewReturnApproachingWorker(notificationSvc))
 	river.AddWorker(workers, notification.NewQuietHoursDeferredWorker(notificationSvc))
 	river.AddWorker(workers, verificationTimeoutWorker)
+	river.AddWorker(workers, appraisalWorker)
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -220,6 +235,26 @@ func run() error {
 	listingRepo := listing.NewRepository(pool)
 	listingSvc := listing.NewService(listingRepo)
 	listingHandler := listing.NewHandler(listingSvc)
+
+	// Build the full AppraisalService now that listingSvc and mediaSvc are available.
+	// appraisalSvcPre was registered as a River worker above with nil deps;
+	// we build a fresh full service here (worker will use appraisalSvcPre which has
+	// nil listingSvc/mediaSvc — jobs enqueued after startup are handled by new workers
+	// that use the full service injected into the worker).
+	// To keep it simple, build one authoritative service and replace the pre-river one's
+	// internal deps isn't possible since NewService is a constructor. Instead, we
+	// re-create the service with all deps and re-register the worker below.
+	// Note: re-registering the worker is not possible after river.NewWorkers() returns.
+	// Solution: the pre-river service receives SetDeps after listing/media are available.
+	appraisalSvcFull := appraisal.NewService(
+		appraisalRepo, listingSvc, mediaSvc, modelRouter, decisionSvc, riverClient,
+	)
+	appraisalSvcPre.SetDeps(listingSvc, mediaSvc, riverClient)
+	appraisalHandler := appraisal.NewHandler(appraisalSvcFull)
+
+	// Wire the appraisal enqueuer into the listing service so that new listings
+	// automatically trigger AI appraisal.
+	listingSvc.WithAppraisalEnqueuer(appraisalSvcFull)
 
 	driveTimeClient := discovery.NewDriveTimeClient(cfg.OSRMBaseURL, redisClient)
 	discoveryRepo := discovery.NewRepository(pool)
@@ -308,6 +343,7 @@ func run() error {
 	notificationHandler.Mount(apiV1, authMW)
 	messagingHandler.Mount(apiV1, authMW)
 	verificationHandler.Mount(apiV1, authMW)
+	appraisalHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

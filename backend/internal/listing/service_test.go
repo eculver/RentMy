@@ -92,6 +92,15 @@ func (f *fakeRepo) AttachMedia(_ context.Context, listingID string, mediaIDs []s
 	return nil
 }
 
+func (f *fakeRepo) UpdateAppraisalFields(_ context.Context, id string, in AppraisalFieldsUpdate) error {
+	l, ok := f.listings[id]
+	if !ok {
+		return ErrNotFound
+	}
+	l.AppraisalStatus = in.AppraisalStatus
+	return nil
+}
+
 // --- tests ---
 
 func TestCreate_DefaultsStatusToPending(t *testing.T) {

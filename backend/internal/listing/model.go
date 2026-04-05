@@ -20,6 +20,15 @@ const (
 // MaxAllowedDuration is the 7-day ceiling enforced on listing max_duration.
 const MaxAllowedDuration = 7 * 24 * time.Hour
 
+// AppraisalStatus tracks the state of AI appraisal for a listing.
+type AppraisalStatus string
+
+const (
+	AppraisalStatusPending  AppraisalStatus = "PENDING"
+	AppraisalStatusComplete AppraisalStatus = "COMPLETE"
+	AppraisalStatusFailed   AppraisalStatus = "FAILED"
+)
+
 // Duration is a time.Duration that marshals to/from a Go duration string (e.g. "168h").
 type Duration time.Duration
 
@@ -64,6 +73,7 @@ type Listing struct {
 	Availability       json.RawMessage `json:"availability"`
 	HasVideo           bool            `json:"hasVideo"`
 	Status             ListingStatus   `json:"status"`
+	AppraisalStatus    AppraisalStatus `json:"appraisalStatus"`
 	CreatedAt          time.Time       `json:"createdAt"`
 }
 
@@ -101,4 +111,16 @@ type ListByHostResult struct {
 	Listings []*Listing `json:"listings"`
 	Total    int        `json:"total"`
 	Page     int        `json:"page"`
+}
+
+// AppraisalFieldsUpdate carries AI-generated fields to merge into a listing.
+// Only non-nil fields are written; existing non-empty strings are preserved.
+type AppraisalFieldsUpdate struct {
+	AIGeneratedTags            []byte
+	EstimatedValueCents        *int    // written only if listing.estimated_value is NULL
+	SuggestedTitle             *string // written only if listing.title is empty
+	SuggestedDescription       *string // written only if listing.description is empty
+	SuggestedPricePerHourCents *int    // written only if listing.price_per_hour is NULL (cents → dollars on write)
+	SuggestedPricePerDayCents  *int    // written only if listing.price_per_day is NULL
+	AppraisalStatus            AppraisalStatus
 }

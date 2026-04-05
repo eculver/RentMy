@@ -3,6 +3,7 @@ package listing
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -17,6 +18,13 @@ type RepositoryInterface interface {
 	FindByHostID(ctx context.Context, hostID string, page, limit int) ([]*Listing, int, error)
 	Update(ctx context.Context, id string, in UpdateListingInput) (*Listing, error)
 	AttachMedia(ctx context.Context, listingID string, mediaIDs []string) error
+	UpdateAppraisalFields(ctx context.Context, id string, in AppraisalFieldsUpdate) error
+}
+
+// AppraisalEnqueuer can asynchronously trigger AI appraisal for a listing.
+// Implemented by the appraisal agent service; injected via WithAppraisalEnqueuer.
+type AppraisalEnqueuer interface {
+	EnqueueAppraisal(ctx context.Context, listingID string) error
 }
 
 // ErrDurationExceedsLimit is returned when the requested max duration exceeds the 7-day ceiling.
@@ -29,7 +37,8 @@ var validate = validator.New()
 
 // Service implements listing business logic.
 type Service struct {
-	repo RepositoryInterface
+	repo             RepositoryInterface
+	appraisalEnqueue AppraisalEnqueuer // optional; nil until wired in main
 }
 
 // NewService constructs a Service backed by the concrete Repository.
@@ -41,6 +50,20 @@ func NewService(repo *Repository) *Service {
 // useful for unit testing with fakes.
 func NewServiceWithInterface(repo RepositoryInterface) *Service {
 	return &Service{repo: repo}
+}
+
+// WithAppraisalEnqueuer sets the appraisal enqueuer after construction.
+// This breaks a potential circular init dependency (listing ↔ appraisal).
+func (s *Service) WithAppraisalEnqueuer(e AppraisalEnqueuer) {
+	s.appraisalEnqueue = e
+}
+
+// UpdateAppraisalResult persists AI-generated fields back onto a listing.
+func (s *Service) UpdateAppraisalResult(ctx context.Context, listingID string, in AppraisalFieldsUpdate) error {
+	if err := s.repo.UpdateAppraisalFields(ctx, listingID, in); err != nil {
+		return fmt.Errorf("update appraisal result: %w", err)
+	}
+	return nil
 }
 
 // Create validates input, enforces the 7-day ceiling, and persists a new listing
@@ -73,6 +96,15 @@ func (s *Service) Create(ctx context.Context, hostID string, in CreateListingInp
 	if err != nil {
 		return nil, fmt.Errorf("create listing: %w", err)
 	}
+
+	// Enqueue AI appraisal asynchronously. Failure here is non-fatal:
+	// the listing was created successfully, and appraisal can be re-triggered.
+	if s.appraisalEnqueue != nil {
+		if err := s.appraisalEnqueue.EnqueueAppraisal(ctx, created.ID); err != nil {
+			slog.Warn("listing: failed to enqueue appraisal job", "listingId", created.ID, "error", err)
+		}
+	}
+
 	return created, nil
 }
 

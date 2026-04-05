@@ -49,7 +49,7 @@ func (r *Repository) Insert(ctx context.Context, l *Listing) (*Listing, error) {
 		          price_per_hour, price_per_day,
 		          min_duration, max_duration,
 		          ST_Y(location::geometry) AS loc_lat, ST_X(location::geometry) AS loc_lng,
-		          availability, has_video, status, created_at`
+		          availability, has_video, status, appraisal_status, created_at`
 
 	var (
 		lat *float64
@@ -79,7 +79,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*Listing, error) 
 		       price_per_hour, price_per_day,
 		       min_duration, max_duration,
 		       ST_Y(location::geometry) AS loc_lat, ST_X(location::geometry) AS loc_lng,
-		       availability, has_video, status, created_at
+		       availability, has_video, status, appraisal_status, created_at
 		FROM listings
 		WHERE id = $1`
 
@@ -107,7 +107,7 @@ func (r *Repository) FindByHostID(ctx context.Context, hostID string, page, limi
 		       price_per_hour, price_per_day,
 		       min_duration, max_duration,
 		       ST_Y(location::geometry) AS loc_lat, ST_X(location::geometry) AS loc_lng,
-		       availability, has_video, status, created_at
+		       availability, has_video, status, appraisal_status, created_at
 		FROM listings
 		WHERE host_id = $1
 		ORDER BY created_at DESC
@@ -149,7 +149,7 @@ func (r *Repository) Update(ctx context.Context, id string, in UpdateListingInpu
 		          price_per_hour, price_per_day,
 		          min_duration, max_duration,
 		          ST_Y(location::geometry) AS loc_lat, ST_X(location::geometry) AS loc_lng,
-		          availability, has_video, status, created_at`
+		          availability, has_video, status, appraisal_status, created_at`
 
 	var minDurInterval, maxDurInterval interface{}
 	if in.MinDuration != nil {
@@ -205,19 +205,20 @@ func (r *Repository) AttachMedia(ctx context.Context, listingID string, mediaIDs
 // It handles the PostGIS lat/lng columns and INTERVAL duration columns.
 func scanListing(row pgx.Row) (*Listing, error) {
 	var (
-		l          Listing
-		tags       []byte
-		avail      []byte
-		status     string
-		minDur     pgtype.Interval
-		maxDur     pgtype.Interval
-		locLat     *float64
-		locLng     *float64
-		estVal     *float64
-		hostVal    *float64
-		valJust    *string
-		priceHour  *float64
-		priceDay   *float64
+		l               Listing
+		tags            []byte
+		avail           []byte
+		status          string
+		appraisalStatus string
+		minDur          pgtype.Interval
+		maxDur          pgtype.Interval
+		locLat          *float64
+		locLng          *float64
+		estVal          *float64
+		hostVal         *float64
+		valJust         *string
+		priceHour       *float64
+		priceDay        *float64
 	)
 	err := row.Scan(
 		&l.ID, &l.HostID, &l.Title, &l.Description,
@@ -225,13 +226,14 @@ func scanListing(row pgx.Row) (*Listing, error) {
 		&priceHour, &priceDay,
 		&minDur, &maxDur,
 		&locLat, &locLng,
-		&avail, &l.HasVideo, &status, &l.CreatedAt,
+		&avail, &l.HasVideo, &status, &appraisalStatus, &l.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	l.Status = ListingStatus(status)
+	l.AppraisalStatus = AppraisalStatus(appraisalStatus)
 	l.AIGeneratedTags = jsonOrDefault(tags, "[]")
 	l.Availability = jsonOrDefault(avail, "[]")
 	l.EstimatedValue = estVal
@@ -246,6 +248,53 @@ func scanListing(row pgx.Row) (*Listing, error) {
 		l.Location = &Location{Lat: *locLat, Lng: *locLng}
 	}
 	return &l, nil
+}
+
+// UpdateAppraisalFields merges AI-generated fields into a listing row.
+// Existing non-empty title/description and non-null numeric fields are preserved via COALESCE/CASE.
+func (r *Repository) UpdateAppraisalFields(ctx context.Context, id string, in AppraisalFieldsUpdate) error {
+	// Convert cent integers to NUMERIC(10,2) dollar values.
+	var estValDollars *float64
+	if in.EstimatedValueCents != nil {
+		v := float64(*in.EstimatedValueCents) / 100.0
+		estValDollars = &v
+	}
+	var pricePerHourDollars *float64
+	if in.SuggestedPricePerHourCents != nil {
+		v := float64(*in.SuggestedPricePerHourCents) / 100.0
+		pricePerHourDollars = &v
+	}
+	var pricePerDayDollars *float64
+	if in.SuggestedPricePerDayCents != nil {
+		v := float64(*in.SuggestedPricePerDayCents) / 100.0
+		pricePerDayDollars = &v
+	}
+
+	const q = `
+		UPDATE listings SET
+			ai_generated_tags    = COALESCE($2, ai_generated_tags),
+			estimated_value      = COALESCE(estimated_value, $3),
+			title                = CASE WHEN title = '' THEN COALESCE($4, title) ELSE title END,
+			description          = CASE WHEN description = '' THEN COALESCE($5, description) ELSE description END,
+			price_per_hour       = COALESCE(price_per_hour, $6),
+			price_per_day        = COALESCE(price_per_day, $7),
+			appraisal_status     = $8
+		WHERE id = $1`
+
+	_, err := r.pool.Exec(ctx, q,
+		id,
+		in.AIGeneratedTags,
+		estValDollars,
+		in.SuggestedTitle,
+		in.SuggestedDescription,
+		pricePerHourDollars,
+		pricePerDayDollars,
+		string(in.AppraisalStatus),
+	)
+	if err != nil {
+		return fmt.Errorf("update appraisal fields: %w", err)
+	}
+	return nil
 }
 
 // durationToInterval converts a *Duration to a pgtype.Interval for pgx.

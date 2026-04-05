@@ -570,7 +570,7 @@
         {
           "id": "4.3",
           "name": "AppraisalAgent",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "backend",
           "dependencies": [
             "4.1"

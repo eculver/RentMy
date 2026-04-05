@@ -122,6 +122,15 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Media, error) {
 	return m, nil
 }
 
+// GetByListingID returns all media records attached to a listing.
+func (s *Service) GetByListingID(ctx context.Context, listingID string) ([]*Media, error) {
+	media, err := s.repo.FindByListingID(ctx, listingID)
+	if err != nil {
+		return nil, fmt.Errorf("get media by listing: %w", err)
+	}
+	return media, nil
+}
+
 // objectURL constructs the public URL for an S3 object.
 func (s *Service) objectURL(bucket, key string) string {
 	return fmt.Sprintf("%s/%s/%s", s.storageURL, bucket, key)

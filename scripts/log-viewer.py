@@ -15,6 +15,7 @@ Usage (from run-agent.sh):
 import argparse
 import json
 import os
+import re
 import signal
 import sys
 import time
@@ -78,8 +79,12 @@ def truncate(s, width):
 
 # ── Event parsing ─────────────────────────────────────────────────────────────
 
-def summarize_event(line):
-    """Parse a stream-json line and return a compact one-line summary, or None to skip."""
+def summarize_event(line, viewport=None):
+    """Parse a stream-json line and return a compact one-line summary, or None to skip.
+
+    If a Viewport is passed, updates its model and commit_count fields
+    as relevant events are encountered.
+    """
     try:
         event = json.loads(line)
     except (json.JSONDecodeError, TypeError):
@@ -94,6 +99,8 @@ def summarize_event(line):
         subtype = event.get("subtype", "")
         if subtype == "init":
             model = event.get("model", "")
+            if model and viewport is not None:
+                viewport.model = model
             return dim(f"session started ({model})") if model else dim("session started")
         return None
 
@@ -127,11 +134,16 @@ def summarize_event(line):
     # ── tool_result ──
     if etype == "tool_result":
         subtype = event.get("subtype", "")
+        content = event.get("content", "")
         if subtype == "error":
-            error = event.get("error", event.get("content", ""))
+            error = event.get("error", content)
             if isinstance(error, str):
                 error = error.split("\n")[0][:120]
             return yellow(f"  error: {error}")
+        # Detect successful git commits from output (e.g., "[branch hash] message")
+        if isinstance(content, str) and viewport is not None:
+            if re.search(r'^\[[\w/.-]+ [0-9a-f]{7,}\]', content, re.MULTILINE):
+                viewport.commit_count += 1
         # Success results are usually too verbose — skip unless short
         return None
 
@@ -173,8 +185,8 @@ def _format_tool_use(block):
     if name == "Bash":
         cmd = inp.get("command", "?")
         # Show first line (truncate() handles length)
-        cmd = cmd.split("\n")[0].strip()
-        return cyan("[Bash]") + f" {cmd}"
+        first_line = cmd.split("\n")[0].strip()
+        return cyan("[Bash]") + f" {first_line}"
 
     if name in ("Grep",):
         pattern = inp.get("pattern", "?")
@@ -207,14 +219,16 @@ def _short_path(path):
 # ── Viewport renderer ─────────────────────────────────────────────────────────
 
 class Viewport:
-    def __init__(self, task_label, log_path, session_num, branching):
+    def __init__(self, task_label, log_path, session_num, graphite_enabled):
         self.task_label = task_label
         self.log_path = log_path
         self.session_num = session_num
-        self.branching = branching
+        self.graphite_enabled = graphite_enabled
         self.start_time = datetime.now()
         self.buffer = []
         self.event_count = 0
+        self.commit_count = 0
+        self.model = ""
         self.rows, self.cols = get_size()
         self.header_height = 0  # computed on first draw
 
@@ -229,13 +243,21 @@ class Viewport:
 
         w = self.cols
         bar = dim("\u2500" * w)
+
+        title = bold("  RentMy Autonomous Coding Agent")
+        if self.model:
+            title += dim(f"  ({self.model})")
+
+        graphite_str = green("yes") if self.graphite_enabled else dim("no")
+        commits_str = f"  Commits: {bold(str(self.commit_count))}" if self.commit_count else ""
+
         lines = [
             bar,
-            bold("  RentMy Autonomous Coding Agent"),
+            title,
             bar,
-            f"  Task:     {self.task_label}",
-            f"  Session:  {self.session_num}  |  Elapsed: {elapsed_str}  |  Events: {self.event_count}",
-            f"  Branch:   {self.branching}",
+            f"  Task:      {self.task_label}",
+            f"  Session:   {self.session_num}  |  Elapsed: {elapsed_str}  |  Events: {self.event_count}{commits_str}",
+            f"  Graphite:  {graphite_str}",
             bar,
             dim(f"  Full logs: tail -f {self.log_path}"),
             bar,
@@ -310,14 +332,14 @@ def main():
     parser.add_argument("--task", default="unknown", help="Task label to display in header")
     parser.add_argument("--log-path", default="(see thoughts/agent-logs/)", help="Path to full log file")
     parser.add_argument("--session", default="1", help="Session number")
-    parser.add_argument("--branching", default="vanilla git", help="Branching mode label")
+    parser.add_argument("--graphite", action="store_true", help="Graphite is enabled")
     args = parser.parse_args()
 
     vp = Viewport(
         task_label=args.task,
         log_path=args.log_path,
         session_num=args.session,
-        branching=args.branching,
+        graphite_enabled=args.graphite,
     )
 
     # Handle resize
@@ -345,9 +367,8 @@ def main():
 
     try:
         for raw_line in sys.stdin:
-            summary = summarize_event(raw_line)
+            summary = summarize_event(raw_line, viewport=vp)
             if summary is not None:
-                # Strip ANSI for length calc but keep for display
                 vp.add_line(summary)
     except KeyboardInterrupt:
         pass

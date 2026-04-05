@@ -155,13 +155,6 @@ sys.exit(1)
 
 LOG_VIEWER="$REPO_ROOT/scripts/log-viewer.py"
 
-# Branching label for display
-if $USE_GT; then
-  BRANCH_LABEL="Graphite ($($GT --version 2>/dev/null || echo '?'))"
-else
-  BRANCH_LABEL="vanilla git"
-fi
-
 # Main loop
 SESSION_COUNT=0
 
@@ -218,16 +211,16 @@ while true; do
 
   # Run Claude Code session with viewport log viewer
   # Full JSON logs go to $LOG_FILE; the viewer shows a compact rolling summary
+  # Build viewer flags
+  VIEWER_FLAGS=(--task "$NEXT_TASK" --log-path "$LOG_FILE" --session "$SESSION_COUNT")
+  $USE_GT && VIEWER_FLAGS+=(--graphite)
+
   claude --print \
     "Read CLAUDE.md, then follow the Session Workflow to implement the next task. One task only. ${BRANCH_INSTRUCTION}${RECOVERY_INSTRUCTION}" \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
     --verbose \
-    2>&1 | tee "$LOG_FILE" | python3 "$LOG_VIEWER" \
-      --task "$NEXT_TASK" \
-      --log-path "$LOG_FILE" \
-      --session "$SESSION_COUNT" \
-      --branching "$BRANCH_LABEL" &
+    2>&1 | tee "$LOG_FILE" | python3 "$LOG_VIEWER" "${VIEWER_FLAGS[@]}" &
   AGENT_PID=$!
   wait "$AGENT_PID" 2>/dev/null
   EXIT_CODE=$?

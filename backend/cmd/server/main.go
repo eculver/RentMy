@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/agent/agreement"
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
@@ -148,6 +149,10 @@ func run() error {
 	riskSvc := risk.NewService(riskRepo, decisionSvc)
 	monthlyReputationWorker := risk.NewMonthlyReputationWorker(riskSvc)
 	decayCheckWorker := risk.NewDecayCheckWorker(riskSvc)
+
+	// Build AgreementAgent service (no River workers needed — generation is synchronous).
+	agreementRepo := agreement.NewRepository(pool)
+	agreementSvc := agreement.NewService(agreementRepo, modelRouter, decisionSvc)
 
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
@@ -322,7 +327,7 @@ func run() error {
 		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
 		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
-	bookingSvc.WithPusher(pusherClient).WithRiskAgent(riskSvc)
+	bookingSvc.WithPusher(pusherClient).WithRiskAgent(riskSvc).WithAgreementAgent(agreementSvc)
 	bookingHandler := booking.NewHandler(bookingSvc, paymentSvc)
 
 	// Build MessagingService.
@@ -344,6 +349,9 @@ func run() error {
 	// Build the RiskAgent HTTP handler.
 	riskHandler := risk.NewHandler(riskSvc)
 
+	// Build the AgreementAgent HTTP handler.
+	agreementHandler := agreement.NewHandler(agreementSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
@@ -357,6 +365,7 @@ func run() error {
 	verificationHandler.Mount(apiV1, authMW)
 	appraisalHandler.Mount(apiV1, authMW)
 	riskHandler.Mount(apiV1, authMW)
+	agreementHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

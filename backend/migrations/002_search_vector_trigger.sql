@@ -3,6 +3,7 @@
 -- The vector is built from title (weight A) and description (weight B).
 -- This enables fast GIN-indexed fulltext search for the discovery feed.
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_listing_search_vector()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -12,6 +13,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 CREATE TRIGGER trig_listing_search_vector
 BEFORE INSERT OR UPDATE OF title, description ON listings

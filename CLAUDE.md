@@ -313,3 +313,18 @@ README.md files at every significant directory level. Keep them up to date. When
 - Do NOT add dependencies without documenting rationale in the handoff doc
 - Do NOT remove or edit existing tests to make them pass
 - Do NOT commit secrets or credentials
+
+---
+
+## Phase Revision Policy (Always Forward)
+
+Phases are **append-only** once any task within them has been completed. If a completed phase needs rework:
+
+1. **Do NOT** re-run the agent against a modified phase spec — the agent cannot diff old vs. new specs and will either re-implement from scratch (breaking downstream code) or skip changes entirely.
+2. **Instead**, create a new refinement phase with surgical tasks that describe the delta:
+   - Task names describe the change: "Migrate SearchService from tsvector to Meilisearch"
+   - Dependencies point to the original tasks being refined
+   - The agent gets clear "change X to Y" instructions
+3. **Exception:** if a phase hasn't started yet (all tasks `"pending"`), it's safe to update the plan docs and run normally — no existing code to conflict with.
+4. Add the refinement phase to `.claude/progress.json` with the next available phase ID.
+5. Create a corresponding plan file: `.claude/plan/phase-{N}-{name}.md`

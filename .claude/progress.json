@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-04-04T00:00:00Z",
   "lastSession": {
-    "taskId": "3.4",
+    "taskId": "3.5",
     "status": "completed",
-    "commitSha": "fd737f5",
+    "commitSha": "00c487a",
     "timestamp": "2026-04-04T00:00:00Z"
   },
   "phases": [
@@ -465,7 +465,7 @@
         {
           "id": "3.5",
           "name": "Booking flow (RN)",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "3.1"
@@ -474,7 +474,10 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
-          ]
+          ],
+          "commitSha": "00c487a",
+          "handoff": "thoughts/handoffs/phase-3-transaction/task-35-booking-flow.md",
+          "verificationPassed": true
         },
         {
           "id": "3.6",

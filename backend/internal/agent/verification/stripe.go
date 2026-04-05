@@ -47,8 +47,9 @@ func (a *stripeIdentityAdapter) CreateVerificationSession(_ context.Context, use
 	}
 
 	return StripeSessionResult{
-		SessionID:  session.ID,
-		SessionURL: session.URL,
+		SessionID:          session.ID,
+		SessionURL:         session.URL,
+		EphemeralKeySecret: session.ClientSecret,
 	}, nil
 }
 

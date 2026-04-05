@@ -7,10 +7,13 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8080";
 // Minimal ky instance for auth calls — no auth header needed
 const authApi = ky.create({ prefixUrl: API_URL, timeout: 10000, retry: 0 });
 
+export type IdentityStatus = "PENDING" | "VERIFIED" | "REJECTED" | "ESCALATED";
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  identityStatus?: IdentityStatus;
 }
 
 interface AuthResponse {
@@ -31,6 +34,7 @@ interface AuthState {
   loginWithCredentials: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   refreshTokens: () => Promise<boolean>;
+  setIdentityStatus: (status: IdentityStatus) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -82,6 +86,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       .post("api/v1/auth/register", { json: { name, email, password } })
       .json<AuthResponse>();
     await get().login(data.accessToken, data.refreshToken, data.user);
+  },
+
+  setIdentityStatus: (status: IdentityStatus) => {
+    const { user } = get();
+    if (!user) return;
+    const updated = { ...user, identityStatus: status };
+    void SecureStore.setItemAsync("auth_user", JSON.stringify(updated));
+    set({ user: updated });
   },
 
   refreshTokens: async (): Promise<boolean> => {

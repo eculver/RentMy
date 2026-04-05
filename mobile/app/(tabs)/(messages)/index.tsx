@@ -1,10 +1,28 @@
-import { View, Text } from "react-native";
+import { SafeAreaView } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useConversations } from "../../../lib/hooks/useConversations";
+import ConversationList from "../../../components/messaging/ConversationList";
 
 export default function MessagesScreen() {
+  const queryClient = useQueryClient();
+  const { data, isLoading, error, refetch, isRefetching } = useConversations();
+
+  const conversations = data?.conversations ?? [];
+
+  const handleRefresh = () => {
+    void refetch();
+    void queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
+  };
+
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-xl font-semibold">Messages</Text>
-      <Text className="text-gray-400 mt-2">Your conversations</Text>
-    </View>
+    <SafeAreaView className="flex-1 bg-white">
+      <ConversationList
+        conversations={conversations}
+        isLoading={isLoading}
+        error={error}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefetching}
+      />
+    </SafeAreaView>
   );
 }

@@ -1,7 +1,7 @@
-# Phase 5 — Returns, Disputes, Trust / Closing the Loop Implementation Plan
+# Phase 6 — Returns, Disputes, Trust / Closing the Loop Implementation Plan
 
 > **Scope:** Wk 11-14. Returns verified via photo diff, damage detected, disputes resolved through escalation gate, reputation updated, payouts land. The platform can run autonomously.
-> **Exit criteria:** CV+LLM photo diff detects damage, disputes resolve via hold allocation with damage reserve, reputation scores update, guarantee fund tracks reserve ratio, outcome linking feeds learning framework. Phase 6 is unblocked.
+> **Exit criteria:** CV+LLM photo diff detects damage, disputes resolve via hold allocation with damage reserve, reputation scores update, guarantee fund tracks reserve ratio, outcome linking feeds learning framework. Phase 7 is unblocked.
 > **Blockers:** Phases 1-4 complete (Users, Listings, Bookings, Payments, Handoff, Messaging, AI Agents)
 
 ## Resolved Decisions
@@ -62,7 +62,7 @@ No new dependencies for Phase 5. Camera (react-native-vision-camera), gyroscope 
 
 ## Implementation Steps
 
-### Step 5.1 — Photo Diff Pipeline (backend + Python sidecar)
+### Step 6.1 — Photo Diff Pipeline (backend + Python sidecar)
 
 **Create:**
 - `cv-service/` (repo root) — Python sidecar project directory
@@ -126,7 +126,7 @@ curl -sf -X POST http://localhost:8080/api/v1/transactions/$TXN_ID/photo-diff \
 # Should return 200 with {result, confidence}
 ```
 
-### Step 5.2 — DisputeAgent with Escalation Gate (backend)
+### Step 6.2 — DisputeAgent with Escalation Gate (backend)
 
 **Create:**
 - `backend/internal/dispute/model.go` — Dispute domain type, DisputeInput (reporter, reason, evidence references), DisputeDecision, EscalationRoute enum (`AUTO_RESOLVE`, `AUTO_RESOLVE_AUDIT`, `HUMAN_REVIEW`), HumanReviewItem
@@ -181,7 +181,7 @@ curl -sf -X POST http://localhost:8080/api/v1/transactions/$TXN_ID/disputes \
 cd backend && go test ./internal/dispute/ -run TestEscalationGate -v
 ```
 
-### Step 5.3 — LateReturnAgent (backend)
+### Step 6.3 — LateReturnAgent (backend)
 
 **Create:**
 - `backend/internal/latereturn/model.go` — LateReturnInput, LateReturnDecision, EscalationLevel enum (`CHARGING`, `WARNING`, `ESCALATED_TO_DISPUTE`, `FLAGGED_FOR_REVIEW`)
@@ -214,7 +214,7 @@ cd backend && go test ./internal/latereturn/ -run TestLateFeeCap -v
 # Verify: remaining hold after late fees >= holdAmount * 0.4 (damage reserve)
 ```
 
-### Step 5.4 — Rating System (backend + RN)
+### Step 6.4 — Rating System (backend + RN)
 
 **Create:**
 - `backend/internal/rating/model.go` — Rating domain type, CreateRatingInput (transactionID, bubbles array), valid bubble constants:
@@ -254,7 +254,7 @@ curl -sf -X POST http://localhost:8080/api/v1/transactions/$TXN_ID/ratings \
 cd mobile && npx tsc --noEmit
 ```
 
-### Step 5.5 — Reputation Score Recalculation (backend)
+### Step 6.5 — Reputation Score Recalculation (backend)
 
 **Create:**
 - `backend/internal/reputation/model.go` — ReputationSignal types:
@@ -300,7 +300,7 @@ cd backend && go test ./internal/reputation/... -v -count=1
 # 5. Score never goes below 0 or above 1000
 ```
 
-### Step 5.6 — Guarantee Fund Accounting (backend)
+### Step 6.6 — Guarantee Fund Accounting (backend)
 
 **Create:**
 - `backend/internal/guaranteefund/model.go` — GuaranteeFundEntry domain type, EntryType enum (`CONTRIBUTION`, `CLAIM`, `CARD_RECOVERY`, `COLLECTIONS_REFERRAL`), FundHealth struct (balance, outstandingGaps, reserveRatio, lossRatio)
@@ -337,7 +337,7 @@ cd backend && go test ./internal/guaranteefund/ -run TestDoubleEntry -v
 # Verify: reserve ratio alerts fire at correct thresholds
 ```
 
-### Step 5.7 — Outcome Linking (Agent Learning Framework)
+### Step 6.7 — Outcome Linking (Agent Learning Framework)
 
 **Create:**
 - `backend/internal/outcome/model.go` — OutcomeLinkInput (transactionID, agentDecisionID), OutcomeRule per agent type (maps to PRD 31 table)
@@ -382,7 +382,7 @@ cd backend && go test ./internal/outcome/ -run TestDisputeOutcome -v
 # Verify: calibration metrics update correctly per bucket
 ```
 
-### Step 5.8 — Post-Rental Flow (RN)
+### Step 6.8 — Post-Rental Flow (RN)
 
 **Create:**
 - `mobile/app/(tabs)/(rentals)/return-confirmation.tsx` — Return confirmation screen: shows transaction summary, both parties' check-out photos, photo diff status (pending/complete), hold release status

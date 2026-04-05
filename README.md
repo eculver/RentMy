@@ -159,7 +159,7 @@ RentMy/
 ├── migrations/                 # Database migrations (goose SQL)
 ├── terraform/                  # Infrastructure as Code
 ├── scripts/                    # Helper scripts
-├── ops/                        # Ops dashboard (Vite + React, Phase 6)
+├── ops/                        # Ops dashboard (Vite + React, Phase 7)
 ├── docker-compose.yml          # Local development services
 ├── .env.example                # Environment variable template
 └── .github/workflows/ci.yml   # CI pipeline
@@ -299,9 +299,9 @@ See `.github/workflows/ci.yml` for the full pipeline.
 | 2 | Complete | Discovery + Payments (search, maps, Stripe, feed/search/checkout screens) |
 | 3 | Complete | Transactions (booking state machine, proximity, notifications, messaging) |
 | 4 | Complete | AI Agents (model router, verification, appraisal, risk, agreement agents) |
-| 7 | Next | Test Infrastructure (testcontainers, Jest+RNTL, retroactive coverage, CI) |
-| 5 | Planned | Returns, Disputes, Trust (photo diff, dispute agent, reputation, guarantee fund) |
-| 6 | Planned | Operations + Growth (ops dashboard, fraud agent, referrals) |
+| 5 | Next | Test Infrastructure (testcontainers, Jest+RNTL, retroactive coverage, CI) |
+| 6 | Planned | Returns, Disputes, Trust (photo diff, dispute agent, reputation, guarantee fund) |
+| 7 | Planned | Operations + Growth (ops dashboard, fraud agent, referrals) |
 
 See `.claude/progress.json` for detailed task-level status.
 

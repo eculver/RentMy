@@ -17,7 +17,7 @@ AI takes over verification, appraisal, risk scoring, and agreement generation. L
 | 4.5 | AgreementAgent | completed | e3104da | task-4.5-agreement-agent |
 | 4.6 | Wire KYC into booking flow (RN) | completed | c95c3ae | task-4.6-kyc-booking-flow |
 | 4.7 | Wire AI autofill into listing creation (RN) | completed | 3a4527b | task-4.7-ai-autofill |
-| 4.8 | Backfill existing data | pending | — | — |
+| 4.8 | Backfill existing data | completed | ddf60d4 | task-4.8-backfill-existing-data |
 
 ---
 
@@ -58,7 +58,7 @@ AI takes over verification, appraisal, risk scoring, and agreement generation. L
 - **4.4**: River periodic jobs not yet scheduled — workers are registered but must be triggered manually or wired to River's `PeriodicJobs` config in Phase 6.
 - **4.5 (next)**: AgreementAgent requires base template JSON (`base_template_v1.json` exists from 4.1), guardrail validation, and `agreement_snapshot` JSONB on transactions.
 - **4.6**: KYC gate in mobile requires `@stripe/stripe-identity-react-native` install.
-- **4.8**: Backfill jobs need 4.3 and 4.4 both complete — ready to implement.
+- **4.8 DONE**: Three River workers + admin endpoints. No `backfilled: true` metadata (decision struct has no metadata field; analytics can use timestamp comparison). Phase 4 now fully complete — Phase 5 unblocked.
 
 ---
 

@@ -153,21 +153,17 @@ sys.exit(1)
 "
 }
 
+LOG_VIEWER="$REPO_ROOT/scripts/log-viewer.py"
+
+# Branching label for display
+if $USE_GT; then
+  BRANCH_LABEL="Graphite ($($GT --version 2>/dev/null || echo '?'))"
+else
+  BRANCH_LABEL="vanilla git"
+fi
+
 # Main loop
 SESSION_COUNT=0
-
-echo "=========================================="
-echo "  RentMy Autonomous Coding Agent"
-echo "  (Graphite stacked branches)"
-echo "=========================================="
-echo "Progress file: $PROGRESS_FILE"
-echo "Target phase:  ${TARGET_PHASE:-all}"
-if $USE_GT; then
-  echo "Branching:     Graphite ($GT, $($GT --version))"
-else
-  echo "Branching:     vanilla git (Graphite unavailable)"
-fi
-echo ""
 
 while true; do
   # Check completion
@@ -199,12 +195,10 @@ while true; do
   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
   LOG_FILE="$LOG_DIR/session-${SESSION_COUNT}-${TIMESTAMP}.log"
 
-  echo ""
-  echo "--- Session $SESSION_COUNT ---"
-  echo "Next: $NEXT_TASK"
-  echo "Log:  $LOG_FILE"
-
   if $DRY_RUN; then
+    echo "--- Session $SESSION_COUNT (dry run) ---"
+    echo "Next: $NEXT_TASK"
+    echo "Log:  $LOG_FILE"
     echo "(dry run — not executing)"
     exit 0
   fi
@@ -222,13 +216,18 @@ while true; do
     RECOVERY_INSTRUCTION=" A previous session was interrupted — follow the Recovery Protocol in CLAUDE.md before starting new work."
   fi
 
-  # Run Claude Code session
+  # Run Claude Code session with viewport log viewer
+  # Full JSON logs go to $LOG_FILE; the viewer shows a compact rolling summary
   claude --print \
     "Read CLAUDE.md, then follow the Session Workflow to implement the next task. One task only. ${BRANCH_INSTRUCTION}${RECOVERY_INSTRUCTION}" \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
     --verbose \
-    2>&1 | tee "$LOG_FILE" &
+    2>&1 | tee "$LOG_FILE" | python3 "$LOG_VIEWER" \
+      --task "$NEXT_TASK" \
+      --log-path "$LOG_FILE" \
+      --session "$SESSION_COUNT" \
+      --branching "$BRANCH_LABEL" &
   AGENT_PID=$!
   wait "$AGENT_PID" 2>/dev/null
   EXIT_CODE=$?
@@ -236,6 +235,7 @@ while true; do
 
   echo ""
   echo "Session $SESSION_COUNT finished (exit code: $EXIT_CODE)"
+  echo "Full log: $LOG_FILE"
 
   # Validate progress.json after session
   if ! python3 -m json.tool "$PROGRESS_FILE" > /dev/null 2>&1; then

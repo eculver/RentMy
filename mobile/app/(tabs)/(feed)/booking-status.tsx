@@ -16,6 +16,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../../lib/auth";
 import { useBooking, type BookingStatus } from "../../../lib/hooks/useBooking";
@@ -282,38 +283,54 @@ export default function BookingStatusScreen() {
         {/* Action buttons */}
         {!isTerminal && (
           <View className="gap-y-3">
-            {/* Renter: navigate to pickup when accepted */}
+            {/* Renter: navigate to pickup and start check-in when accepted */}
             {isRenter && booking.status === "ACCEPTED" && (
-              <Pressable
-                className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/(feed)/check-in" as never,
-                    params: { transactionId: booking.id },
-                  })
-                }
-              >
-                <Ionicons name="navigate-outline" size={18} color="white" />
-                <Text className="text-white font-semibold text-base">
-                  Start check-in
-                </Text>
-              </Pressable>
+              <>
+                <Pressable
+                  className="bg-gray-100 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
+                  onPress={() => {
+                    const url = `maps://maps.apple.com/?q=RentMy+pickup+${booking.listingId}`;
+                    void Linking.openURL(url).catch(() =>
+                      Alert.alert("Maps unavailable", "Could not open Maps on this device."),
+                    );
+                  }}
+                >
+                  <Ionicons name="navigate-outline" size={18} color="#374151" />
+                  <Text className="text-gray-700 font-semibold text-base">
+                    Navigate to pickup
+                  </Text>
+                </Pressable>
+                <Pressable
+                  className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/(feed)/check-in" as never,
+                      params: { transactionId: booking.id },
+                    })
+                  }
+                >
+                  <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                  <Text className="text-white font-semibold text-base">
+                    Start check-in
+                  </Text>
+                </Pressable>
+              </>
             )}
 
-            {/* Active: navigate to return */}
+            {/* Active: manage the in-progress rental */}
             {booking.status === "ACTIVE" && (
               <Pressable
                 className="bg-green-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                 onPress={() =>
                   router.push({
-                    pathname: "/(tabs)/(feed)/check-out" as never,
+                    pathname: "/(tabs)/(feed)/active-rental" as never,
                     params: { transactionId: booking.id },
                   })
                 }
               >
-                <Ionicons name="arrow-undo-outline" size={18} color="white" />
+                <Ionicons name="play-circle-outline" size={18} color="white" />
                 <Text className="text-white font-semibold text-base">
-                  Start check-out
+                  Manage active rental
                 </Text>
               </Pressable>
             )}

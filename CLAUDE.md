@@ -100,13 +100,40 @@ Every session follows this protocol. No exceptions.
 
 ### Recovery Protocol
 
-If progress.json shows a task as `"in_progress"` at session start:
+If progress.json shows a task as `"in_progress"` at session start, **you are resuming an interrupted session**. Follow these steps in order:
 
-1. Check `git log --oneline -5` for commits since the task started
-2. If commits exist: verify them (run tests). If they pass, update progress.json to `"completed"`
-3. If no commits: check `git diff` for uncommitted changes
-4. If changes look salvageable: continue the task from where it left off
-5. If changes are broken: ask the user before discarding
+**Step 1 — Identify the interrupted task and its expected branch:**
+```bash
+# Find the in-progress task ID and name from progress.json
+# Expected branch: task-{N}.{M}-{short-name}
+git branch --show-current
+git log --oneline -10
+git diff --stat
+git stash list
+```
+
+**Step 2 — Assess the state (pick the first matching scenario):**
+
+| Scenario | Git state | Action |
+|----------|-----------|--------|
+| **A. Committed & verified** | On task branch, commits exist, tests pass | Complete the task: write handoff doc, update progress.json to `"completed"`, push |
+| **B. Committed but broken** | On task branch, commits exist, tests fail | Fix the failing code, re-verify, then complete |
+| **C. Uncommitted changes** | On task branch, `git diff` shows changes | Read the diff to understand what was done. Continue implementing from where it left off. Do NOT discard the changes. |
+| **D. Branch exists, no changes** | On task branch, clean working tree, no new commits | The previous session created the branch but didn't start coding. Begin implementation. |
+| **E. Wrong branch** | Not on the expected task branch | Check if the task branch exists (`git branch --list "task-*"`). If yes, switch to it and re-assess. If no, create it. |
+| **F. Stashed changes** | `git stash list` shows entries | Pop the stash (`git stash pop`), assess the changes, continue implementation. |
+
+**Step 3 — Resume:**
+- Read the task's phase plan and PRD refs (you don't have context from the previous session)
+- Read any handoff docs for dependency tasks
+- Continue from wherever the previous session left off
+- Follow the normal workflow from step 7 onward (implement → verify → commit → handoff → push)
+
+**Rules for autonomous recovery (no human present):**
+- NEVER discard uncommitted changes — always attempt to continue from them
+- NEVER reset the branch — work with what exists
+- If progress.json is corrupted (invalid JSON), fix it by re-reading git log to reconstruct the state
+- If you genuinely cannot determine what the previous session was doing, start the task fresh on a clean branch (rename the broken branch to `task-{N}.{M}-{short-name}-abandoned`)
 
 ---
 

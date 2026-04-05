@@ -59,6 +59,57 @@ fi
 
 mkdir -p "$LOG_DIR"
 
+# Graceful shutdown on SIGINT/SIGTERM
+AGENT_PID=""
+cleanup() {
+  echo ""
+  echo "Caught signal — shutting down gracefully."
+  if [[ -n "$AGENT_PID" ]] && kill -0 "$AGENT_PID" 2>/dev/null; then
+    echo "Waiting for current Claude session (PID $AGENT_PID) to finish..."
+    echo "  (send SIGTERM again to force-kill)"
+    trap "kill $AGENT_PID 2>/dev/null; exit 130" INT TERM
+    wait "$AGENT_PID" 2>/dev/null
+  fi
+  echo ""
+  echo "Runner stopped after $SESSION_COUNT session(s)."
+  echo "The next run will detect any in-progress tasks and resume via the Recovery Protocol."
+  exit 130
+}
+trap cleanup INT TERM
+
+# Detect interrupted state from a previous run
+detect_interrupted_state() {
+  local has_in_progress
+  has_in_progress=$(python3 -c "
+import json, sys
+with open('$PROGRESS_FILE') as f:
+    data = json.load(f)
+for phase in data['phases']:
+    for task in phase['tasks']:
+        if task['status'] == 'in_progress':
+            print(f\"Phase {phase['id']} | Task {task['id']}: {task['name']}\")
+            sys.exit(0)
+sys.exit(1)
+" 2>&1) || return 1
+
+  # Check for uncommitted changes
+  local has_diff
+  has_diff=$(cd "$REPO_ROOT" && git diff --stat 2>/dev/null)
+  local has_staged
+  has_staged=$(cd "$REPO_ROOT" && git diff --cached --stat 2>/dev/null)
+  local current_branch
+  current_branch=$(cd "$REPO_ROOT" && git branch --show-current 2>/dev/null)
+  local stash_count
+  stash_count=$(cd "$REPO_ROOT" && git stash list 2>/dev/null | wc -l | tr -d ' ')
+
+  echo "RECOVERY DETECTED: $has_in_progress"
+  echo "  Current branch: $current_branch"
+  [[ -n "$has_diff" ]] && echo "  Uncommitted changes: yes"
+  [[ -n "$has_staged" ]] && echo "  Staged changes: yes"
+  [[ "$stash_count" -gt 0 ]] && echo "  Stashed changes: $stash_count"
+  return 0
+}
+
 # Check if all phases are complete
 all_complete() {
   if [[ -n "$TARGET_PHASE" ]]; then
@@ -165,22 +216,49 @@ while true; do
     BRANCH_INSTRUCTION="Graphite is unavailable — use vanilla git for branching (git checkout -b, git push -u origin)."
   fi
 
+  # Detect if we're resuming an interrupted task
+  RECOVERY_INSTRUCTION=""
+  if detect_interrupted_state 2>/dev/null; then
+    RECOVERY_INSTRUCTION=" A previous session was interrupted — follow the Recovery Protocol in CLAUDE.md before starting new work."
+  fi
+
   # Run Claude Code session
   claude --print \
-    "Read CLAUDE.md, then follow the Session Workflow to implement the next task. One task only. ${BRANCH_INSTRUCTION}" \
+    "Read CLAUDE.md, then follow the Session Workflow to implement the next task. One task only. ${BRANCH_INSTRUCTION}${RECOVERY_INSTRUCTION}" \
     --max-turns "$MAX_TURNS" \
+    --output-format stream-json \
     --verbose \
-    2>&1 | tee "$LOG_FILE"
-
-  EXIT_CODE=${PIPESTATUS[0]}
+    2>&1 | tee "$LOG_FILE" &
+  AGENT_PID=$!
+  wait "$AGENT_PID" 2>/dev/null
+  EXIT_CODE=$?
+  AGENT_PID=""
 
   echo ""
   echo "Session $SESSION_COUNT finished (exit code: $EXIT_CODE)"
 
   # Validate progress.json after session
   if ! python3 -m json.tool "$PROGRESS_FILE" > /dev/null 2>&1; then
-    echo "WARNING: progress.json is invalid after session. Stopping."
-    exit 1
+    echo "WARNING: progress.json is invalid JSON after session."
+    echo "  Attempting to recover from git..."
+    (cd "$REPO_ROOT" && git checkout -- .claude/progress.json 2>/dev/null) && {
+      echo "  Restored progress.json from last commit. The session's progress may be lost."
+      echo "  The next session will re-attempt the task via the Recovery Protocol."
+    } || {
+      echo "  Could not recover progress.json. Stopping."
+      exit 1
+    }
+  fi
+
+  # Check for dangling in-progress tasks (session crashed before completing)
+  if detect_interrupted_state > /dev/null 2>&1; then
+    echo "NOTE: Task still in_progress — previous session did not complete cleanly."
+    echo "  The next session will resume via the Recovery Protocol."
+    # Check for uncommitted changes the interrupted session may have left
+    UNCOMMITTED=$(cd "$REPO_ROOT" && git diff --stat 2>/dev/null)
+    if [[ -n "$UNCOMMITTED" ]]; then
+      echo "  Uncommitted changes detected — preserving for next session to assess."
+    fi
   fi
 
   # Pause between sessions

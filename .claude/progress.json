@@ -724,7 +724,8 @@
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest --passWithNoTests"
-          ]
+          ],
+          "commitSha": "c38fc03"
         },
         {
           "id": "5.3",

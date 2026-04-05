@@ -1,3 +1,11 @@
+/**
+ * Booking request screen — quick entry point from the feed listing card.
+ * Receives listing params via router, lets the user pick a duration and
+ * payment method, then calls POST /api/v1/bookings.
+ *
+ * After a successful booking, the user is taken to the booking-status screen
+ * for real-time tracking.
+ */
 import { useState } from "react";
 import {
   View,
@@ -10,17 +18,20 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useHoldEstimate } from "../../../../../lib/hooks/useDiscovery";
-import { useListing } from "../../../../../lib/hooks/useListing";
-import { useAuthStore } from "../../../../../lib/auth";
-import { useCheckoutStore } from "../../../../../lib/stores/checkoutStore";
-import { api } from "../../../../../lib/api";
-import DurationPicker from "../../../../../components/checkout/DurationPicker";
-import CostBreakdown from "../../../../../components/checkout/CostBreakdown";
-import PaymentMethodSelector from "../../../../../components/checkout/PaymentMethodSelector";
+import { useHoldEstimate } from "../../../lib/hooks/useDiscovery";
+import { useAuthStore } from "../../../lib/auth";
+import { useCheckoutStore } from "../../../lib/stores/checkoutStore";
+import { api } from "../../../lib/api";
+import DurationPicker from "../../../components/checkout/DurationPicker";
+import CostBreakdown from "../../../components/checkout/CostBreakdown";
+import PaymentMethodSelector from "../../../components/checkout/PaymentMethodSelector";
 
-type CheckoutParams = {
+type BookingRequestParams = {
   id: string;
+  title?: string;
+  pricePerHour?: string;
+  pricePerDay?: string;
+  hostName?: string;
 };
 
 interface BookingResponse {
@@ -31,8 +42,6 @@ interface BookingResponse {
   totalImpact: number;
 }
 
-// Estimate rental fee from listing hold estimate and duration.
-// The backend computes exact fees on booking; this is a display estimate.
 function estimateRentalFee(
   pricePerHour: number | undefined,
   pricePerDay: number | undefined,
@@ -43,10 +52,8 @@ function estimateRentalFee(
   const ms = end.getTime() - start.getTime();
   if (ms <= 0) return 0;
   const hours = ms / (1000 * 60 * 60);
-
   if (pricePerDay != null && hours >= 24) {
-    const days = Math.ceil(hours / 24);
-    return Math.round(pricePerDay * days * 100);
+    return Math.round(pricePerDay * Math.ceil(hours / 24) * 100);
   }
   if (pricePerHour != null) {
     return Math.round(pricePerHour * hours * 100);
@@ -54,14 +61,17 @@ function estimateRentalFee(
   return 0;
 }
 
-export default function CheckoutScreen() {
+export default function BookingRequestScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<CheckoutParams>();
+  const params = useLocalSearchParams<BookingRequestParams>();
   const user = useAuthStore((s) => s.user);
 
-  const { data: holdEstimate } = useHoldEstimate(id ?? null);
-  const { data: listingData } = useListing(id ?? null);
-  const listing = listingData?.listing;
+  const listingId = params.id;
+  const title = params.title ?? "Rental";
+  const pricePerHour = params.pricePerHour ? Number(params.pricePerHour) : undefined;
+  const pricePerDay = params.pricePerDay ? Number(params.pricePerDay) : undefined;
+
+  const { data: holdEstimate } = useHoldEstimate(listingId ?? null);
 
   const {
     scheduledStart,
@@ -69,7 +79,6 @@ export default function CheckoutScreen() {
     paymentMethodId,
     holdAmount,
     rentalFee,
-    totalImpact,
     setSchedule,
     setPaymentMethod,
     setAmounts,
@@ -78,30 +87,14 @@ export default function CheckoutScreen() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // KYC gate — user.identityStatus is not yet in the Phase 2 User type;
-  // the field will be populated in Phase 4. We stub the check here.
-  const identityStatus = (user as unknown as { identityStatus?: string })
-    ?.identityStatus;
-  const isVerified = identityStatus == null || identityStatus === "VERIFIED";
-
   const handleScheduleChange = (start: Date, end: Date) => {
     setSchedule(start, end);
     const hold = holdEstimate?.holdAmount ?? 0;
-    const fee = estimateRentalFee(
-      listing?.pricePerHour,
-      listing?.pricePerDay,
-      start,
-      end,
-    );
+    const fee = estimateRentalFee(pricePerHour, pricePerDay, start, end);
     setAmounts(hold, fee);
   };
 
-  const handlePaymentMethodSelected = (methodId: string) => {
-    setPaymentMethod(methodId);
-  };
-
   const canConfirm =
-    isVerified &&
     scheduledStart != null &&
     scheduledEnd != null &&
     scheduledEnd.getTime() > scheduledStart.getTime() &&
@@ -109,14 +102,14 @@ export default function CheckoutScreen() {
     !isSubmitting;
 
   const handleConfirm = async () => {
-    if (!canConfirm || !id || !user) return;
+    if (!canConfirm || !listingId || !user) return;
 
     setIsSubmitting(true);
     try {
       const result = await api
         .post("api/v1/bookings", {
           json: {
-            listingId: id,
+            listingId,
             paymentMethodId,
             scheduledStart: scheduledStart!.toISOString(),
             scheduledEnd: scheduledEnd!.toISOString(),
@@ -139,35 +132,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  if (!isVerified) {
-    return (
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
-          <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Ionicons name="chevron-back" size={24} color="#111827" />
-          </Pressable>
-          <Text className="text-lg font-semibold text-gray-900 ml-2">
-            Checkout
-          </Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="shield-outline" size={56} color="#f59e0b" />
-          <Text className="text-xl font-bold text-gray-900 text-center mt-4">
-            Identity verification required
-          </Text>
-          <Text className="text-sm text-gray-500 text-center mt-2">
-            Please verify your identity to rent items on RentMy.
-          </Text>
-          <Pressable className="mt-6 px-6 py-3 bg-sky-600 rounded-2xl">
-            <Text className="text-white font-semibold">Verify Identity</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const displayHold = holdEstimate?.holdAmount ?? holdAmount;
-  const displayTotal = displayHold + rentalFee;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -176,9 +141,14 @@ export default function CheckoutScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color="#111827" />
         </Pressable>
-        <Text className="text-lg font-semibold text-gray-900 ml-2">
-          Checkout
-        </Text>
+        <View className="ml-2 flex-1">
+          <Text className="text-lg font-semibold text-gray-900" numberOfLines={1}>
+            Request to rent
+          </Text>
+          <Text className="text-xs text-gray-500" numberOfLines={1}>
+            {title}
+          </Text>
+        </View>
       </View>
 
       <ScrollView
@@ -192,7 +162,7 @@ export default function CheckoutScreen() {
           end={scheduledEnd}
           onChangeStart={(s) => {
             if (scheduledEnd) handleScheduleChange(s, scheduledEnd);
-            else setSchedule(s, new Date(s.getTime() + 3600000));
+            else setSchedule(s, new Date(s.getTime() + 3_600_000));
           }}
           onChangeEnd={(e) => {
             if (scheduledStart) handleScheduleChange(scheduledStart, e);
@@ -211,8 +181,19 @@ export default function CheckoutScreen() {
         {/* Payment method */}
         <PaymentMethodSelector
           selectedPaymentMethodId={paymentMethodId}
-          onPaymentMethodSelected={handlePaymentMethodSelected}
+          onPaymentMethodSelected={setPaymentMethod}
         />
+
+        {/* How it works note */}
+        <View className="bg-sky-50 rounded-xl px-4 py-3">
+          <Text className="text-xs font-semibold text-sky-800 mb-1">
+            How it works
+          </Text>
+          <Text className="text-xs text-sky-700 leading-relaxed">
+            Your request is sent to the host. They have 2 hours to accept or
+            decline. Nothing is charged until the host accepts.
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Fixed confirm CTA */}
@@ -240,7 +221,7 @@ export default function CheckoutScreen() {
                 canConfirm ? "text-white" : "text-gray-400"
               }`}
             >
-              Confirm Booking
+              Send Request
             </Text>
           )}
         </Pressable>

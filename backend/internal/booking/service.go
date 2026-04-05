@@ -3,8 +3,10 @@ package booking
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/proximity"
 )
@@ -27,6 +29,10 @@ type Config struct {
 	HostCancelLateBPS int
 	// HostCancelVeryLateBPS is the cancellation fee BPS for hosts cancelling after scheduled start.
 	HostCancelVeryLateBPS int
+	// PickupReminderBefore is how far before scheduled_start to fire the pickup approaching notification.
+	PickupReminderBefore time.Duration
+	// ReturnReminderBefore is how far before scheduled_end to fire the return approaching notification.
+	ReturnReminderBefore time.Duration
 }
 
 // autoDeclineAt returns the timestamp when the auto-decline job should fire.
@@ -42,23 +48,31 @@ type proximitySvc interface {
 	CheckHandoffComplete(ctx context.Context, transactionID string, proofType proximity.ProofType) (bool, error)
 }
 
+// notificationSvc is the interface the booking service uses to dispatch
+// notifications without a direct import cycle.
+type notificationSvc interface {
+	Notify(ctx context.Context, userID string, t notification.Type, title, body string, data map[string]string) error
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
-	repo         *Repository
-	paymentSvc   *payment.Service
-	riverClient  riverInserter
-	proximitySvc proximitySvc
-	cfg          Config
+	repo            *Repository
+	paymentSvc      *payment.Service
+	riverClient     riverInserter
+	proximitySvc    proximitySvc
+	notificationSvc notificationSvc
+	cfg             Config
 }
 
 // NewService creates a Service with the given dependencies and config.
-func NewService(repo *Repository, paymentSvc *payment.Service, riverClient riverInserter, proximitySvc proximitySvc, cfg Config) *Service {
+func NewService(repo *Repository, paymentSvc *payment.Service, riverClient riverInserter, proximitySvc proximitySvc, notificationSvc notificationSvc, cfg Config) *Service {
 	return &Service{
-		repo:         repo,
-		paymentSvc:   paymentSvc,
-		riverClient:  riverClient,
-		proximitySvc: proximitySvc,
-		cfg:          cfg,
+		repo:            repo,
+		paymentSvc:      paymentSvc,
+		riverClient:     riverClient,
+		proximitySvc:    proximitySvc,
+		notificationSvc: notificationSvc,
+		cfg:             cfg,
 	}
 }
 
@@ -118,8 +132,18 @@ func (s *Service) CreateBooking(ctx context.Context, in CreateInput) (payment.Bo
 	// Schedule auto-decline River job.
 	if err := scheduleAutoDecline(ctx, s.riverClient, result.TransactionID, s.cfg); err != nil {
 		// Log and continue: auto-decline failure is not booking-critical.
-		// The booking is already created and paid; a manual process can handle stale requests.
-		_ = err // TODO: add structured logging here when NotificationService is available
+		slog.Warn("failed to schedule auto-decline job", "transactionId", result.TransactionID, "error", err)
+	}
+
+	// Notify the host of the new booking request.
+	if s.notificationSvc != nil {
+		if err := s.notificationSvc.Notify(ctx, hostID, notification.TypeBookingRequest,
+			"New booking request",
+			"Someone wants to rent your item. Check the app to accept or decline.",
+			map[string]string{"transactionId": result.TransactionID},
+		); err != nil {
+			slog.Warn("failed to send booking request notification", "hostId", hostID, "error", err)
+		}
 	}
 
 	return result, nil
@@ -157,7 +181,32 @@ func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 	// host can trigger the SMS fallback endpoint to regenerate.
 	if _, err := s.proximitySvc.GenerateCheckInPIN(ctx, in.BookingID, in.HostID); err != nil {
 		// Log and continue — booking acceptance is already committed.
-		_ = err
+		slog.Warn("failed to generate check-in PIN", "bookingId", in.BookingID, "error", err)
+	}
+
+	// Notify the renter and schedule pickup/return reminders (best-effort).
+	if s.notificationSvc != nil {
+		data := map[string]string{"transactionId": in.BookingID}
+		if err := s.notificationSvc.Notify(ctx, booking.RenterID, notification.TypeBookingAccepted,
+			"Booking accepted",
+			"Your booking request has been accepted. Get ready for pickup!",
+			data,
+		); err != nil {
+			slog.Warn("failed to send booking accepted notification", "renterId", booking.RenterID, "error", err)
+		}
+	}
+
+	if s.riverClient != nil && !booking.ScheduledStart.IsZero() && !booking.ScheduledEnd.IsZero() {
+		if err := notification.SchedulePickupApproaching(ctx, s.riverClient, in.BookingID,
+			booking.RenterID, booking.HostID, booking.ScheduledStart, s.cfg.PickupReminderBefore,
+		); err != nil {
+			slog.Warn("failed to schedule pickup reminder", "bookingId", in.BookingID, "error", err)
+		}
+		if err := notification.ScheduleReturnApproaching(ctx, s.riverClient, in.BookingID,
+			booking.RenterID, booking.ScheduledEnd, s.cfg.ReturnReminderBefore,
+		); err != nil {
+			slog.Warn("failed to schedule return reminder", "bookingId", in.BookingID, "error", err)
+		}
 	}
 
 	return nil
@@ -292,7 +341,30 @@ func (s *Service) Cancel(ctx context.Context, in CancelInput) error {
 		return err
 	}
 
-	return dbTx.Commit(ctx)
+	if err := dbTx.Commit(ctx); err != nil {
+		return err
+	}
+
+	// Notify the other party about the cancellation (best-effort).
+	if s.notificationSvc != nil {
+		var recipientID string
+		switch role {
+		case CancellerRenter:
+			recipientID = booking.HostID
+		case CancellerHost:
+			recipientID = booking.RenterID
+		}
+		if recipientID != "" {
+			if err := s.notificationSvc.Notify(ctx, recipientID, notification.TypeCancellation,
+				"Booking cancelled",
+				"The other party has cancelled the booking.",
+				map[string]string{"transactionId": in.BookingID},
+			); err != nil {
+				slog.Warn("failed to send cancellation notification", "recipientId", recipientID, "error", err)
+			}
+		}
+	}
+	return nil
 }
 
 // GetBooking returns a booking by ID. Either the renter or host may retrieve it.

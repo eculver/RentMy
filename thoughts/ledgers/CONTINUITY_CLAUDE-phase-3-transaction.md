@@ -16,7 +16,7 @@ Full booking lifecycle: request → accept → check-in handoff → rental → r
 | 3.4 | MessagingService (backend) | ✅ completed | fd737f5 | Pusher real-time chat, booking status events |
 | 3.5 | Booking flow (RN) | ✅ completed | 00c487a | Booking request, status, Pusher real-time, cancel modal |
 | 3.6 | Handoff screens (RN) | ✅ completed | eb43ac1 | Check-in/out GPS+PIN+photos, active rental timer |
-| 3.7 | Messaging screen (RN) | pending | — | Real-time chat UI |
+| 3.7 | Messaging screen (RN) | ✅ completed | eb1b8ba | Conversation list, real-time chat, cursor pagination, unread badge |
 
 ---
 

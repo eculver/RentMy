@@ -11,7 +11,7 @@ Full booking lifecycle: request → accept → check-in handoff → rental → r
 | Task | Name | Status | Commit | Notes |
 |------|------|--------|--------|-------|
 | 3.1 | BookingService (backend) | ✅ completed | b3a66c2 | State machine, fraud, cancellation, auto-decline |
-| 3.2 | ProximityService (backend) | pending | — | GPS + PIN handoff verification |
+| 3.2 | ProximityService (backend) | ✅ completed | 12dc136 | GPS + PIN handoff, Twilio SMS fallback |
 | 3.3 | NotificationService (backend) | pending | — | Expo push + Twilio SMS |
 | 3.4 | MessagingService (backend) | pending | — | Pusher real-time chat |
 | 3.5 | Booking flow (RN) | pending | — | Host accept/decline, renter cancel screens |
@@ -36,6 +36,23 @@ Created `backend/internal/booking/` package with full booking lifecycle manageme
 - No new migrations were needed for 3.1 — all required columns exist in the schema.
 
 **Open wiring needed in future tasks:**
-- `PaymentService.ScheduleHostPayout` should be called on ACTIVE→COMPLETED transition (task 3.2)
+- `PaymentService.ScheduleHostPayout` should be called on ACTIVE→COMPLETED transition (done via task 3.2 CheckOut flow)
 - NotificationService calls stub-commented in `service.go` (task 3.3)
 - `payout_delayed` flag from fraud check not yet persisted (task 3.3 or later)
+
+### Task 3.2 — ProximityService
+
+Created `backend/internal/proximity/` package with GPS + PIN handoff verification.
+
+**Key facts for future sessions:**
+- Migration 004 adds `user_id` and `pin_expires_at` to `proximity_proofs`.
+- Each handoff event has per-user records: `(transaction_id, proof_type, user_id)`. Host CHECK_IN record stores the PIN; renter's record is marked verified after GPS + PIN pass.
+- `BookingService.Accept` now calls `proximitySvc.GenerateCheckInPIN` (best-effort after commit — failure does not roll back acceptance).
+- `BookingService.CheckIn/CheckOut` gate on `proximitySvc.CheckHandoffComplete` before status transition.
+- `proximitySvc` is injected as an interface into `BookingService` — allows test stubbing without a real DB.
+- Twilio client is nil in dev/test when env vars (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`) are absent.
+- Config defaults: `GPS_THRESHOLD_METERS=100`, `PIN_VALIDITY_MINUTES=30`.
+
+**Open wiring for future tasks:**
+- Photo requirement for `CheckHandoffComplete` is enforced client-side (handoff screens, task 3.6). Server only checks GPS + PIN today.
+- `PaymentService.ScheduleHostPayout` should be called from `BookingService.CheckOut` after ACTIVE→COMPLETED (not yet wired).

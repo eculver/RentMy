@@ -16,6 +16,8 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/booking"
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
@@ -70,6 +72,30 @@ func run() error {
 	if err := riverpkg.RunMigrations(ctx, pool); err != nil {
 		return fmt.Errorf("running river migrations: %w", err)
 	}
+
+	// Initialize Anthropic model router and decision service.
+	// When AnthropicAPIKey is empty (dev/test without AI), the router is nil.
+	// Agents must check for nil before calling Route.
+	var modelRouter *router.AnthropicRouter
+	if cfg.AnthropicAPIKey != "" {
+		modelRouter, err = router.New(router.Config{
+			APIKey:     cfg.AnthropicAPIKey,
+			FullModel:  cfg.AnthropicFullModel,
+			CheapModel: cfg.AnthropicCheapModel,
+			PromptsDir: "prompts",
+		})
+		if err != nil {
+			return fmt.Errorf("creating model router: %w", err)
+		}
+		slog.Info("model router initialized", "full_model", cfg.AnthropicFullModel, "cheap_model", cfg.AnthropicCheapModel)
+	} else {
+		slog.Warn("ANTHROPIC_API_KEY not set — AI agents disabled")
+	}
+	_ = modelRouter // will be injected into agents in Phase 4.2+
+
+	decisionRepo := decision.NewRepository(pool)
+	decisionSvc := decision.NewService(decisionRepo)
+	_ = decisionSvc // will be injected into agents in Phase 4.2+
 
 	// Build Stripe adapter and payment repository early so the payout worker
 	// can be registered before the River client starts.

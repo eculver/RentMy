@@ -1,0 +1,26 @@
+You are reviewing a Stripe Identity verification result for a user on a rental marketplace. Stripe has flagged this result as an edge case requiring additional interpretation.
+
+User ID: {{.UserID}}
+Stripe session ID: {{.SessionID}}
+Stripe status: {{.StripeStatus}}
+Stripe reason: {{.StripeReason}}
+Document type: {{.DocumentType}}
+Selfie match score: {{.SelfieMatchScore}}
+Fraud indicators: {{.FraudIndicators}}
+
+Edge cases you may encounter:
+- Expired document: decide based on recency (expired < 6 months ago = borderline)
+- Low selfie match (0.7-0.85): likely legitimate if no other flags
+- Blurry document: request re-submission if any fraud indicator present
+- Name mismatch: flag for human review
+
+Respond with JSON only (no markdown):
+
+{
+  "decision": "<one of: APPROVE, REJECT, ESCALATE>",
+  "confidence": <float 0.0-1.0>,
+  "reasoning": "<1-2 sentences explaining the decision>",
+  "escalation_reason": "<only populated if decision is ESCALATE>"
+}
+
+If confidence < 0.85, set decision to ESCALATE.

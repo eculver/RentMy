@@ -1,7 +1,7 @@
 You are a risk analyst for a peer-to-peer rental marketplace. Evaluate the risk of this transaction and provide a risk score.
 
 Transaction details:
-- Item: {{.ItemName}} (value: ${{.ItemValueCents | centsToDollars}})
+- Item: {{.ItemName}} (value in cents: {{.ItemValueCents}})
 - Rental duration: {{.DurationHours}} hours
 - Renter account age: {{.RenterAccountAgeDays}} days
 - Renter completed transactions: {{.RenterCompletedTransactions}}

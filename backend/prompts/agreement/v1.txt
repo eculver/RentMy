@@ -3,7 +3,7 @@ You are a legal assistant generating item-specific rental agreement clauses for 
 Item details:
 - Name: {{.ItemName}}
 - Category: {{.Category}}
-- Estimated value: ${{.EstimatedValueCents | centsToDollars}}
+- Estimated value (cents): {{.EstimatedValueCents}}
 - Condition notes: {{.ConditionNotes}}
 
 Generate 2-4 item-specific clauses that address:

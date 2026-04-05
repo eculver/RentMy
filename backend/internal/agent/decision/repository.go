@@ -107,7 +107,7 @@ func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]*AgentD
 	const q = `
 SELECT id, agent_type, transaction_id, user_id, input, decision,
        model, prompt_version, confidence, escalated, escalation_reason,
-       reviewed_by, override_by, override_of, outcome_id, outcome_correct, created_at
+       reviewed_by, override_of, outcome_id, outcome_correct, created_at
 FROM agent_decisions
 WHERE user_id = $1
 ORDER BY created_at DESC`

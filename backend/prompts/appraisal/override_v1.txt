@@ -4,8 +4,8 @@ The host has declared a value significantly higher than the AI estimate. Evaluat
 
 Item: {{.ItemName}}
 Category: {{.Category}}
-AI estimated value: ${{.AIEstimateCents | centsToDollars}}
-Host declared value: ${{.HostDeclaredCents | centsToDollars}}
+AI estimated value (cents): {{.AIEstimateCents}}
+Host declared value (cents): {{.HostDeclaredCents}}
 Host justification: {{.Justification}}
 
 Approve the override if any of these apply:

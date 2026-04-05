@@ -3,10 +3,12 @@ import {
   RefreshControl,
   View,
   Text,
+  Pressable,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocation } from "../../../lib/hooks/useLocation";
 import { useFeed, RankedListing } from "../../../lib/hooks/useDiscovery";
 import ListingFeedCard from "../../../components/listing/ListingFeedCard";
@@ -93,21 +95,42 @@ export default function FeedScreen() {
           data={listings}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ListingFeedCard
-              listing={item}
-              onPress={() =>
-                router.push({
-                  pathname: "/listing/[id]" as never,
-                  params: {
-                    id: item.id,
-                    hostName: item.hostName,
-                    hostReputation: String(item.hostReputation),
-                    thumbnailUrl: item.thumbnailUrl ?? "",
-                    driveTimeMin: String(item.driveTimeMin),
-                  },
-                })
-              }
-            />
+            <View>
+              <ListingFeedCard
+                listing={item}
+                onPress={() =>
+                  router.push({
+                    pathname: "/listing/[id]" as never,
+                    params: {
+                      id: item.id,
+                      hostName: item.hostName,
+                      hostReputation: String(item.hostReputation),
+                      thumbnailUrl: item.thumbnailUrl ?? "",
+                      driveTimeMin: String(item.driveTimeMin),
+                    },
+                  })
+                }
+              />
+              {/* Rent Now shortcut — takes user directly to the booking request screen */}
+              <Pressable
+                className="mx-4 -mt-2 mb-3 bg-sky-600 rounded-xl py-2.5 flex-row items-center justify-center gap-x-1.5"
+                onPress={() =>
+                  router.push({
+                    pathname: "/(tabs)/(feed)/booking-request" as never,
+                    params: {
+                      id: item.id,
+                      title: item.title,
+                      pricePerHour: item.pricePerHour != null ? String(item.pricePerHour) : "",
+                      pricePerDay: item.pricePerDay != null ? String(item.pricePerDay) : "",
+                      hostName: item.hostName,
+                    },
+                  })
+                }
+              >
+                <Ionicons name="flash-outline" size={15} color="white" />
+                <Text className="text-white text-sm font-semibold">Rent Now</Text>
+              </Pressable>
+            </View>
           )}
           ListEmptyComponent={<EmptyState />}
           ListFooterComponent={

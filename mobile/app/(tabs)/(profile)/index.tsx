@@ -2,7 +2,9 @@ import { View, Text, FlatList, Pressable, ActivityIndicator } from "react-native
 import { router } from "expo-router";
 import { useAuthStore } from "../../../lib/auth";
 import { useMyListings, Listing } from "../../../lib/hooks/useListings";
+import { useUserRatingsSummary, BUBBLE_LABELS } from "../../../lib/hooks/useRatings";
 import ListingCard from "../../../components/listing/ListingCard";
+import RatingBubbles from "../../../components/rating/RatingBubbles";
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -10,6 +12,9 @@ export default function ProfileScreen() {
 
   const { data, isLoading, isError } = useMyListings();
   const listings: Listing[] = data?.listings ?? [];
+
+  const { data: summaryData } = useUserRatingsSummary(user?.id ?? null);
+  const summary = summaryData?.summary ?? [];
 
   return (
     <View className="flex-1 bg-white">
@@ -34,6 +39,28 @@ export default function ProfileScreen() {
           <Text className="text-white font-semibold">+ Create Listing</Text>
         </Pressable>
       </View>
+
+      {/* Rating bubbles section */}
+      {summary.length > 0 && (
+        <View className="px-6 pt-5 pb-4 border-b border-gray-100">
+          <Text className="text-base font-semibold text-gray-900 mb-3">
+            Reviews from renters
+          </Text>
+          <RatingBubbles
+            availableBubbles={summary.map((s) => s.bubble)}
+            selected={summary.map((s) => s.bubble)}
+            onToggle={() => {}}
+            readOnly
+          />
+          <View className="flex-row flex-wrap gap-x-4 mt-3">
+            {summary.map((item) => (
+              <Text key={item.bubble} className="text-xs text-gray-500">
+                {BUBBLE_LABELS[item.bubble]} ({item.count})
+              </Text>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Listings section */}
       <View className="flex-1 px-6 pt-4">

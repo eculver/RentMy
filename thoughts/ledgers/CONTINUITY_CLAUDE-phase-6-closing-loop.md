@@ -6,8 +6,8 @@
 
 | Task | Name | Status | Branch | Commit |
 |------|------|--------|--------|--------|
-| 6.1 | Photo diff pipeline | Completed | task-6.1-photo-diff-pipeline | pending |
-| 6.2 | DisputeAgent with escalation gate | Completed | task-6.2-dispute-agent | pending |
+| 6.1 | Photo diff pipeline | Completed | task-6.1-photo-diff-pipeline | 0c5d226 |
+| 6.2 | DisputeAgent with escalation gate | Completed | task-6.2-dispute-agent | 35a58c6 |
 | 6.3 | LateReturnAgent | Pending | — | — |
 | 6.4 | Rating system (backend + RN) | Pending | — | — |
 | 6.5 | Reputation score recalculation | Pending | — | — |

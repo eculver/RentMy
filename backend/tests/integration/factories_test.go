@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
@@ -66,8 +67,8 @@ func CreateTestListing(t *testing.T, pool *pgxpool.Pool, ownerID string) *listin
 	pricePerDay := 25.0
 	lat := 37.7749
 	lng := -122.4194
-	minDuration := int64((1 * time.Hour).Nanoseconds())  // 1h in nanoseconds
-	maxDuration := int64((24 * time.Hour).Nanoseconds()) // 24h in nanoseconds
+	minDuration := pgtype.Interval{Microseconds: time.Hour.Microseconds(), Valid: true}
+	maxDuration := pgtype.Interval{Microseconds: (24 * time.Hour).Microseconds(), Valid: true}
 
 	const q = `
 		INSERT INTO listings (
@@ -95,17 +96,17 @@ func CreateTestListing(t *testing.T, pool *pgxpool.Pool, ownerID string) *listin
 
 	l := &listing.Listing{}
 	var (
-		aiTags      []byte
-		loc         listing.Location
+		aiTags       []byte
+		loc          listing.Location
 		availability []byte
-		minDurNs    *int64
-		maxDurNs    *int64
+		minDurIV     pgtype.Interval
+		maxDurIV     pgtype.Interval
 	)
 	if err := row.Scan(
 		&l.ID, &l.HostID, &l.Title, &l.Description,
 		&aiTags, &l.EstimatedValue, &l.HostDeclaredValue, &l.ValueJustification,
 		&l.PricePerHour, &l.PricePerDay,
-		&minDurNs, &maxDurNs,
+		&minDurIV, &maxDurIV,
 		&loc.Lat, &loc.Lng,
 		&availability, &l.HasVideo, &l.Status, &l.AppraisalStatus, &l.CreatedAt,
 	); err != nil {
@@ -118,12 +119,12 @@ func CreateTestListing(t *testing.T, pool *pgxpool.Pool, ownerID string) *listin
 		l.Availability = json.RawMessage(availability)
 	}
 	l.Location = &loc
-	if minDurNs != nil {
-		d := listing.Duration(time.Duration(*minDurNs))
+	if minDurIV.Valid {
+		d := listing.Duration(time.Duration(minDurIV.Microseconds) * time.Microsecond)
 		l.MinDuration = &d
 	}
-	if maxDurNs != nil {
-		d := listing.Duration(time.Duration(*maxDurNs))
+	if maxDurIV.Valid {
+		d := listing.Duration(time.Duration(maxDurIV.Microseconds) * time.Microsecond)
 		l.MaxDuration = &d
 	}
 	return l

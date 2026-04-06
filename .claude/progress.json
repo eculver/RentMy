@@ -730,7 +730,7 @@
         {
           "id": "5.3",
           "name": "Phase 1-2 backend integration tests",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "backend",
           "dependencies": [
             "5.1"
@@ -739,7 +739,8 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
-          ]
+          ],
+          "commitSha": "30e5d1e"
         },
         {
           "id": "5.4",

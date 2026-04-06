@@ -24,6 +24,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/dispute"
+	"github.com/giits/rentmy/backend/internal/guaranteefund"
 	"github.com/giits/rentmy/backend/internal/latereturn"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
@@ -146,6 +147,15 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	reputationRepo := reputation.NewRepository(pool)
 	reputationSvcPre := reputation.NewService(reputationRepo, nil)
 
+	// Guarantee fund service — pre-river (riverClient injected after River starts).
+	guaranteeFundRepo := guaranteefund.NewRepository(pool)
+	guaranteeFundSvcPre := guaranteefund.NewService(guaranteeFundRepo, nil, guaranteefund.Config{
+		ReserveRatioNormal:       cfg.ReserveRatioNormal,
+		ReserveRatioAlert:        cfg.ReserveRatioAlert,
+		ReserveRatioRestrictHigh: cfg.ReserveRatioRestrictHigh,
+		LossRatioTarget:          cfg.LossRatioTarget,
+	})
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -163,6 +173,8 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, reputation.NewReputationRecalcWorker(reputationSvcPre))
 	river.AddWorker(workers, reputation.NewMonthlyHostReputationWorker(reputationSvcPre))
 	river.AddWorker(workers, reputation.NewNegativeDecayWorker(reputationSvcPre))
+	river.AddWorker(workers, guaranteefund.NewFundHealthCheckWorker(guaranteeFundSvcPre))
+	river.AddWorker(workers, guaranteefund.NewLossRatioCheckWorker(guaranteeFundSvcPre))
 
 	// LateReturnAgent pre-river workers (riverClient injected after River starts).
 	lateReturnRepo := latereturn.NewRepository(pool)
@@ -296,6 +308,15 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	reputationSvc := reputation.NewService(reputationRepo, riverClient)
 	*reputationSvcPre = *reputationSvc
 
+	// Guarantee fund service — full, with riverClient.
+	guaranteeFundSvc := guaranteefund.NewService(guaranteeFundRepo, riverClient, guaranteefund.Config{
+		ReserveRatioNormal:       cfg.ReserveRatioNormal,
+		ReserveRatioAlert:        cfg.ReserveRatioAlert,
+		ReserveRatioRestrictHigh: cfg.ReserveRatioRestrictHigh,
+		LossRatioTarget:          cfg.LossRatioTarget,
+	})
+	*guaranteeFundSvcPre = *guaranteeFundSvc
+
 	// DisputeAgent — full service with all dependencies.
 	disputeHoldSvc := dispute.NewHoldService(paymentSvc)
 	disputeSvc := dispute.NewService(disputeRepo, decisionSvc, disputeHoldSvc, paymentSvc, modelRouter, riverClient, dispute.Config{
@@ -320,6 +341,8 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	ratingRepo := rating.NewRepository(pool)
 	ratingSvc := rating.NewService(ratingRepo, riskSvc).WithReputation(reputationSvc)
 	ratingHandler := rating.NewHandler(ratingSvc)
+
+	guaranteeFundHandler := guaranteefund.NewHandler(guaranteeFundSvc)
 
 	// Build chi router.
 	r := chi.NewRouter()
@@ -348,6 +371,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	disputeHandler.Mount(apiV1, authMW)
 	lateReturnHandler.Mount(apiV1, authMW)
 	ratingHandler.Mount(apiV1, authMW)
+	guaranteeFundHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

@@ -11,7 +11,7 @@
 | 6.3 | LateReturnAgent | Completed | task-6.3-late-return-agent | 6d867cd |
 | 6.4 | Rating system (backend + RN) | Completed | task-6.4-rating-system | 356ec39 |
 | 6.5 | Reputation score recalculation | Completed | task-6.5-reputation-score-recalculation | 30a9259 |
-| 6.6 | Guarantee fund accounting | Pending | — | — |
+| 6.6 | Guarantee fund accounting | Completed | task-6.6-guarantee-fund-accounting | TBD |
 | 6.7 | Outcome linking (Agent Learning Framework) | Pending | — | — |
 | 6.8 | Post-rental flow (RN) | Pending | — | — |
 
@@ -62,3 +62,14 @@
 - `rating.Service` and `dispute.Service` both enqueue `ReputationRecalcJob` after relevant events
 - Two parallel scoring paths exist: risk package (incremental signal log) + reputation package (source truth)
 - 10 unit tests for scoring math, decay, milestones, clamping; all integration tests continue to pass
+
+### Task 6.6 — Guarantee Fund Accounting
+- New `backend/internal/guaranteefund/` package — dedicated fund ledger, monitoring, and admin API
+- Service methods: `Contribute`, `Claim` (caps at available balance), `RecordCardRecovery`, `RecordCollectionsReferral`, `GetFundHealth`, `CheckReserveRatio`
+- Four-tier reserve ratio thresholds from PRD §7: NORMAL (≥15%), ALERT (10-15%), RESTRICT_HIGH_VALUE (5-10%), RESTRICT_ALL_GAP (<5%)
+- Rolling 90-day loss ratio tracking (claims / contributions), target < 0.6
+- River jobs: `FundHealthCheckWorker` (hourly), `LossRatioCheckWorker` (daily)
+- Admin endpoints: `GET /api/v1/admin/guarantee-fund/health`, `GET /api/v1/admin/guarantee-fund/entries`
+- Config fields added: `ReserveRatioNormal`, `ReserveRatioAlert`, `ReserveRatioRestrictHigh`, `LossRatioTarget`
+- 20 unit tests for threshold logic; all existing tests continue to pass
+- No migration needed — uses existing `guarantee_fund_entries` table from 001_initial_schema.sql

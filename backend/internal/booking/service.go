@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/giits/rentmy/backend/internal/latereturn"
 	"github.com/giits/rentmy/backend/internal/messaging"
 	"github.com/giits/rentmy/backend/internal/notification"
 	"github.com/giits/rentmy/backend/internal/payment"
@@ -291,6 +292,12 @@ func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 			booking.RenterID, booking.ScheduledEnd, s.cfg.ReturnReminderBefore,
 		); err != nil {
 			slog.Warn("failed to schedule return reminder", "bookingId", in.BookingID, "error", err)
+		}
+
+		// Schedule late return check at scheduled_end — if the rental is still ACTIVE
+		// at that point, LateReturnAgent will begin charging late fees.
+		if err := latereturn.ScheduleLateReturnCheck(ctx, s.riverClient, in.BookingID, booking.ScheduledEnd); err != nil {
+			slog.Warn("failed to schedule late return check", "bookingId", in.BookingID, "error", err)
 		}
 	}
 

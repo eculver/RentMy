@@ -919,7 +919,7 @@
         {
           "id": "6.6",
           "name": "Guarantee fund accounting",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "backend",
           "dependencies": [
             "5.1"

@@ -115,6 +115,12 @@ type Config struct {
 	HostCancelLateBPS              int `env:"HOST_CANCEL_LATE_BPS" envDefault:"2500"`           // 25%
 	HostCancelVeryLateBPS          int `env:"HOST_CANCEL_VERY_LATE_BPS" envDefault:"5000"`      // 50%
 
+	// Guarantee fund reserve ratio thresholds (PRD section 7).
+	ReserveRatioNormal       float64 `env:"RESERVE_RATIO_NORMAL" envDefault:"0.15"`        // 15% — healthy
+	ReserveRatioAlert        float64 `env:"RESERVE_RATIO_ALERT" envDefault:"0.10"`         // 10% — alert
+	ReserveRatioRestrictHigh float64 `env:"RESERVE_RATIO_RESTRICT_HIGH" envDefault:"0.05"` // 5% — restrict high-value
+	LossRatioTarget          float64 `env:"LOSS_RATIO_TARGET" envDefault:"0.6"`
+
 	// Notification config (PRD section 16).
 	ExpoPushAccessToken    string `env:"EXPO_PUSH_ACCESS_TOKEN" envDefault:""`
 	PickupReminderMinutes  int    `env:"PICKUP_REMINDER_MINUTES" envDefault:"30"`

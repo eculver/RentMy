@@ -26,6 +26,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/dispute"
 	"github.com/giits/rentmy/backend/internal/guaranteefund"
 	"github.com/giits/rentmy/backend/internal/latereturn"
+	"github.com/giits/rentmy/backend/internal/outcome"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -186,6 +187,12 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, latereturn.NewLateReturnCheckWorker(lateReturnSvcPre))
 	river.AddWorker(workers, latereturn.NewLateReturnEscalationWorker(lateReturnSvcPre))
 
+	// Outcome linking pre-river workers (svc rebuilt after River starts).
+	outcomeRepo := outcome.NewRepository(pool, redisClient)
+	outcomeSvcPre := outcome.NewService(outcomeRepo, decisionSvc)
+	river.AddWorker(workers, outcome.NewOutcomeLinkWorker(outcomeSvcPre))
+	river.AddWorker(workers, outcome.NewMonthlyCalibrationReportWorker(outcomeSvcPre))
+
 	// DisputeAgent pre-river workers (riverClient injected after River starts).
 	disputeRepo := dispute.NewRepository(pool)
 	disputeSvcPre := dispute.NewService(disputeRepo, decisionSvc, nil, nil, modelRouter, nil, dispute.Config{
@@ -344,6 +351,9 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 
 	guaranteeFundHandler := guaranteefund.NewHandler(guaranteeFundSvc)
 
+	// Outcome linking — handler for admin calibration/decision API.
+	outcomeHandler := outcome.NewHandler(outcomeSvcPre)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -372,6 +382,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	lateReturnHandler.Mount(apiV1, authMW)
 	ratingHandler.Mount(apiV1, authMW)
 	guaranteeFundHandler.Mount(apiV1, authMW)
+	outcomeHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

@@ -9,6 +9,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/latereturn"
 	"github.com/giits/rentmy/backend/internal/messaging"
 	"github.com/giits/rentmy/backend/internal/notification"
+	"github.com/giits/rentmy/backend/internal/outcome"
 	"github.com/giits/rentmy/backend/internal/payment"
 	"github.com/giits/rentmy/backend/internal/proximity"
 
@@ -373,6 +374,14 @@ func (s *Service) CheckOut(ctx context.Context, bookingID, requesterID string) e
 		return err
 	}
 	s.triggerStatusChanged(ctx, bookingID, StatusCompleted)
+
+	// Schedule outcome linking job 48h from now for agent learning framework.
+	if s.riverClient != nil {
+		if err := outcome.ScheduleOutcomeLink(ctx, s.riverClient, bookingID); err != nil {
+			slog.Warn("booking: failed to schedule outcome link",
+				"bookingId", bookingID, "error", err)
+		}
+	}
 	return nil
 }
 

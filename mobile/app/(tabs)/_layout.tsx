@@ -42,6 +42,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="(rentals)"
+        options={{
+          title: "Rentals",
+          tabBarIcon: ({ color, size }) => <TabIcon name="receipt-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="(messages)"
         options={{
           title: "Messages",

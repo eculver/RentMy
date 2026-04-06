@@ -966,7 +966,7 @@
         {
           "id": "6.8",
           "name": "Post-rental flow (RN)",
-          "status": "pending",
+          "status": "in_progress",
           "model": "sonnet",
           "domain": "mobile",
           "dependencies": [

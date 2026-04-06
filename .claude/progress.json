@@ -796,6 +796,7 @@
       "id": 6,
       "name": "Returns, Disputes, Trust",
       "status": "pending",
+      "model": "opus",
       "blockedBy": [
         5
       ],
@@ -863,6 +864,7 @@
           "id": "6.4",
           "name": "Rating system (backend + RN)",
           "status": "pending",
+          "model": "sonnet",
           "domain": "backend",
           "dependencies": [
             "5.1",
@@ -885,6 +887,7 @@
           "id": "6.5",
           "name": "Reputation score recalculation",
           "status": "pending",
+          "model": "sonnet",
           "domain": "backend",
           "dependencies": [
             "6.4",
@@ -946,6 +949,7 @@
           "id": "6.8",
           "name": "Post-rental flow (RN)",
           "status": "pending",
+          "model": "sonnet",
           "domain": "mobile",
           "dependencies": [
             "6.2",
@@ -965,6 +969,7 @@
       "id": 7,
       "name": "Operations + Growth",
       "status": "pending",
+      "model": "sonnet",
       "blockedBy": [
         6
       ],
@@ -1011,6 +1016,7 @@
           "id": "7.3",
           "name": "Ops dashboard (web)",
           "status": "pending",
+          "model": "opus",
           "domain": "web",
           "dependencies": [
             "7.1",

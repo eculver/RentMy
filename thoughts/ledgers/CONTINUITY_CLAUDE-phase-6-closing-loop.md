@@ -9,7 +9,7 @@
 | 6.1 | Photo diff pipeline | Completed | task-6.1-photo-diff-pipeline | 0c5d226 |
 | 6.2 | DisputeAgent with escalation gate | Completed | task-6.2-dispute-agent | 35a58c6 |
 | 6.3 | LateReturnAgent | Completed | task-6.3-late-return-agent | 6d867cd |
-| 6.4 | Rating system (backend + RN) | Pending | — | — |
+| 6.4 | Rating system (backend + RN) | Completed | task-6.4-rating-system | 356ec39 |
 | 6.5 | Reputation score recalculation | Pending | — | — |
 | 6.6 | Guarantee fund accounting | Pending | — | — |
 | 6.7 | Outcome linking (Agent Learning Framework) | Pending | — | — |
@@ -41,4 +41,15 @@
 - ScheduleLateReturnCheck() integrated into booking.Accept()
 - Conservative escalation: LLM defaults to WARNING on failure, FLAGGED_FOR_REVIEW is rare
 - 4 test groups covering hourly rate calculation, fee cap enforcement, damage reserve invariant, status mapping
+- All existing tests continue to pass
+
+### Task 6.4 — Rating System (backend + RN)
+- Full vertical slice: `backend/internal/rating/` package + mobile components
+- Bubble constants for renter-rates-host (5 tags) and host-rates-renter (5 tags); GOOD_COMMUNICATION shared
+- Service validates COMPLETED status, role-correct bubble set, UNIQUE constraint
+- Reputation integrated via `riskSvc.EmitSignal(positive_rating)` — one signal per bubble, synchronous, non-fatal on failure
+- Four HTTP endpoints: POST/GET ratings per transaction, GET ratings per user (paginated), GET bubble summary
+- Mobile: `useRatings.ts` hooks, `RatingBubbles` (tappable pills + read-only), `RatingPrompt` (post-rental modal)
+- Profile screen shows received bubble summary in read-only pill format
+- 8 backend unit tests, 7 integration tests, 7 mobile component tests (66 total mobile)
 - All existing tests continue to pass

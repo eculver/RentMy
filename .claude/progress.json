@@ -756,12 +756,12 @@
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
           ],
-          "commitSha": "PENDING"
+          "commitSha": "3141527"
         },
         {
           "id": "5.5",
           "name": "Phase 1-4 mobile component tests",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "5.2"
@@ -770,7 +770,8 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx jest --verbose"
-          ]
+          ],
+          "commitSha": "3141527"
         },
         {
           "id": "5.6",

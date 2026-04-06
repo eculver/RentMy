@@ -10,6 +10,11 @@
 #   ./scripts/run-agent.sh              # Run until all phases complete
 #   ./scripts/run-agent.sh --dry-run    # Show next task without executing
 #   ./scripts/run-agent.sh --phase 1    # Run only Phase 1 tasks
+#   ./scripts/run-agent.sh --model opus # Force a specific model for all tasks
+#
+# Model selection: Each task or phase can specify a preferred model in
+# progress.json (task.model or phase.model). The --model flag overrides both.
+# Default: sonnet
 #
 set -euo pipefail
 
@@ -20,14 +25,17 @@ GT="/opt/homebrew/bin/gt"
 MAX_TURNS=200
 PAUSE_BETWEEN_SESSIONS=10
 USE_GT=false
+DEFAULT_MODEL="sonnet"
 
 # Parse flags
 DRY_RUN=false
 TARGET_PHASE=""
+MODEL_OVERRIDE=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --dry-run) DRY_RUN=true; shift ;;
     --phase) TARGET_PHASE="$2"; shift 2 ;;
+    --model) MODEL_OVERRIDE="$2"; shift 2 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
@@ -119,7 +127,7 @@ all_complete() {
   fi
 }
 
-# Get next task info
+# Get next task info (prints task description to stdout)
 next_task_info() {
   python3 -c "
 import json, sys
@@ -151,6 +159,42 @@ for phase in data['phases']:
 print('No pending tasks found.')
 sys.exit(1)
 "
+}
+
+# Resolve model for a task: CLI override > task.model > phase.model > default
+resolve_model() {
+  if [[ -n "$MODEL_OVERRIDE" ]]; then
+    echo "$MODEL_OVERRIDE"
+    return
+  fi
+  python3 -c "
+import json, sys
+
+with open('$PROGRESS_FILE') as f:
+    data = json.load(f)
+
+for phase in data['phases']:
+    if phase['status'] == 'completed':
+        continue
+    if '$TARGET_PHASE' and phase['id'] != int('${TARGET_PHASE:-0}' or '0'):
+        continue
+    phase_model = phase.get('model', '')
+    for task in phase['tasks']:
+        if task['status'] in ('pending', 'in_progress'):
+            all_deps_met = True
+            for dep in task.get('dependencies', []):
+                for p in data['phases']:
+                    for t in p['tasks']:
+                        if t['id'] == dep and t['status'] != 'completed':
+                            all_deps_met = False
+            if all_deps_met or task['status'] == 'in_progress':
+                # Task-level model takes priority over phase-level
+                model = task.get('model', '') or phase_model
+                print(model)
+                sys.exit(0)
+
+sys.exit(1)
+" 2>/dev/null || echo ""
 }
 
 LOG_VIEWER="$REPO_ROOT/scripts/log-viewer.py"
@@ -188,10 +232,15 @@ while true; do
   TIMESTAMP=$(date +%Y%m%d-%H%M%S)
   LOG_FILE="$LOG_DIR/session-${SESSION_COUNT}-${TIMESTAMP}.log"
 
+  # Resolve model for this task
+  TASK_MODEL=$(resolve_model)
+  TASK_MODEL="${TASK_MODEL:-$DEFAULT_MODEL}"
+
   if $DRY_RUN; then
     echo "--- Session $SESSION_COUNT (dry run) ---"
-    echo "Next: $NEXT_TASK"
-    echo "Log:  $LOG_FILE"
+    echo "Next:  $NEXT_TASK"
+    echo "Model: $TASK_MODEL"
+    echo "Log:   $LOG_FILE"
     echo "(dry run — not executing)"
     exit 0
   fi
@@ -215,8 +264,11 @@ while true; do
   VIEWER_FLAGS=(--task "$NEXT_TASK" --log-path "$LOG_FILE" --session "$SESSION_COUNT")
   $USE_GT && VIEWER_FLAGS+=(--graphite)
 
+  echo "Using model: $TASK_MODEL"
+
   claude --print \
     "Read CLAUDE.md, then follow the Session Workflow to implement the next task. One task only. ${BRANCH_INSTRUCTION}${RECOVERY_INSTRUCTION}" \
+    --model "$TASK_MODEL" \
     --max-turns "$MAX_TURNS" \
     --output-format stream-json \
     --verbose \

@@ -3,6 +3,7 @@ package rating
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	"github.com/giits/rentmy/backend/internal/platform/ulid"
@@ -13,15 +14,27 @@ type riskAgent interface {
 	EmitSignal(ctx context.Context, in risk.EmitSignalInput) error
 }
 
+// reputationEnqueuer can schedule an async reputation recalculation for a user.
+type reputationEnqueuer interface {
+	EnqueueRecalc(ctx context.Context, userID string) error
+}
+
 // Service contains the rating business logic.
 type Service struct {
-	repo      *Repository
-	riskAgent riskAgent
+	repo       *Repository
+	riskAgent  riskAgent
+	reputation reputationEnqueuer
 }
 
 // NewService creates a new rating Service.
 func NewService(repo *Repository, riskAgent riskAgent) *Service {
 	return &Service{repo: repo, riskAgent: riskAgent}
+}
+
+// WithReputation injects the reputation enqueuer dependency.
+func (s *Service) WithReputation(r reputationEnqueuer) *Service {
+	s.reputation = r
+	return s
 }
 
 // SubmitRating submits a rating from fromUserID for the given transaction.
@@ -77,7 +90,7 @@ func (s *Service) SubmitRating(ctx context.Context, in CreateRatingInput) (*Rati
 		return nil, err
 	}
 
-	// Emit one positive_rating signal per bubble for reputation recalculation.
+	// Emit one positive_rating signal per bubble for the incremental signal log.
 	txnID := in.TransactionID
 	for range in.Bubbles {
 		if err := s.riskAgent.EmitSignal(ctx, risk.EmitSignalInput{
@@ -85,8 +98,17 @@ func (s *Service) SubmitRating(ctx context.Context, in CreateRatingInput) (*Rati
 			SignalType:    risk.SignalPositiveRating,
 			TransactionID: &txnID,
 		}); err != nil {
-			// Non-fatal: log-worthy but don't fail the request.
+			// Non-fatal: signal log is best-effort.
 			_ = err
+		}
+	}
+
+	// Schedule an authoritative source-based reputation recalculation for the
+	// rated user.  Non-fatal: the signal log above already updated the score.
+	if s.reputation != nil {
+		if err := s.reputation.EnqueueRecalc(ctx, toUserID); err != nil {
+			slog.Warn("rating: failed to enqueue reputation recalc",
+				"userId", toUserID, "error", err)
 		}
 	}
 

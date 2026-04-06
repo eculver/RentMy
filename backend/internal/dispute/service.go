@@ -21,6 +21,11 @@ type Config struct {
 	SLAPostReturnHours int // SLA for post-return disputes (default 24h)
 }
 
+// reputationEnqueuer can schedule an async reputation recalculation for a user.
+type reputationEnqueuer interface {
+	EnqueueRecalc(ctx context.Context, userID string) error
+}
+
 // Service implements the dispute domain business logic.
 type Service struct {
 	repo        *Repository
@@ -29,6 +34,7 @@ type Service struct {
 	paymentSvc  *payment.Service
 	modelRouter *router.AnthropicRouter
 	riverClient *river.Client[pgx.Tx]
+	reputation  reputationEnqueuer
 	cfg         Config
 }
 
@@ -51,6 +57,12 @@ func NewService(
 		riverClient: riverClient,
 		cfg:         cfg,
 	}
+}
+
+// WithReputation injects the reputation enqueuer dependency.
+func (s *Service) WithReputation(r reputationEnqueuer) *Service {
+	s.reputation = r
+	return s
 }
 
 // FileDispute creates a new dispute, transitions the transaction to DISPUTED,
@@ -255,6 +267,7 @@ func (s *Service) executeDecision(ctx context.Context, disputeID string, transac
 		if err := s.repo.UpdateStatus(ctx, disputeID, StatusAutoResolved); err != nil {
 			return fmt.Errorf("update status: %w", err)
 		}
+		s.enqueueReputationRecalc(ctx, transactionID)
 		return nil
 	}
 
@@ -276,7 +289,37 @@ func (s *Service) executeDecision(ctx context.Context, disputeID string, transac
 	if err := s.repo.UpdateStatus(ctx, disputeID, StatusAutoResolved); err != nil {
 		return fmt.Errorf("update status: %w", err)
 	}
+
+	// Schedule authoritative reputation recalculation for both parties.
+	s.enqueueReputationRecalcForParties(ctx, txn.RenterID, txn.HostID)
 	return nil
+}
+
+// enqueueReputationRecalc fetches the transaction parties and enqueues recalc for both.
+func (s *Service) enqueueReputationRecalc(ctx context.Context, transactionID string) {
+	if s.reputation == nil {
+		return
+	}
+	renterID, hostID, err := s.repo.GetTransactionParties(ctx, transactionID)
+	if err != nil {
+		slog.Warn("dispute: failed to get parties for reputation recalc", "error", err)
+		return
+	}
+	s.enqueueReputationRecalcForParties(ctx, renterID, hostID)
+}
+
+// enqueueReputationRecalcForParties enqueues reputation recalc jobs for both
+// the renter and the host.  Errors are logged but do not fail the caller.
+func (s *Service) enqueueReputationRecalcForParties(ctx context.Context, renterID, hostID string) {
+	if s.reputation == nil {
+		return
+	}
+	for _, userID := range []string{renterID, hostID} {
+		if err := s.reputation.EnqueueRecalc(ctx, userID); err != nil {
+			slog.Warn("dispute: failed to enqueue reputation recalc",
+				"userId", userID, "error", err)
+		}
+	}
 }
 
 // ProcessDispute runs the full dispute resolution pipeline: gather evidence, run agent, route & execute.

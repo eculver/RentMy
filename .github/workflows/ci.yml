@@ -108,12 +108,14 @@ jobs:
         run: go mod download
 
       - name: Run integration tests
-        run: |
-          if [ -d "tests/integration" ] && ls tests/integration/*_test.go 1>/dev/null 2>&1; then
-            go test ./tests/integration/... -v -count=1 -timeout=300s
-          else
-            echo "No integration tests found yet — skipping (Phase 7 will add them)"
-          fi
+        run: go test ./tests/integration/... -v -count=1 -timeout=300s
+        env:
+          # testcontainers-go uses the Docker socket available on ubuntu-latest runners.
+          # Ryuk (the resource reaper) is disabled because it requires a privileged container
+          # which is not available in standard GitHub Actions runners.
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          # Suppress testcontainers verbose startup logs in CI output.
+          TESTCONTAINERS_RYUK_VERBOSE: "false"
 
   # ── Mobile: TypeScript + Lint ──────────────────────────────────────────────
   mobile-lint:
@@ -161,9 +163,4 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: |
-          if npx jest --listTests 2>/dev/null | grep -q '.'; then
-            npx jest --ci --coverage --verbose
-          else
-            echo "No mobile tests found yet — skipping (Phase 7 will add them)"
-          fi
+        run: npx jest --ci --coverage --verbose

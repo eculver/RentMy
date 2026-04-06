@@ -123,7 +123,7 @@ Both smoke tests must pass.
 
 **Goal:** Test the user, media, listing, discovery, and payment API surfaces end-to-end.
 
-**Dependencies:** [7.1]
+**Dependencies:** [5.1]
 
 ### Tests to write in `backend/tests/integration/`
 
@@ -166,7 +166,7 @@ All new tests must pass. Existing unit tests must still pass.
 
 **Goal:** Test the booking lifecycle, proximity, notifications, messaging, and AI agent surfaces.
 
-**Dependencies:** [7.1, 7.3]
+**Dependencies:** [5.1, 5.3]
 
 ### Tests to write
 
@@ -204,7 +204,7 @@ cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s
 
 **Goal:** Write screen tests for the core mobile screens built in Phases 1-4.
 
-**Dependencies:** [7.2]
+**Dependencies:** [5.2]
 
 ### Tests to write in `mobile/__tests__/`
 
@@ -251,7 +251,7 @@ cd mobile && npx jest --verbose
 
 **Goal:** Add integration tests and mobile tests to GitHub Actions CI.
 
-**Dependencies:** [7.1, 7.2]
+**Dependencies:** [5.1, 5.2]
 
 ### What to build
 

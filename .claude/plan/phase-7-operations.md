@@ -502,7 +502,7 @@ curl -sf "http://localhost:8080/api/v1/ops/agents/metrics?agent_type=DISPUTE" \
   - `GET /api/v1/ops/reviews/:id` — single review item with full context
   - `PUT /api/v1/ops/reviews/:id/resolve` — resolve (body: `{action: "approve"|"override"|"request_info", reason?, notes?, overrideDecision?}`)
   - `PUT /api/v1/ops/reviews/:id/assign` — assign to user (body: `{assigneeId}`)
-- Escalation hooks in existing agents (Phase 3-5 code) — when any agent sets `escalated = true` on an `AgentDecision`, also call `review.CreateReviewItem()` to enqueue for human review
+- Escalation hooks in existing agents (Phase 3-6 code) — when any agent sets `escalated = true` on an `AgentDecision`, also call `review.CreateReviewItem()` to enqueue for human review
 
 **Verify:**
 ```bash
@@ -745,13 +745,13 @@ INSERT INTO alert_rules (id, metric_name, operator, threshold, severity, channel
 
 | Step | What | Day | Depends On |
 |------|------|-----|------------|
-| 6.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | Phase 6 complete |
-| 6.2 | FraudAgent + signals + patterns (backend) | Day 3-6 | 6.1 (shares ops alert routing) |
-| 6.3 | Ops dashboard (web) | Day 5-10 | 6.1, 6.2 (needs API endpoints to render) |
-| 6.4 | Referral system (backend + RN) | Day 5-8 | Phase 6 complete (needs transaction completion hook) |
-| 6.5 | Agent learning endpoints (backend) | Day 7-9 | 6.1 (extends ops handler) |
-| 6.6 | Human review queue (backend) | Day 8-10 | 6.1, 6.2 (review items created by agent escalations) |
+| 7.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | Phase 6 complete |
+| 7.2 | FraudAgent + signals + patterns (backend) | Day 3-6 | 7.1 (shares ops alert routing) |
+| 7.3 | Ops dashboard (web) | Day 5-10 | 7.1, 7.2 (needs API endpoints to render) |
+| 7.4 | Referral system (backend + RN) | Day 5-8 | Phase 6 complete (needs transaction completion hook) |
+| 7.5 | Agent learning endpoints (backend) | Day 7-9 | 7.1 (extends ops handler) |
+| 7.6 | Human review queue (backend) | Day 8-10 | 7.1, 7.2 (review items created by agent escalations) |
 
-Steps 6.1 and 6.4 are independent and can start in parallel (ops metrics vs. referral system).
+Steps 7.1 and 7.4 are independent and can start in parallel (ops metrics vs. referral system).
 Step 7.3 (dashboard) can start UI scaffolding on Day 5 while backend endpoints are still being built — mock data first, wire to real API as endpoints land.
-Steps 6.5 and 6.6 extend 6.1's handler and can be developed in parallel with each other once 6.1 is complete.
+Steps 7.5 and 7.6 extend 7.1's handler and can be developed in parallel with each other once 7.1 is complete.

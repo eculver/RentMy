@@ -56,7 +56,7 @@
 
 ### React Native (New Dependencies)
 
-No new dependencies for Phase 5. Camera (react-native-vision-camera), gyroscope (expo-sensors), and push notifications (expo-notifications) are already installed from Phases 1 and 3.
+No new dependencies for Phase 6. Camera (react-native-vision-camera), gyroscope (expo-sensors), and push notifications (expo-notifications) are already installed from Phases 1 and 3.
 
 ---
 
@@ -942,15 +942,15 @@ Maintain a golden test set of 20+ image pairs in `backend/testdata/photodiff/`:
 
 | Step | What | Day | Depends On |
 |------|------|-----|------------|
-| 5.1 | Photo diff pipeline (Python sidecar + Go client + service) | Day 1-4 | Phase 4 complete (media, transactions in place) |
-| 5.2 | DisputeAgent with escalation gate | Day 3-6 | 5.1 (needs photo diff results) |
-| 5.3 | LateReturnAgent | Day 4-6 | 5.2 (escalation hands off to DisputeAgent) |
-| 5.4 | Rating system (backend + RN) | Day 5-7 | Phase 4 complete (independent of 5.1-5.3) |
-| 5.5 | Reputation score recalculation | Day 6-8 | 5.4 (needs ratings as input), 5.2 (needs dispute outcomes) |
-| 5.6 | Guarantee fund accounting | Day 7-9 | 5.2 (DisputeAgent draws from fund) |
-| 5.7 | Outcome linking | Day 8-10 | 5.2, 5.3, 5.5 (needs agent decisions + outcomes to link) |
-| 5.8 | Post-rental flow (RN) | Day 7-10 | 5.2, 5.4 (needs dispute + rating APIs) |
+| 6.1 | Photo diff pipeline (Python sidecar + Go client + service) | Day 1-4 | Phase 5 complete (media, transactions in place) |
+| 6.2 | DisputeAgent with escalation gate | Day 3-6 | 6.1 (needs photo diff results) |
+| 6.3 | LateReturnAgent | Day 4-6 | 6.2 (escalation hands off to DisputeAgent) |
+| 6.4 | Rating system (backend + RN) | Day 5-7 | Phase 5 complete (independent of 6.1-6.3) |
+| 6.5 | Reputation score recalculation | Day 6-8 | 6.4 (needs ratings as input), 6.2 (needs dispute outcomes) |
+| 6.6 | Guarantee fund accounting | Day 7-9 | 6.2 (DisputeAgent draws from fund) |
+| 6.7 | Outcome linking | Day 8-10 | 6.2, 6.3, 6.5 (needs agent decisions + outcomes to link) |
+| 6.8 | Post-rental flow (RN) | Day 7-10 | 6.2, 6.4 (needs dispute + rating APIs) |
 
-Steps 5.4 and 5.1 are independent and can start in parallel (ratings vs photo diff).
-Steps 5.8 and 5.7 are independent of each other and can be parallelized (RN vs backend).
-The critical path is: 5.1 -> 5.2 -> 5.3 -> 5.5 -> 5.7.
+Steps 6.4 and 6.1 are independent and can start in parallel (ratings vs photo diff).
+Steps 6.8 and 6.7 are independent of each other and can be parallelized (RN vs backend).
+The critical path is: 6.1 -> 6.2 -> 6.3 -> 6.5 -> 6.7.

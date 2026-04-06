@@ -24,6 +24,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/dispute"
+	"github.com/giits/rentmy/backend/internal/latereturn"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -154,6 +155,16 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, backfillReputationWorker)
 	river.AddWorker(workers, backfillRiskWorker)
 
+	// LateReturnAgent pre-river workers (riverClient injected after River starts).
+	lateReturnRepo := latereturn.NewRepository(pool)
+	lateReturnSvcPre := latereturn.NewService(lateReturnRepo, decisionSvc, nil, modelRouter, nil, latereturn.Config{
+		EscalationThresholdHours: cfg.LateReturnEscalationThresholdH,
+		DamageReserveRateBPS:     cfg.DamageReserveRate,
+		ReCheckIntervalMinutes:   cfg.LateReturnReCheckMinutes,
+	})
+	river.AddWorker(workers, latereturn.NewLateReturnCheckWorker(lateReturnSvcPre))
+	river.AddWorker(workers, latereturn.NewLateReturnEscalationWorker(lateReturnSvcPre))
+
 	// DisputeAgent pre-river workers (riverClient injected after River starts).
 	disputeRepo := dispute.NewRepository(pool)
 	disputeSvcPre := dispute.NewService(disputeRepo, decisionSvc, nil, nil, modelRouter, nil, dispute.Config{
@@ -282,6 +293,15 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	*disputeSvcPre = *disputeSvc
 	disputeHandler := dispute.NewHandler(disputeSvc)
 
+	// LateReturnAgent — full service with all dependencies.
+	lateReturnSvc := latereturn.NewService(lateReturnRepo, decisionSvc, paymentSvc, modelRouter, riverClient, latereturn.Config{
+		EscalationThresholdHours: cfg.LateReturnEscalationThresholdH,
+		DamageReserveRateBPS:     cfg.DamageReserveRate,
+		ReCheckIntervalMinutes:   cfg.LateReturnReCheckMinutes,
+	})
+	*lateReturnSvcPre = *lateReturnSvc
+	lateReturnHandler := latereturn.NewHandler(lateReturnSvc)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -307,6 +327,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	backfillHandler.Mount(apiV1, authMW)
 	photodiffHandler.Mount(apiV1, authMW)
 	disputeHandler.Mount(apiV1, authMW)
+	lateReturnHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

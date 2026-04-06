@@ -175,6 +175,9 @@ func TestMain(m *testing.M) {
 		// Notifications.
 		PickupReminderMinutes: 30,
 		ReturnReminderMinutes: 30,
+		// Dispute.
+		DisputeSLAActiveHours:     4,
+		DisputeSLAPostReturnHours: 24,
 	}
 
 	code = m.Run()
@@ -244,6 +247,7 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool) {
 
 	_, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
+			disputes,
 			agent_decisions,
 			agreements,
 			agreement_acceptances,

@@ -98,6 +98,10 @@ type Config struct {
 	TwilioAuthToken   string `env:"TWILIO_AUTH_TOKEN" envDefault:""`
 	TwilioFromNumber  string `env:"TWILIO_FROM_NUMBER" envDefault:""`
 
+	// Dispute config (PRD section 20).
+	DisputeSLAActiveHours     int `env:"DISPUTE_SLA_ACTIVE_HOURS" envDefault:"4"`
+	DisputeSLAPostReturnHours int `env:"DISPUTE_SLA_POST_RETURN_HOURS" envDefault:"24"`
+
 	// Booking config (PRD sections 7, 9, 18).
 	AutoDeclineTimeoutH            int `env:"AUTO_DECLINE_TIMEOUT_HOURS" envDefault:"2"`
 	FraudNewAccountDays            int `env:"FRAUD_NEW_ACCOUNT_DAYS" envDefault:"30"`

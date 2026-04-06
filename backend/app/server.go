@@ -23,6 +23,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
+	"github.com/giits/rentmy/backend/internal/dispute"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -153,6 +154,16 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, backfillReputationWorker)
 	river.AddWorker(workers, backfillRiskWorker)
 
+	// DisputeAgent pre-river workers (riverClient injected after River starts).
+	disputeRepo := dispute.NewRepository(pool)
+	disputeSvcPre := dispute.NewService(disputeRepo, decisionSvc, nil, nil, modelRouter, nil, dispute.Config{
+		SLAActiveHours:     cfg.DisputeSLAActiveHours,
+		SLAPostReturnHours: cfg.DisputeSLAPostReturnHours,
+	})
+	river.AddWorker(workers, dispute.NewDisputeResolutionWorker(disputeSvcPre))
+	river.AddWorker(workers, dispute.NewRePromptExpiryWorker(disputeSvcPre))
+	river.AddWorker(workers, dispute.NewSLAMonitorWorker(disputeSvcPre))
+
 	riverClient, err := riverpkg.New(ctx, pool, workers)
 	if err != nil {
 		return nil, fmt.Errorf("starting river: %w", err)
@@ -261,6 +272,16 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	photodiffSvc := photodiff.NewService(photodiffRepo, mediaRepo, cvClient, modelRouter, s3Client)
 	photodiffHandler := photodiff.NewHandler(photodiffSvc)
 
+	// DisputeAgent — full service with all dependencies.
+	disputeHoldSvc := dispute.NewHoldService(paymentSvc)
+	disputeSvc := dispute.NewService(disputeRepo, decisionSvc, disputeHoldSvc, paymentSvc, modelRouter, riverClient, dispute.Config{
+		SLAActiveHours:     cfg.DisputeSLAActiveHours,
+		SLAPostReturnHours: cfg.DisputeSLAPostReturnHours,
+	})
+	// Inject real dependencies into the pre-river workers.
+	*disputeSvcPre = *disputeSvc
+	disputeHandler := dispute.NewHandler(disputeSvc)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -285,6 +306,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	agreementHandler.Mount(apiV1, authMW)
 	backfillHandler.Mount(apiV1, authMW)
 	photodiffHandler.Mount(apiV1, authMW)
+	disputeHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

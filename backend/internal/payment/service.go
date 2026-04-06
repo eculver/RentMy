@@ -404,3 +404,67 @@ func (s *Service) GetTransaction(ctx context.Context, id string) (Transaction, e
 func (s *Service) GetRenterBookings(ctx context.Context, renterID string, limit, offset int) ([]Transaction, int, error) {
 	return s.repo.GetRenterTransactions(ctx, renterID, limit, offset)
 }
+
+// UpdateTransactionStatus updates the status of a transaction.
+func (s *Service) UpdateTransactionStatus(ctx context.Context, transactionID, status string) error {
+	return s.repo.UpdateTransactionStatus(ctx, transactionID, status)
+}
+
+// ChargeForDamageOverflow attempts to charge the renter's card for damage that
+// exceeds the hold amount. Requires the renter to have a Stripe customer with
+// a default payment method on file.
+func (s *Service) ChargeForDamageOverflow(ctx context.Context, transactionID string, amount int64) error {
+	txn, err := s.repo.GetTransaction(ctx, transactionID)
+	if err != nil {
+		return fmt.Errorf("get transaction: %w", err)
+	}
+	customerID, err := s.repo.GetStripeCustomerID(ctx, txn.RenterID)
+	if err != nil {
+		return fmt.Errorf("get renter customer id: %w", err)
+	}
+	if customerID == "" {
+		return ErrNoPaymentMethod
+	}
+	// Use default payment method via the Stripe customer.
+	_, err = s.adapter.ChargeRentalFee(ctx, amount, "usd", "", customerID)
+	if err != nil {
+		return fmt.Errorf("charge damage overflow: %w", err)
+	}
+	return nil
+}
+
+// ClaimGuaranteeFund draws from the guarantee fund to cover damage shortfalls.
+// The fund balance cannot go negative — only the available amount is disbursed.
+func (s *Service) ClaimGuaranteeFund(ctx context.Context, transactionID string, amount int64) error {
+	balance, err := s.repo.GetGuaranteeFundBalance(ctx)
+	if err != nil {
+		return fmt.Errorf("get fund balance: %w", err)
+	}
+	if balance <= 0 {
+		return fmt.Errorf("guarantee fund empty, cannot claim %d cents", amount)
+	}
+	claimAmount := amount
+	if claimAmount > balance {
+		claimAmount = balance
+	}
+
+	tx, err := s.repo.BeginTx(ctx)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	entry := GuaranteeFundEntry{
+		ID:            ulid.New(),
+		TransactionID: transactionID,
+		EntryType:     "CLAIM",
+		Amount:        -claimAmount,
+	}
+	if err := s.repo.InsertGuaranteeFundEntry(ctx, tx, entry); err != nil {
+		return fmt.Errorf("insert claim entry: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit claim: %w", err)
+	}
+	return nil
+}

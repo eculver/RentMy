@@ -12,7 +12,7 @@
 | 6.4 | Rating system (backend + RN) | Completed | task-6.4-rating-system | 356ec39 |
 | 6.5 | Reputation score recalculation | Completed | task-6.5-reputation-score-recalculation | 30a9259 |
 | 6.6 | Guarantee fund accounting | Completed | task-6.6-guarantee-fund-accounting | d9589b0 |
-| 6.7 | Outcome linking (Agent Learning Framework) | Pending | — | — |
+| 6.7 | Outcome linking (Agent Learning Framework) | Completed | task-6.7-outcome-linking | 9bc1807 |
 | 6.8 | Post-rental flow (RN) | Pending | — | — |
 
 ## Notes
@@ -73,3 +73,14 @@
 - Config fields added: `ReserveRatioNormal`, `ReserveRatioAlert`, `ReserveRatioRestrictHigh`, `LossRatioTarget`
 - 20 unit tests for threshold logic; all existing tests continue to pass
 - No migration needed — uses existing `guarantee_fund_entries` table from 001_initial_schema.sql
+
+### Task 6.7 — Outcome Linking (Agent Learning Framework)
+- New `backend/internal/outcome/` package — PRD §31 decision→outcome→calibration pipeline
+- `LinkOutcomes` evaluates all agent decisions per transaction using agent-specific correctness rules
+- 7 agent-specific rules: DisputeAgent (not overridden), RiskAgent (assessment matched outcome), AppraisalAgent (not overridden), LateReturnAgent (escalation warranted), AgreementAgent (no gap dispute), VerificationAgent (not fraud-flagged), FraudAgent (confirmed fraudulent)
+- Calibration: 5 confidence buckets, rolling 90-day window, stored in Redis with TTL
+- River jobs: `OutcomeLinkJob` (48h delay), `MonthlyCalibrationReportJob`
+- Dispute and booking services schedule outcome linking after resolution/checkout
+- Admin endpoints: calibration overview, per-agent calibration, paginated decisions with outcome data
+- 6 unit tests + 10 integration tests; all existing tests continue to pass
+- No migration needed — uses existing `outcome_id`/`outcome_correct` columns from migration 006

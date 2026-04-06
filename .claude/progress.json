@@ -896,7 +896,7 @@
         {
           "id": "6.5",
           "name": "Reputation score recalculation",
-          "status": "pending",
+          "status": "completed",
           "model": "sonnet",
           "domain": "backend",
           "dependencies": [
@@ -912,7 +912,9 @@
             "cd backend && go build ./cmd/server",
             "cd backend && go test ./... -v -count=1",
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
-          ]
+          ],
+          "commitSha": "30a9259",
+          "branch": "task-6.5-reputation-score-recalculation"
         },
         {
           "id": "6.6",

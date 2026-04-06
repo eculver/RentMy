@@ -689,7 +689,7 @@
     {
       "id": 5,
       "name": "Test Infrastructure + Retroactive Coverage",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [
         4
       ],
@@ -804,7 +804,7 @@
         {
           "id": "6.1",
           "name": "Photo diff pipeline",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "backend",
           "dependencies": [
             "5.1"

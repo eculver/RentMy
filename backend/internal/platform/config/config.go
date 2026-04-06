@@ -85,6 +85,9 @@ type Config struct {
 	GPSThresholdMeters  float64 `env:"GPS_THRESHOLD_METERS" envDefault:"100"`
 	PINValidityMinutes  int     `env:"PIN_VALIDITY_MINUTES" envDefault:"30"`
 
+	// CV Service URL (photo diff pipeline sidecar).
+	CVServiceURL string `env:"CV_SERVICE_URL" envDefault:"http://localhost:8090"`
+
 	// Anthropic API config (AI agents — Phase 4+).
 	AnthropicAPIKey      string `env:"ANTHROPIC_API_KEY" envDefault:""`
 	AnthropicFullModel   string `env:"ANTHROPIC_FULL_MODEL" envDefault:"claude-sonnet-4-6"`

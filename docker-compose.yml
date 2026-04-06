@@ -56,6 +56,19 @@ services:
       timeout: 5s
       retries: 5
 
+  cv-service:
+    build:
+      context: ./cv-service
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8090/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # OSRM self-hosted routing service (optional — requires pre-processed data).
   # Run `scripts/osrm-prepare.sh` once to build /data/region.osrm, then start
   # this service with: docker compose --profile osrm up -d

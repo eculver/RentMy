@@ -23,6 +23,8 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
+	"github.com/giits/rentmy/backend/internal/photodiff"
+	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
 	"github.com/giits/rentmy/backend/internal/booking"
 	"github.com/giits/rentmy/backend/internal/discovery"
@@ -253,6 +255,12 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	agreementHandler := agreement.NewHandler(agreementSvc)
 	backfillHandler := backfill.NewHandler(riverClient, backfillProgress)
 
+	// PhotoDiff pipeline — optional, requires cv-service sidecar.
+	cvClient := cv.New(cfg.CVServiceURL)
+	photodiffRepo := photodiff.NewRepository(pool)
+	photodiffSvc := photodiff.NewService(photodiffRepo, mediaRepo, cvClient, modelRouter, s3Client)
+	photodiffHandler := photodiff.NewHandler(photodiffSvc)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -276,6 +284,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	riskHandler.Mount(apiV1, authMW)
 	agreementHandler.Mount(apiV1, authMW)
 	backfillHandler.Mount(apiV1, authMW)
+	photodiffHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

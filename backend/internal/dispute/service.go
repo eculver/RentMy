@@ -12,6 +12,7 @@ import (
 
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/router"
+	"github.com/giits/rentmy/backend/internal/outcome"
 	"github.com/giits/rentmy/backend/internal/payment"
 )
 
@@ -268,6 +269,7 @@ func (s *Service) executeDecision(ctx context.Context, disputeID string, transac
 			return fmt.Errorf("update status: %w", err)
 		}
 		s.enqueueReputationRecalc(ctx, transactionID)
+		s.scheduleOutcomeLink(ctx, transactionID)
 		return nil
 	}
 
@@ -292,6 +294,7 @@ func (s *Service) executeDecision(ctx context.Context, disputeID string, transac
 
 	// Schedule authoritative reputation recalculation for both parties.
 	s.enqueueReputationRecalcForParties(ctx, txn.RenterID, txn.HostID)
+	s.scheduleOutcomeLink(ctx, transactionID)
 	return nil
 }
 
@@ -319,6 +322,18 @@ func (s *Service) enqueueReputationRecalcForParties(ctx context.Context, renterI
 			slog.Warn("dispute: failed to enqueue reputation recalc",
 				"userId", userID, "error", err)
 		}
+	}
+}
+
+// scheduleOutcomeLink enqueues an outcome linking job 48h from now for the
+// given transaction. Errors are logged but do not fail the caller.
+func (s *Service) scheduleOutcomeLink(ctx context.Context, transactionID string) {
+	if s.riverClient == nil {
+		return
+	}
+	if err := outcome.ScheduleOutcomeLink(ctx, s.riverClient, transactionID); err != nil {
+		slog.Warn("dispute: failed to schedule outcome link",
+			"transactionId", transactionID, "error", err)
 	}
 }
 
@@ -411,6 +426,7 @@ func (s *Service) ResolveByHuman(ctx context.Context, in ResolveInput) error {
 		return fmt.Errorf("update review: %w", err)
 	}
 
+	s.scheduleOutcomeLink(ctx, d.TransactionID)
 	return nil
 }
 

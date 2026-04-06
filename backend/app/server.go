@@ -25,7 +25,6 @@ import (
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/dispute"
 	"github.com/giits/rentmy/backend/internal/latereturn"
-	"github.com/giits/rentmy/backend/internal/rating"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -44,6 +43,8 @@ import (
 	riverpkg "github.com/giits/rentmy/backend/internal/platform/river"
 	locals3 "github.com/giits/rentmy/backend/internal/platform/s3"
 	"github.com/giits/rentmy/backend/internal/proximity"
+	"github.com/giits/rentmy/backend/internal/rating"
+	"github.com/giits/rentmy/backend/internal/reputation"
 	"github.com/giits/rentmy/backend/internal/user"
 )
 
@@ -141,6 +142,10 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	backfillReputationWorker := backfill.NewBackfillReputationWorker(backfillRepo, riskSvc, backfillProgress)
 	backfillRiskWorker := backfill.NewBackfillRiskScoreWorker(backfillRepo, riskSvc, backfillProgress)
 
+	// Reputation service — pre-river (riverClient injected after River starts).
+	reputationRepo := reputation.NewRepository(pool)
+	reputationSvcPre := reputation.NewService(reputationRepo, nil)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -155,6 +160,9 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, backfillAppraisalWorker)
 	river.AddWorker(workers, backfillReputationWorker)
 	river.AddWorker(workers, backfillRiskWorker)
+	river.AddWorker(workers, reputation.NewReputationRecalcWorker(reputationSvcPre))
+	river.AddWorker(workers, reputation.NewMonthlyHostReputationWorker(reputationSvcPre))
+	river.AddWorker(workers, reputation.NewNegativeDecayWorker(reputationSvcPre))
 
 	// LateReturnAgent pre-river workers (riverClient injected after River starts).
 	lateReturnRepo := latereturn.NewRepository(pool)
@@ -284,12 +292,17 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	photodiffSvc := photodiff.NewService(photodiffRepo, mediaRepo, cvClient, modelRouter, s3Client)
 	photodiffHandler := photodiff.NewHandler(photodiffSvc)
 
+	// Reputation service — full, with riverClient for async enqueue.
+	reputationSvc := reputation.NewService(reputationRepo, riverClient)
+	*reputationSvcPre = *reputationSvc
+
 	// DisputeAgent — full service with all dependencies.
 	disputeHoldSvc := dispute.NewHoldService(paymentSvc)
 	disputeSvc := dispute.NewService(disputeRepo, decisionSvc, disputeHoldSvc, paymentSvc, modelRouter, riverClient, dispute.Config{
 		SLAActiveHours:     cfg.DisputeSLAActiveHours,
 		SLAPostReturnHours: cfg.DisputeSLAPostReturnHours,
 	})
+	disputeSvc.WithReputation(reputationSvc)
 	// Inject real dependencies into the pre-river workers.
 	*disputeSvcPre = *disputeSvc
 	disputeHandler := dispute.NewHandler(disputeSvc)
@@ -305,7 +318,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 
 	// Rating system.
 	ratingRepo := rating.NewRepository(pool)
-	ratingSvc := rating.NewService(ratingRepo, riskSvc)
+	ratingSvc := rating.NewService(ratingRepo, riskSvc).WithReputation(reputationSvc)
 	ratingHandler := rating.NewHandler(ratingSvc)
 
 	// Build chi router.

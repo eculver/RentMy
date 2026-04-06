@@ -730,7 +730,7 @@
         {
           "id": "5.3",
           "name": "Phase 1-2 backend integration tests",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "backend",
           "dependencies": [
             "5.1"

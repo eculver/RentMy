@@ -10,7 +10,7 @@
 | 6.2 | DisputeAgent with escalation gate | Completed | task-6.2-dispute-agent | 35a58c6 |
 | 6.3 | LateReturnAgent | Completed | task-6.3-late-return-agent | 6d867cd |
 | 6.4 | Rating system (backend + RN) | Completed | task-6.4-rating-system | 356ec39 |
-| 6.5 | Reputation score recalculation | Pending | — | — |
+| 6.5 | Reputation score recalculation | Completed | task-6.5-reputation-score-recalculation | 30a9259 |
 | 6.6 | Guarantee fund accounting | Pending | — | — |
 | 6.7 | Outcome linking (Agent Learning Framework) | Pending | — | — |
 | 6.8 | Post-rental flow (RN) | Pending | — | — |
@@ -53,3 +53,12 @@
 - Profile screen shows received bubble summary in read-only pill format
 - 8 backend unit tests, 7 integration tests, 7 mobile component tests (66 total mobile)
 - All existing tests continue to pass
+
+### Task 6.5 — Reputation Score Recalculation
+- New `backend/internal/reputation/` package — source-based, idempotent score computation
+- Three River jobs: `reputation_recalc` (event-driven), `reputation_monthly_host`, `reputation_negative_decay`
+- `computeScore` reads raw tables (transactions, ratings, disputes, users) — never double-counts
+- 180-day decay applied per-event for disputes, cancellations, late returns; fraud flags never decay
+- `rating.Service` and `dispute.Service` both enqueue `ReputationRecalcJob` after relevant events
+- Two parallel scoring paths exist: risk package (incremental signal log) + reputation package (source truth)
+- 10 unit tests for scoring math, decay, milestones, clamping; all integration tests continue to pass

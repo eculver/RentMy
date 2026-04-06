@@ -53,6 +53,9 @@ const (
 
 	// DiscoveryService tasks.
 	TaskSemanticSearch AgentTask = "discovery.semantic_search"
+
+	// PhotoDiffService tasks.
+	TaskPhotoDiffComparison AgentTask = "photodiff.comparison"
 )
 
 // RouteInput is the payload sent to the model.

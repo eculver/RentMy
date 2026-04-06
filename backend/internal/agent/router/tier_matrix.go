@@ -40,6 +40,9 @@ var tierMatrix = map[AgentTask]ModelTier{
 
 	// DiscoveryService — semantic matching is a fast, cheap operation.
 	TaskSemanticSearch: TierCheap,
+
+	// PhotoDiffService — structural comparison needs vision reasoning.
+	TaskPhotoDiffComparison: TierFull,
 }
 
 // TierFor returns the ModelTier for a given AgentTask.

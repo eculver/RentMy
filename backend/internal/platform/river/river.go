@@ -13,16 +13,17 @@ import (
 	"github.com/riverqueue/river/rivermigrate"
 )
 
-// New creates and starts a River client with the given workers.
-// The caller must call client.Stop(ctx) on shutdown to allow in-flight
-// jobs to finish gracefully.
-func New(ctx context.Context, pool *pgxpool.Pool, workers *river.Workers) (*river.Client[pgx.Tx], error) {
+// New creates and starts a River client with the given workers and optional
+// periodic jobs. The caller must call client.Stop(ctx) on shutdown to allow
+// in-flight jobs to finish gracefully.
+func New(ctx context.Context, pool *pgxpool.Pool, workers *river.Workers, periodicJobs ...*river.PeriodicJob) (*river.Client[pgx.Tx], error) {
 	client, err := river.NewClient(riverpgxv5.New(pool), &river.Config{
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: 10},
 		},
-		Workers: workers,
-		Logger:  slog.Default(),
+		Workers:      workers,
+		PeriodicJobs: periodicJobs,
+		Logger:       slog.Default(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create river client: %w", err)

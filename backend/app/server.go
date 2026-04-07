@@ -203,7 +203,25 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, dispute.NewRePromptExpiryWorker(disputeSvcPre))
 	river.AddWorker(workers, dispute.NewSLAMonitorWorker(disputeSvcPre))
 
-	riverClient, err := riverpkg.New(ctx, pool, workers)
+	// Schedule periodic jobs for guarantee fund monitoring.
+	periodicJobs := []*river.PeriodicJob{
+		river.NewPeriodicJob(
+			river.PeriodicInterval(1*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return guaranteefund.FundHealthCheckJobArgs{}, nil
+			},
+			&river.PeriodicJobOpts{ID: "guarantee_fund_health_check"},
+		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(24*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return guaranteefund.LossRatioCheckJobArgs{}, nil
+			},
+			&river.PeriodicJobOpts{ID: "guarantee_fund_loss_ratio_check"},
+		),
+	}
+
+	riverClient, err := riverpkg.New(ctx, pool, workers, periodicJobs...)
 	if err != nil {
 		return nil, fmt.Errorf("starting river: %w", err)
 	}
@@ -253,7 +271,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	})
 	discoveryHandler := discovery.NewHandler(discoverySvc)
 
-	paymentSvc := payment.NewService(paymentRepo, stripeAdapter, riverClient, payment.Config{
+	paymentSvc := payment.NewService(paymentRepo, stripeAdapter, riverClient, guaranteeFundSvcPre, payment.Config{
 		TakeRateBPS:         cfg.TakeRateBPS,
 		GuaranteeRateBPS:    cfg.GuaranteeRateBPS,
 		DamageReserveRate:   cfg.DamageReserveRate,
@@ -325,7 +343,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	*guaranteeFundSvcPre = *guaranteeFundSvc
 
 	// DisputeAgent — full service with all dependencies.
-	disputeHoldSvc := dispute.NewHoldService(paymentSvc)
+	disputeHoldSvc := dispute.NewHoldService(paymentSvc, guaranteeFundSvc)
 	disputeSvc := dispute.NewService(disputeRepo, decisionSvc, disputeHoldSvc, paymentSvc, modelRouter, riverClient, dispute.Config{
 		SLAActiveHours:     cfg.DisputeSLAActiveHours,
 		SLAPostReturnHours: cfg.DisputeSLAPostReturnHours,

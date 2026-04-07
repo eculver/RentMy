@@ -97,23 +97,6 @@ type BookingResult struct {
 	TotalImpact          int64  `json:"totalImpact"` // holdAmount + rentalFee
 }
 
-// GuaranteeFundEntry represents a ledger entry in the guarantee fund.
-type GuaranteeFundEntry struct {
-	ID            string    `json:"id"`
-	TransactionID string    `json:"transactionId"`
-	EntryType     string    `json:"entryType"` // CONTRIBUTION, CLAIM, CARD_RECOVERY, COLLECTIONS_REFERRAL
-	Amount        int64     `json:"amount"`    // cents; positive = in, negative = out
-	BalanceAfter  int64     `json:"balanceAfter"`
-	CreatedAt     time.Time `json:"createdAt"`
-}
-
-// GuaranteeFundHealth summarizes the guarantee fund financial state.
-type GuaranteeFundHealth struct {
-	Balance              int64   `json:"balance"`
-	OutstandingGaps      int64   `json:"outstandingGaps"`
-	ReserveRatio         float64 `json:"reserveRatio"` // balance / outstandingGaps
-}
-
 // ListingSnapshot holds the listing fields needed to compute booking amounts.
 type ListingSnapshot struct {
 	ID                string

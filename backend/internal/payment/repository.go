@@ -252,63 +252,6 @@ func (r *Repository) UpdateTransactionStripeTransferID(ctx context.Context, tran
 	return nil
 }
 
-// InsertGuaranteeFundEntry inserts a guarantee fund ledger entry.
-// balance_after is computed as the previous balance_after plus amount.
-func (r *Repository) InsertGuaranteeFundEntry(ctx context.Context, tx pgx.Tx, entry GuaranteeFundEntry) error {
-	// Compute the running balance from the last entry.
-	var prev float64
-	err := tx.QueryRow(ctx,
-		`SELECT COALESCE(balance_after, 0) FROM guarantee_fund_entries ORDER BY created_at DESC LIMIT 1`,
-	).Scan(&prev)
-	// ErrNoRows is fine: starting balance is 0.
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return fmt.Errorf("get guarantee fund balance: %w", err)
-	}
-
-	balanceAfter := prev + float64(entry.Amount)/100
-
-	_, err = tx.Exec(ctx,
-		`INSERT INTO guarantee_fund_entries (id, transaction_id, entry_type, amount, balance_after)
-		 VALUES ($1, $2, $3, $4, $5)`,
-		entry.ID,
-		entry.TransactionID,
-		entry.EntryType,
-		float64(entry.Amount)/100,
-		balanceAfter,
-	)
-	if err != nil {
-		return fmt.Errorf("insert guarantee fund entry: %w", err)
-	}
-	return nil
-}
-
-// GetGuaranteeFundBalance returns the current guarantee fund balance in cents.
-func (r *Repository) GetGuaranteeFundBalance(ctx context.Context) (int64, error) {
-	var balance float64
-	err := r.pool.QueryRow(ctx,
-		`SELECT COALESCE(balance_after, 0) FROM guarantee_fund_entries ORDER BY created_at DESC LIMIT 1`,
-	).Scan(&balance)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return 0, nil
-	}
-	if err != nil {
-		return 0, fmt.Errorf("get guarantee fund balance: %w", err)
-	}
-	return int64(balance * 100), nil
-}
-
-// GetTotalOutstandingGuaranteeGaps returns the sum of guarantee_gap for all active transactions, in cents.
-func (r *Repository) GetTotalOutstandingGuaranteeGaps(ctx context.Context) (int64, error) {
-	var total float64
-	err := r.pool.QueryRow(ctx,
-		`SELECT COALESCE(SUM(guarantee_gap), 0) FROM transactions WHERE status = 'ACTIVE'`,
-	).Scan(&total)
-	if err != nil {
-		return 0, fmt.Errorf("get total outstanding guarantee gaps: %w", err)
-	}
-	return int64(total * 100), nil
-}
-
 // GetHostTransactionCount returns the number of completed transactions for a host.
 func (r *Repository) GetHostTransactionCount(ctx context.Context, hostID string) (int, error) {
 	var count int

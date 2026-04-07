@@ -10,7 +10,7 @@ export default function StripeProviderWrapper({
 }) {
   return (
     <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
-      {children}
+      {children as React.ReactElement}
     </StripeProvider>
   );
 }

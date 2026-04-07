@@ -186,7 +186,7 @@ describe('RegisterScreen', () => {
     pressCreateAccount();
 
     await waitFor(() =>
-      expect(registerSpy).toHaveBeenCalledWith('Jane Smith', 'jane@example.com', 'Password1'),
+      expect(registerSpy).toHaveBeenCalledWith('Jane Smith', 'jane@example.com', 'Password1', undefined),
     );
   });
 

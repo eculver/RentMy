@@ -16,6 +16,12 @@ import (
 // ErrBadCredentials is returned when login email/password do not match.
 var ErrBadCredentials = errors.New("invalid email or password")
 
+// ReferralApplier applies a referral code for a newly registered user.
+// Nil-safe: when nil, referral application is skipped.
+type ReferralApplier interface {
+	ApplyCode(ctx context.Context, refereeUserID, code string) error
+}
+
 // RepositoryInterface declares the persistence operations required by Service.
 type RepositoryInterface interface {
 	Insert(ctx context.Context, u *User, passwordHash string) (*User, error)
@@ -36,10 +42,11 @@ type RedisStore interface {
 
 // Service implements user registration, authentication, and profile management.
 type Service struct {
-	repo     RepositoryInterface
-	issuer   *auth.Issuer
-	redis    RedisStore
-	validate *validator.Validate
+	repo        RepositoryInterface
+	issuer      *auth.Issuer
+	redis       RedisStore
+	validate    *validator.Validate
+	referralSvc ReferralApplier // nil-safe
 }
 
 // NewService constructs a Service backed by the concrete Repository.
@@ -56,6 +63,12 @@ func NewServiceWithInterfaces(repo RepositoryInterface, issuer *auth.Issuer, red
 		redis:    redis,
 		validate: validator.New(),
 	}
+}
+
+// WithReferralService attaches a referral service to apply codes during registration.
+func (s *Service) WithReferralService(r ReferralApplier) *Service {
+	s.referralSvc = r
+	return s
 }
 
 // Register creates a new user account and returns auth tokens.
@@ -94,6 +107,14 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (*AuthResponse
 
 	if err := s.storeRefresh(ctx, inserted.ID, tokens.RefreshToken); err != nil {
 		return nil, err
+	}
+
+	// Apply referral code if provided — best-effort, does not fail registration.
+	if s.referralSvc != nil && in.ReferralCode != nil && *in.ReferralCode != "" {
+		if err := s.referralSvc.ApplyCode(ctx, inserted.ID, *in.ReferralCode); err != nil {
+			// Log but don't surface: a bad/expired code should not block registration.
+			_ = err
+		}
 	}
 
 	return &AuthResponse{User: inserted, AccessToken: tokens.AccessToken, RefreshToken: tokens.RefreshToken}, nil

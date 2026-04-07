@@ -31,10 +31,11 @@ type User struct {
 
 // RegisterInput is the request body for POST /api/v1/auth/register.
 type RegisterInput struct {
-	Email    string  `json:"email"    validate:"required,email"`
-	Password string  `json:"password" validate:"required,min=8"`
-	Name     string  `json:"name"     validate:"required,min=1,max=100"`
-	Phone    *string `json:"phone"    validate:"omitempty,e164"`
+	Email        string  `json:"email"        validate:"required,email"`
+	Password     string  `json:"password"     validate:"required,min=8"`
+	Name         string  `json:"name"         validate:"required,min=1,max=100"`
+	Phone        *string `json:"phone"        validate:"omitempty,e164"`
+	ReferralCode *string `json:"referralCode" validate:"omitempty"`
 }
 
 // LoginInput is the request body for POST /api/v1/auth/login.

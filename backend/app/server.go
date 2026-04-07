@@ -17,6 +17,8 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/referral"
+
 	"github.com/giits/rentmy/backend/internal/agent/agreement"
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/backfill"
@@ -215,6 +217,12 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	opsWorker := ops.NewHealthCheckWorker(opsAgent)
 	river.AddWorker(workers, opsWorker)
 
+	// Referral system — pre-river (riverClient injected after River starts).
+	referralRepo := referral.NewRepository(pool)
+	referralSvcPre := referral.NewService(referralRepo, stripeAdapter, paymentRepo, referralRepo, nil)
+	river.AddWorker(workers, referral.NewReferralPayoutJobWorker(referralSvcPre))
+	river.AddWorker(workers, referral.NewReferralStripeTransferWorker(referralSvcPre))
+
 	// FraudAgent — per-transaction signal detection and scheduled pattern scans.
 	fraudRepo := fraud.NewRepository(pool)
 	fraudAgent := fraud.New(fraudRepo, decisionSvc)
@@ -272,7 +280,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 		time.Duration(cfg.JWTAccessTTL)*time.Second,
 		time.Duration(cfg.JWTRefreshTTL)*time.Second,
 	)
-	userSvc := user.NewService(userRepo, issuer, redisStore)
+	userSvc := user.NewService(userRepo, issuer, redisStore).WithReferralService(referralSvcPre)
 	userHandler := user.NewHandler(userSvc)
 
 	mediaRepo := media.NewRepository(pool)
@@ -336,7 +344,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
 		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
-	bookingSvc.WithRiskAgent(riskSvc).WithAgreementAgent(agreementSvc).WithFraudAgent(fraudAgent)
+	bookingSvc.WithRiskAgent(riskSvc).WithAgreementAgent(agreementSvc).WithFraudAgent(fraudAgent).WithReferralService(referralSvcPre)
 	if deps.Pusher != nil {
 		bookingSvc.WithPusher(deps.Pusher)
 	}
@@ -407,6 +415,11 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	// FraudAgent handler.
 	fraudHandler := fraud.NewHandler(fraudRepo, fraudAgent)
 
+	// Referral system — full service with riverClient.
+	referralSvc := referral.NewService(referralRepo, stripeAdapter, paymentRepo, referralRepo, riverClient)
+	*referralSvcPre = *referralSvc
+	referralHandler := referral.NewHandler(referralSvcPre)
+
 	// OpsAgent handler.
 	opsHandler := ops.NewHandler(opsRepo, opsAgent)
 
@@ -441,6 +454,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	outcomeHandler.Mount(apiV1, authMW)
 	fraudHandler.Mount(apiV1, authMW)
 	opsHandler.Mount(apiV1, authMW)
+	referralHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

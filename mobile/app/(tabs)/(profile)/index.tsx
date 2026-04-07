@@ -38,6 +38,13 @@ export default function ProfileScreen() {
         >
           <Text className="text-white font-semibold">+ Create Listing</Text>
         </Pressable>
+
+        <Pressable
+          className="mt-3 w-full border border-sky-300 py-3 rounded-xl items-center"
+          onPress={() => router.push("/(tabs)/(profile)/referrals")}
+        >
+          <Text className="text-sky-600 font-semibold">Invite Friends — Earn $20</Text>
+        </Pressable>
       </View>
 
       {/* Rating bubbles section */}

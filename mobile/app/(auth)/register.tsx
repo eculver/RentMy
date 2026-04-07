@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,6 +17,7 @@ const schema = z.object({
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
+  referralCode: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -25,19 +26,23 @@ export default function RegisterScreen() {
   const register = useAuthStore((s) => s.register);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  // Pre-fill referral code from deep link (?ref=CODE).
+  const params = useLocalSearchParams<{ ref?: string }>();
+  const prefillCode = params.ref ?? "";
+
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { name: "", email: "", password: "", referralCode: prefillCode },
   });
 
   const onSubmit = async (data: FormData) => {
     setApiError(null);
     try {
-      await register(data.name, data.email, data.password);
+      await register(data.name, data.email, data.password, data.referralCode || undefined);
     } catch (err) {
       if (err instanceof HTTPError && err.response.status === 409) {
         setApiError("An account with this email already exists.");
@@ -109,6 +114,22 @@ export default function RegisterScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.password?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="referralCode"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <Input
+                  label="Referral Code (optional)"
+                  placeholder="ABCD1234"
+                  autoCapitalize="characters"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.referralCode?.message}
                 />
               )}
             />

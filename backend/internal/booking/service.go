@@ -79,6 +79,12 @@ type fraudSvc interface {
 	EvaluateTransaction(ctx context.Context, transactionID string) error
 }
 
+// referralSvc is the subset of referral.Service the booking service calls on
+// checkout to trigger first-rental payout evaluation. Nil-safe.
+type referralSvc interface {
+	OnFirstRentalCompleted(ctx context.Context, userID string)
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
 	repo            *Repository
@@ -90,6 +96,7 @@ type Service struct {
 	riskSvc         *risk.Service // nil-safe: when nil, risk checks are skipped
 	agreementSvc    agreementSvc  // nil-safe: when nil, agreement generation is skipped
 	fraudSvc        fraudSvc      // nil-safe: when nil, fraud evaluation is skipped
+	referralSvc     referralSvc   // nil-safe: when nil, referral hook is skipped
 	cfg             Config
 }
 
@@ -114,6 +121,12 @@ func (s *Service) WithRiskAgent(r *risk.Service) *Service {
 // WithAgreementAgent attaches an AgreementAgent service for post-acceptance agreement generation.
 func (s *Service) WithAgreementAgent(a agreementSvc) *Service {
 	s.agreementSvc = a
+	return s
+}
+
+// WithReferralService attaches a referral service to receive first-rental hooks.
+func (s *Service) WithReferralService(r referralSvc) *Service {
+	s.referralSvc = r
 	return s
 }
 
@@ -403,6 +416,12 @@ func (s *Service) CheckOut(ctx context.Context, bookingID, requesterID string) e
 				"bookingId", bookingID, "error", err)
 		}
 	}
+
+	// Trigger referral first-rental hook for the renter (fire-and-forget).
+	if s.referralSvc != nil {
+		s.referralSvc.OnFirstRentalCompleted(ctx, booking.RenterID)
+	}
+
 	return nil
 }
 

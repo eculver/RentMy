@@ -32,7 +32,7 @@ interface AuthState {
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
   loginWithCredentials: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, referralCode?: string) => Promise<void>;
   refreshTokens: () => Promise<boolean>;
   setIdentityStatus: (status: IdentityStatus) => void;
 }
@@ -81,9 +81,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await get().login(data.accessToken, data.refreshToken, data.user);
   },
 
-  register: async (name: string, email: string, password: string) => {
+  register: async (name: string, email: string, password: string, referralCode?: string) => {
+    const body: Record<string, unknown> = { name, email, password };
+    if (referralCode) body.referralCode = referralCode;
     const data = await authApi
-      .post("api/v1/auth/register", { json: { name, email, password } })
+      .post("api/v1/auth/register", { json: body })
       .json<AuthResponse>();
     await get().login(data.accessToken, data.refreshToken, data.user);
   },

@@ -1017,12 +1017,30 @@
       ],
       "tasks": [
         {
+          "id": "7.0",
+          "name": "Full-stack build verification & fix pass",
+          "status": "pending",
+          "model": "opus",
+          "domain": "fullstack",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-7-operations.md#step-70",
+          "prdRefs": [],
+          "verificationCommands": [
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server",
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx expo export --platform web",
+            "cd backend && go test ./... -v -count=1 -timeout 120s",
+            "cd mobile && npx jest --ci"
+          ]
+        },
+        {
           "id": "7.1",
           "name": "OpsAgent",
           "status": "pending",
           "domain": "backend",
           "dependencies": [
-            "5.1"
+            "7.0"
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-71",
           "prdRefs": [
@@ -1041,7 +1059,7 @@
           "status": "pending",
           "domain": "backend",
           "dependencies": [
-            "5.1"
+            "7.0"
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-72",
           "prdRefs": [
@@ -1080,8 +1098,7 @@
           "status": "pending",
           "domain": "backend",
           "dependencies": [
-            "5.1",
-            "5.2"
+            "7.0"
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-74",
           "prdRefs": [],

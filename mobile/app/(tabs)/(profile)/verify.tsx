@@ -26,7 +26,7 @@ type ScreenState =
 
 // Placeholder brand logo — replace with actual asset when available.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const BRAND_LOGO = Image.resolveAssetSource(require("../../../assets/icon.png"));
+const BRAND_LOGO = Image.resolveAssetSource(require("../../../assets/images/icon.png"));
 
 export default function VerifyScreen() {
   const router = useRouter();

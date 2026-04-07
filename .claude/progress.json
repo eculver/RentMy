@@ -1105,7 +1105,7 @@
         {
           "id": "7.4",
           "name": "Referral system (backend + RN)",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "backend",
           "dependencies": [
             "7.0"
@@ -1119,7 +1119,8 @@
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s",
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest"
-          ]
+          ],
+          "commitSha": "e195c3d"
         }
       ]
     }

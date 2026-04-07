@@ -3,12 +3,9 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StripeProvider } from "@stripe/stripe-react-native";
+import StripeProviderWrapper from "../components/providers/StripeProviderWrapper";
 import { queryClient } from "../lib/query";
 import { useAuthStore } from "../lib/auth";
-
-const STRIPE_PUBLISHABLE_KEY =
-  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "pk_test_placeholder";
 
 export default function RootLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -25,7 +22,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+      <StripeProviderWrapper>
         <QueryClientProvider client={queryClient}>
           <Stack screenOptions={{ headerShown: false }}>
             {isAuthenticated ? (
@@ -35,7 +32,7 @@ export default function RootLayout() {
             )}
           </Stack>
         </QueryClientProvider>
-      </StripeProvider>
+      </StripeProviderWrapper>
     </GestureHandlerRootView>
   );
 }

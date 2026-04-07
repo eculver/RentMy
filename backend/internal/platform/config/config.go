@@ -115,6 +115,11 @@ type Config struct {
 	HostCancelLateBPS              int `env:"HOST_CANCEL_LATE_BPS" envDefault:"2500"`           // 25%
 	HostCancelVeryLateBPS          int `env:"HOST_CANCEL_VERY_LATE_BPS" envDefault:"5000"`      // 50%
 
+	// OpsAgent alert routing (PRD section 25).
+	SlackWebhookURL          string `env:"SLACK_WEBHOOK_URL" envDefault:""`
+	PagerDutyRoutingKey      string `env:"PAGERDUTY_ROUTING_KEY" envDefault:""`
+	OpsHealthCheckIntervalM  int    `env:"OPS_HEALTH_CHECK_INTERVAL_MINUTES" envDefault:"15"`
+
 	// Guarantee fund reserve ratio thresholds (PRD section 7).
 	ReserveRatioNormal       float64 `env:"RESERVE_RATIO_NORMAL" envDefault:"0.15"`        // 15% — healthy
 	ReserveRatioAlert        float64 `env:"RESERVE_RATIO_ALERT" envDefault:"0.10"`         // 10% — alert

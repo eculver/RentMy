@@ -21,6 +21,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/backfill"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/giits/rentmy/backend/internal/agent/ops"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/dispute"
@@ -203,6 +204,16 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	river.AddWorker(workers, dispute.NewRePromptExpiryWorker(disputeSvcPre))
 	river.AddWorker(workers, dispute.NewSLAMonitorWorker(disputeSvcPre))
 
+	// OpsAgent — health metrics, anomaly detection, and alert routing.
+	opsRepo := ops.NewRepository(pool)
+	opsCollector := ops.NewMetricsCollector(pool)
+	opsSlack := ops.NewSlackSender(cfg.SlackWebhookURL)
+	opsPD := ops.NewPagerDutySender(cfg.PagerDutyRoutingKey)
+	opsAlertRouter := ops.NewAlertRouter(opsRepo, opsSlack, opsPD)
+	opsAgent := ops.New(opsRepo, opsCollector, opsAlertRouter)
+	opsWorker := ops.NewHealthCheckWorker(opsAgent)
+	river.AddWorker(workers, opsWorker)
+
 	// Schedule periodic jobs for guarantee fund monitoring.
 	periodicJobs := []*river.PeriodicJob{
 		river.NewPeriodicJob(
@@ -218,6 +229,13 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 				return guaranteefund.LossRatioCheckJobArgs{}, nil
 			},
 			&river.PeriodicJobOpts{ID: "guarantee_fund_loss_ratio_check"},
+		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(time.Duration(cfg.OpsHealthCheckIntervalM)*time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return ops.HealthCheckArgs{}, nil
+			},
+			&river.PeriodicJobOpts{ID: "ops_health_check"},
 		),
 	}
 
@@ -372,6 +390,9 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	// Outcome linking — handler for admin calibration/decision API.
 	outcomeHandler := outcome.NewHandler(outcomeSvcPre)
 
+	// OpsAgent handler.
+	opsHandler := ops.NewHandler(opsRepo, opsAgent)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -401,6 +422,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	ratingHandler.Mount(apiV1, authMW)
 	guaranteeFundHandler.Mount(apiV1, authMW)
 	outcomeHandler.Mount(apiV1, authMW)
+	opsHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

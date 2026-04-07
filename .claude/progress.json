@@ -980,6 +980,27 @@
             "cd mobile && npx jest"
           ],
           "commitSha": "31e3fbb053bd98f0542cf31641294197d5d1cdc4"
+        },
+        {
+          "id": "6.9",
+          "name": "Guarantee fund refinement (fixes 6.6 gaps)",
+          "status": "pending",
+          "model": "opus",
+          "domain": "backend",
+          "dependencies": [
+            "6.6"
+          ],
+          "planRef": ".claude/plan/phase-6-closing-loop.md#step-69",
+          "prdRefs": [
+            "rentmy-prd-v8.md §7 (guarantee fund, reserve ratio)"
+          ],
+          "verificationCommands": [
+            "cd backend && go vet ./...",
+            "cd backend && go build ./cmd/server",
+            "cd backend && go test ./internal/guaranteefund/... -v -count=1",
+            "cd backend && go test ./internal/payment/... -v -count=1",
+            "cd backend && go test ./tests/integration/... -run GuaranteeFund -v -count=1 -timeout 180s"
+          ]
         }
       ]
     },

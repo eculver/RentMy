@@ -954,3 +954,56 @@ Maintain a golden test set of 20+ image pairs in `backend/testdata/photodiff/`:
 Steps 6.4 and 6.1 are independent and can start in parallel (ratings vs photo diff).
 Steps 6.8 and 6.7 are independent of each other and can be parallelized (RN vs backend).
 The critical path is: 6.1 -> 6.2 -> 6.3 -> 6.5 -> 6.7.
+
+---
+
+## Refinement Steps
+
+### Step 6.9 — Guarantee Fund Refinement (refines 6.6)
+
+**Goal:** Fix gaps from the interrupted 6.6 session: eliminate code duplication between `guaranteefund` and `payment` packages, wire River periodic jobs, add missing Claim escalation logic, and add real tests for financial operations.
+
+**Context:** Task 6.6 created `backend/internal/guaranteefund/` with model, repository, service, handler, and workers. However, (1) the `payment` package retains duplicate guarantee fund operations, (2) periodic jobs are registered but never scheduled, (3) the Claim method doesn't handle the card-charge + COLLECTIONS_REFERRAL fallback, and (4) tests only cover threshold logic — no database or integration tests exist.
+
+**Modify:**
+
+1. **Consolidate duplicate code — make `payment` delegate to `guaranteefund`:**
+   - `backend/internal/payment/service.go` — Remove `ClaimGuaranteeFund()`, `GetGuaranteeFundHealth()` methods. Replace calls with delegation to `guaranteefund.Service` (inject as dependency).
+   - `backend/internal/payment/repository.go` — Remove `InsertGuaranteeFundEntry()`, `GetGuaranteeFundBalance()`, `GetTotalOutstandingGuaranteeGaps()`. These now live exclusively in `guaranteefund.Repository`.
+   - `backend/internal/payment/model.go` — Remove `GuaranteeFundEntry` and `GuaranteeFundHealth` types (use `guaranteefund.Entry` and `guaranteefund.FundHealth` instead).
+   - Update all callers of the removed `payment` methods to use `guaranteefund.Service`.
+
+2. **Wire River periodic jobs:**
+   - `backend/internal/platform/river/river.go` (or wherever `PeriodicJobs` config lives) — Add:
+     - `FundHealthCheckJob` scheduled every hour
+     - `LossRatioCheckJob` scheduled every 24 hours
+   - Verify workers are registered AND scheduled (not just registered).
+
+3. **Implement Claim escalation logic:**
+   - `backend/internal/guaranteefund/service.go` — Update `Claim()`: when requested amount > available balance, disburse what's available, attempt card charge for the remainder via `payment.Service.ChargeCard()`, and if card charge fails, call `RecordCollectionsReferral()` and insert the referral entry. Return a result struct indicating what happened (full claim, partial + card recovery, partial + collections referral).
+
+4. **Add real tests:**
+   - `backend/internal/guaranteefund/service_test.go` — Add tests with mock repository for:
+     - `TestContribute_InsertsEntryAndUpdatesBalance`
+     - `TestClaim_FullAmount_WhenSufficientBalance`
+     - `TestClaim_PartialWithCardCharge_WhenInsufficientBalance`
+     - `TestClaim_CollectionsReferral_WhenCardChargeFails`
+     - `TestGetFundHealth_CalculatesAllMetrics`
+     - `TestDoubleEntryIntegrity` — verify every entry's balance_after = previous + amount
+   - `backend/tests/integration/guarantee_fund_api_test.go` — Integration test:
+     - `TestGuaranteeFundAdminEndpoints` — Hit GET /admin/guarantee-fund/health and /entries, verify response shape
+     - `TestGuaranteeFundLedgerIntegrity` — Create bookings, trigger contributions, trigger claims, verify fund balance is correct
+
+5. **Add commit reasoning doc** for original 6.6 commit:
+   - `thoughts/commits/d9589b0/reasoning.md`
+
+**Verify:**
+```bash
+cd backend && go vet ./...
+cd backend && go build ./cmd/server
+cd backend && go test ./internal/guaranteefund/... -v -count=1
+cd backend && go test ./internal/payment/... -v -count=1
+cd backend && go test ./tests/integration/... -run GuaranteeFund -v -count=1 -timeout 180s
+# Verify: no guarantee fund types/functions remain in payment package
+# Verify: River periodic jobs appear in scheduled job list
+```

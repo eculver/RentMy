@@ -1062,7 +1062,7 @@
         {
           "id": "7.2",
           "name": "FraudAgent",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "backend",
           "dependencies": [
             "7.0"

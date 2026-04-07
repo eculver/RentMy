@@ -21,6 +21,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
 	"github.com/giits/rentmy/backend/internal/agent/backfill"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/giits/rentmy/backend/internal/agent/fraud"
 	"github.com/giits/rentmy/backend/internal/agent/ops"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
@@ -214,6 +215,12 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	opsWorker := ops.NewHealthCheckWorker(opsAgent)
 	river.AddWorker(workers, opsWorker)
 
+	// FraudAgent — per-transaction signal detection and scheduled pattern scans.
+	fraudRepo := fraud.NewRepository(pool)
+	fraudAgent := fraud.New(fraudRepo, decisionSvc)
+	fraudWorker := fraud.NewPatternScanWorker(fraudAgent)
+	river.AddWorker(workers, fraudWorker)
+
 	// Schedule periodic jobs for guarantee fund monitoring.
 	periodicJobs := []*river.PeriodicJob{
 		river.NewPeriodicJob(
@@ -236,6 +243,13 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 				return ops.HealthCheckArgs{}, nil
 			},
 			&river.PeriodicJobOpts{ID: "ops_health_check"},
+		),
+		river.NewPeriodicJob(
+			river.PeriodicInterval(6*time.Hour),
+			func() (river.JobArgs, *river.InsertOpts) {
+				return fraud.PatternScanArgs{}, nil
+			},
+			&river.PeriodicJobOpts{ID: "fraud_pattern_scan"},
 		),
 	}
 
@@ -322,7 +336,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 		PickupReminderBefore:       time.Duration(cfg.PickupReminderMinutes) * time.Minute,
 		ReturnReminderBefore:       time.Duration(cfg.ReturnReminderMinutes) * time.Minute,
 	})
-	bookingSvc.WithRiskAgent(riskSvc).WithAgreementAgent(agreementSvc)
+	bookingSvc.WithRiskAgent(riskSvc).WithAgreementAgent(agreementSvc).WithFraudAgent(fraudAgent)
 	if deps.Pusher != nil {
 		bookingSvc.WithPusher(deps.Pusher)
 	}
@@ -390,6 +404,9 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	// Outcome linking — handler for admin calibration/decision API.
 	outcomeHandler := outcome.NewHandler(outcomeSvcPre)
 
+	// FraudAgent handler.
+	fraudHandler := fraud.NewHandler(fraudRepo, fraudAgent)
+
 	// OpsAgent handler.
 	opsHandler := ops.NewHandler(opsRepo, opsAgent)
 
@@ -422,6 +439,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	ratingHandler.Mount(apiV1, authMW)
 	guaranteeFundHandler.Mount(apiV1, authMW)
 	outcomeHandler.Mount(apiV1, authMW)
+	fraudHandler.Mount(apiV1, authMW)
 	opsHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 

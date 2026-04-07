@@ -73,6 +73,12 @@ type agreementSvc interface {
 	TriggerAgreement(ctx context.Context, transactionID string) error
 }
 
+// fraudSvc is the subset of fraud.Agent the booking service uses for
+// post-transaction signal evaluation.  Nil-safe: when nil, fraud checks are skipped.
+type fraudSvc interface {
+	EvaluateTransaction(ctx context.Context, transactionID string) error
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
 	repo            *Repository
@@ -83,6 +89,7 @@ type Service struct {
 	pusherSvc       pusherSvc
 	riskSvc         *risk.Service // nil-safe: when nil, risk checks are skipped
 	agreementSvc    agreementSvc  // nil-safe: when nil, agreement generation is skipped
+	fraudSvc        fraudSvc      // nil-safe: when nil, fraud evaluation is skipped
 	cfg             Config
 }
 
@@ -107,6 +114,12 @@ func (s *Service) WithRiskAgent(r *risk.Service) *Service {
 // WithAgreementAgent attaches an AgreementAgent service for post-acceptance agreement generation.
 func (s *Service) WithAgreementAgent(a agreementSvc) *Service {
 	s.agreementSvc = a
+	return s
+}
+
+// WithFraudAgent attaches a FraudAgent for post-transaction signal evaluation.
+func (s *Service) WithFraudAgent(f fraudSvc) *Service {
+	s.fraudSvc = f
 	return s
 }
 
@@ -208,6 +221,14 @@ func (s *Service) CreateBooking(ctx context.Context, in CreateInput) (payment.Bo
 	if err := scheduleAutoDecline(ctx, s.riverClient, result.TransactionID, s.cfg); err != nil {
 		// Log and continue: auto-decline failure is not booking-critical.
 		slog.Warn("failed to schedule auto-decline job", "transactionId", result.TransactionID, "error", err)
+	}
+
+	// Run FraudAgent signal evaluation for both renter and host.
+	if s.fraudSvc != nil {
+		if err := s.fraudSvc.EvaluateTransaction(ctx, result.TransactionID); err != nil {
+			// Log and continue: fraud evaluation failure must not block a booking.
+			slog.Warn("booking: fraud evaluation failed", "transactionId", result.TransactionID, "error", err)
+		}
 	}
 
 	// Notify the host of the new booking request.

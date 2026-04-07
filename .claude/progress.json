@@ -2,9 +2,9 @@
   "version": 1,
   "lastUpdated": "2026-04-07",
   "lastSession": {
-    "task": "7.1",
-    "status": "completed",
-    "branch": "task-7.1-ops-agent"
+    "task": "7.3",
+    "status": "in_progress",
+    "branch": "task-7.3-ops-dashboard"
   },
   "phases": [
     {
@@ -1082,7 +1082,7 @@
         {
           "id": "7.3",
           "name": "Ops dashboard (web)",
-          "status": "pending",
+          "status": "in_progress",
           "model": "opus",
           "domain": "web",
           "dependencies": [

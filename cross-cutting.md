@@ -23,7 +23,7 @@ These aren't a phase — they're woven into every phase as the relevant services
 - Retry with exponential backoff on external API calls (Stripe, KYC, LLM, SAM segmentation)
 - Circuit breakers on third-party dependencies
 - Dead letter queue for failed River jobs
-- HoldAllocation atomic operations (SELECT FOR UPDATE) to prevent race conditions between LateReturnAgent and DisputeAgent
+- HoldAllocation atomic operations: `READ COMMITTED` isolation + `SELECT ... FOR UPDATE` row-level locking on the transaction row. All capture operations within a single pgx transaction: lock → read `remaining` → validate → update `hold_allocation` JSON → commit. Prevents race conditions between LateReturnAgent and DisputeAgent
 
 ## Rate Limiting
 - Per-user rate limits on all public endpoints (token bucket, Redis-backed)

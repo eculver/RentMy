@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/platform/auth"
 	"github.com/giits/rentmy/backend/internal/platform/config"
 	"github.com/giits/rentmy/backend/internal/platform/httpserver"
 	"github.com/giits/rentmy/backend/internal/platform/postgres"
@@ -23,6 +24,7 @@ import (
 	localredis "github.com/giits/rentmy/backend/internal/platform/redis"
 	riverpkg "github.com/giits/rentmy/backend/internal/platform/river"
 	locals3 "github.com/giits/rentmy/backend/internal/platform/s3"
+	"github.com/giits/rentmy/backend/internal/user"
 	"github.com/giits/rentmy/backend/migrations"
 )
 
@@ -126,6 +128,21 @@ func run() error {
 
 	// Health check.
 	r.Get("/health", handleHealth(pool, redisClient, s3Client))
+
+	// Build shared infrastructure for application services.
+	issuer := auth.NewIssuer(
+		cfg.JWTSecret,
+		time.Duration(cfg.JWTAccessTTL)*time.Second,
+		time.Duration(cfg.JWTRefreshTTL)*time.Second,
+	)
+	redisStore := localredis.NewStore(redisClient)
+	authMW := auth.Middleware(issuer)
+
+	// User service and routes.
+	userRepo := user.NewRepository(pool)
+	userSvc := user.NewService(userRepo, issuer, redisStore)
+	userHandler := user.NewHandler(userSvc)
+	r.Mount("/api/v1", userHandler.Router(authMW))
 
 	// Debug route group.
 	r.Route("/debug", func(r chi.Router) {

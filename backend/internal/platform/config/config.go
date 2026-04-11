@@ -45,6 +45,15 @@ type Config struct {
 
 	// PusherCluster is the Pusher cluster identifier.
 	PusherCluster string `env:"PUSHER_CLUSTER" envDefault:"mt1"`
+
+	// JWTSecret is the HMAC-SHA256 signing key for access and refresh tokens.
+	JWTSecret string `env:"JWT_SECRET" envDefault:"dev-secret-change-in-production"`
+
+	// JWTAccessTTL is the access token lifetime in seconds (default 15 minutes).
+	JWTAccessTTL int `env:"JWT_ACCESS_TTL" envDefault:"900"`
+
+	// JWTRefreshTTL is the refresh token lifetime in seconds (default 7 days).
+	JWTRefreshTTL int `env:"JWT_REFRESH_TTL" envDefault:"604800"`
 }
 
 // IsProd reports whether the application is running in a production environment.

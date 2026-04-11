@@ -130,6 +130,28 @@ Each agent is assigned a model tier based on decision complexity:
 - **Cheap model (fast, low-cost):** Notifications, summaries, simple classification, search matching
 - **Claude (complex reasoning):** Disputes, value appraisal, fraud pattern detection, agreement generation, any decision that touches money
 
+**Complete Task-to-Model-Tier Matrix:**
+
+| Agent | Task | Model Tier |
+|---|---|---|
+| AppraisalAgent | Item identification from photos | Claude (Sonnet) |
+| AppraisalAgent | Tag generation | Cheap model |
+| AppraisalAgent | Value override justification review | Claude (Sonnet) |
+| DisputeAgent | Evidence analysis + decision | Claude (Sonnet) |
+| DisputeAgent | Evidence summary for human review | Cheap model |
+| RiskAgent | Per-transaction risk scoring | Cheap model (rule-based with ML signal) |
+| VerificationAgent | KYC result interpretation | Cheap model |
+| AgreementAgent | Custom clause generation | Claude (Sonnet) |
+| AgreementAgent | Template rendering | No model (template engine) |
+| LateReturnAgent | Escalation decision | Claude (Sonnet) |
+| LateReturnAgent | Late fee calculation | No model (deterministic) |
+| FraudAgent | Pattern detection across history | Claude (Sonnet) |
+| FraudAgent | Signal aggregation | Cheap model |
+| OpsAgent | Anomaly detection | Cheap model |
+| OpsAgent | Health report generation | Cheap model |
+| NotificationService | Notification text generation | Cheap model |
+| DiscoveryService | Semantic search matching | Cheap model (embeddings) |
+
 ---
 
 ## 6. Data Models
@@ -329,6 +351,10 @@ The hold is a shared resource. LateReturnAgent and DisputeAgent both draw from i
 **Damage reserve:** When LateReturnAgent captures late fees, it must leave a configurable percentage of the original hold untouched as a damage reserve (default: 40%). Late fee captures are capped at `holdAmount * (1 - damageReserveRate)`. This ensures the DisputeAgent always has funds available for damage claims even after late fees.
 
 **Read-before-write:** Both agents read `holdAllocation.remaining` before any capture. All captures are atomic database operations (SELECT FOR UPDATE).
+
+**Concurrency isolation:** Hold allocation operations use `READ COMMITTED` isolation (Postgres default) with explicit `SELECT ... FOR UPDATE` row-level locking on the transaction row. This prevents LateReturnAgent and DisputeAgent from simultaneously modifying the same hold allocation. All capture operations must: (1) lock the transaction row, (2) read current `remaining`, (3) validate capture does not exceed `remaining`, (4) update `hold_allocation` JSON, (5) commit — all within a single pgx transaction.
+
+**Guarantee fund depletion safeguards:** The fund balance cannot go negative. If a claim would exceed remaining balance, only the available amount is disbursed. The remaining damage amount is charged to the renter's card on file. If card charge fails, the amount is referred to collections (per §10 terms). OpsAgent fires a CRITICAL alert when fund balance drops below $100 absolute (in addition to ratio-based thresholds above). All new bookings where `guaranteeGap > $0` are restricted until fund balance recovers above 5% of outstanding gaps.
 
 ### Rental Duration Ceiling:
 
@@ -646,6 +672,8 @@ When the diff returns INCONCLUSIVE or confidence < 0.7:
 3. If still inconclusive after second round → DisputeAgent evaluates using all available evidence (messages, agreement terms, user history, reputation scores) and flags decision for human review queue regardless of dollar amount
 4. Inconclusive diffs are never auto-resolved in either party's favor
 
+**Re-prompt notification flow:** Push notification + in-app alert sent to both parties requesting additional photos. A 2-hour countdown timer starts; a River job is scheduled to fire at expiry. If one party submits and the other does not: proceed with available evidence + flag as "partial re-prompt" in the dispute record. If neither party submits: escalate to human review with existing evidence + note "re-prompt unanswered." Additional photos follow the same quality gate (angle enforcement, blur detection, resolution check).
+
 **Angle Enforcement:**
 
 The app requires photos from meaningfully different angles to ensure the item is documented from multiple perspectives.
@@ -669,6 +697,11 @@ At check-in and check-out, the app validates photo quality before accepting:
 - Blur detection (reject blurry captures)
 - Item must be detected in frame (reject photos of walls, floors, etc.)
 - Minimum 3 photos, each ≥ 30° apart (enforced by gyroscope — see above)
+
+**Quality gate enforcement ownership:**
+
+- **Client-side (React Native):** Blur detection (frame processor), angle diversity (gyroscope — already specified), minimum resolution check (image metadata). These are real-time UX feedback loops that must run on-device for responsive capture experience.
+- **Server-side (Go MediaService):** Item-in-frame detection (requires ML model that cannot run on-device in v1), resolution re-verification (trust but verify), EXIF metadata validation (timestamp, GPS, device ID consistency).
 
 **Limitations (acknowledged):**
 
@@ -985,6 +1018,8 @@ Not all decisions are equal. The DisputeAgent operates autonomously within bound
 - Post-return disputes (auto-resolve): < 12 hours
 - Post-return disputes (human review): < 24 hours
 
+**SLA breach handling:** A River cron job checks the human review queue every 15 minutes. At 80% of the SLA window, the system fires a warning alert to the ops team. On full SLA breach for active rentals (4h): auto-escalate to next-level reviewer + OpsAgent fires CRITICAL alert. On full SLA breach for post-return (24h): OpsAgent fires WARNING alert + auto-assign to next available reviewer. SLA compliance rate is tracked on the ops dashboard (§25).
+
 ### All decisions logged:
 
 Every DisputeAgent decision is stored as an AgentDecision record with full input, output, model used, confidence score, and escalation path taken. This is the audit trail.
@@ -1156,6 +1191,13 @@ OpsAgent pushes alerts to the team when:
 - Agent confidence scores trend downward
 - Payout failures spike
 - Any metric deviates significantly from rolling average
+
+**Alert routing:**
+
+- **Primary channel:** Slack webhook (all alerts posted to #ops-alerts channel)
+- **Secondary channel:** Email digest for non-urgent alerts (daily summary)
+- **Critical alerts page on-call:** Fraud spike, payout failure, SLA breach, guarantee fund CRITICAL — additionally routed to on-call via PagerDuty (or equivalent)
+- **Configuration:** Alert routing rules stored in config (env vars for Slack webhook URL, email recipients, PagerDuty integration key). Per-alert-type routing is configurable.
 
 ---
 

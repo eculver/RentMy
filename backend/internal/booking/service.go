@@ -63,6 +63,14 @@ type pusherSvc interface {
 	Trigger(channel, event string, data interface{}) error
 }
 
+// agreementSvc is the subset of agreement.Service the booking service needs.
+// Using an interface avoids an import cycle and allows test injection.
+// The booking service only cares about triggering generation (fire-and-forget best-effort),
+// so only the error return matters.
+type agreementSvc interface {
+	TriggerAgreement(ctx context.Context, transactionID string) error
+}
+
 // Service implements the booking domain business logic.
 type Service struct {
 	repo            *Repository
@@ -72,6 +80,7 @@ type Service struct {
 	notificationSvc notificationSvc
 	pusherSvc       pusherSvc
 	riskSvc         *risk.Service // nil-safe: when nil, risk checks are skipped
+	agreementSvc    agreementSvc  // nil-safe: when nil, agreement generation is skipped
 	cfg             Config
 }
 
@@ -90,6 +99,12 @@ func NewService(repo *Repository, paymentSvc *payment.Service, riverClient river
 // WithRiskAgent attaches a RiskAgent service for per-transaction risk scoring.
 func (s *Service) WithRiskAgent(r *risk.Service) *Service {
 	s.riskSvc = r
+	return s
+}
+
+// WithAgreementAgent attaches an AgreementAgent service for post-acceptance agreement generation.
+func (s *Service) WithAgreementAgent(a agreementSvc) *Service {
+	s.agreementSvc = a
 	return s
 }
 
@@ -236,6 +251,15 @@ func (s *Service) Accept(ctx context.Context, in AcceptInput) error {
 
 	// Notify real-time subscribers of the status change (best-effort).
 	s.triggerStatusChanged(ctx, in.BookingID, StatusAccepted)
+
+	// Generate the rental agreement now that the host has accepted (best-effort).
+	// Both parties will need to accept the agreement before the booking goes ACTIVE.
+	if s.agreementSvc != nil {
+		if err := s.agreementSvc.TriggerAgreement(ctx, in.BookingID); err != nil {
+			slog.Warn("failed to generate agreement after acceptance",
+				"bookingId", in.BookingID, "error", err)
+		}
+	}
 
 	// Generate and store the check-in PIN for the proximity handoff.
 	// This is best-effort: if it fails the booking is still accepted and the

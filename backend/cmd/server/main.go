@@ -16,6 +16,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/booking"
 	"github.com/giits/rentmy/backend/internal/discovery"
 	"github.com/giits/rentmy/backend/internal/listing"
 	"github.com/giits/rentmy/backend/internal/media"
@@ -73,9 +74,13 @@ func run() error {
 	paymentRepo := payment.NewRepository(pool)
 
 	// Register River workers.
+	// bookingRepo is created early so the auto-decline worker can be registered before River starts.
+	bookingRepo := booking.NewRepository(pool)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
+	river.AddWorker(workers, booking.NewAutoDeclineJobWorker(bookingRepo))
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -184,12 +189,27 @@ func run() error {
 	})
 	paymentHandler := payment.NewHandler(paymentSvc)
 
+	// bookingRepo is created early (before River starts) to register the auto-decline worker.
+	// Reuse it here to build the booking service.
+	bookingSvc := booking.NewService(bookingRepo, paymentSvc, riverClient, booking.Config{
+		AutoDeclineTimeout:         time.Duration(cfg.AutoDeclineTimeoutH) * time.Hour,
+		FraudNewAccountDays:        cfg.FraudNewAccountDays,
+		FraudFirstNTransactions:    cfg.FraudFirstNTransactions,
+		FraudPayoutDelay:           time.Duration(cfg.PayoutDelayNewHostH) * time.Hour,
+		FraudDamageClaimCapCents:   int64(cfg.FraudDamageClaimCapCents),
+		FraudDamageClaimWindowDays: cfg.FraudDamageClaimWindowDays,
+		HostCancelLateBPS:          cfg.HostCancelLateBPS,
+		HostCancelVeryLateBPS:      cfg.HostCancelVeryLateBPS,
+	})
+	bookingHandler := booking.NewHandler(bookingSvc, paymentSvc)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
 	listingHandler.Mount(apiV1, authMW)
 	discoveryHandler.Mount(apiV1, authMW)
 	paymentHandler.Mount(apiV1, authMW)
+	bookingHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

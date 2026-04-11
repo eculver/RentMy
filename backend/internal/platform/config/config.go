@@ -75,10 +75,19 @@ type Config struct {
 	StripeWebhookSecret  string `env:"STRIPE_WEBHOOK_SECRET" envDefault:"whsec_placeholder"`
 
 	// Payment config (PRD section 7 defaults).
-	TakeRateBPS         int `env:"TAKE_RATE_BPS" envDefault:"2000"`          // 20%
-	GuaranteeRateBPS    int `env:"GUARANTEE_RATE_BPS" envDefault:"1000"`     // 10% of platform fee
+	TakeRateBPS         int `env:"TAKE_RATE_BPS" envDefault:"2000"`           // 20%
+	GuaranteeRateBPS    int `env:"GUARANTEE_RATE_BPS" envDefault:"1000"`      // 10% of platform fee
 	DamageReserveRate   int `env:"DAMAGE_RESERVE_RATE_BPS" envDefault:"4000"` // 40% of hold
 	PayoutDelayNewHostH int `env:"PAYOUT_DELAY_NEW_HOST_HOURS" envDefault:"48"`
+
+	// Booking config (PRD sections 7, 9, 18).
+	AutoDeclineTimeoutH            int `env:"AUTO_DECLINE_TIMEOUT_HOURS" envDefault:"2"`
+	FraudNewAccountDays            int `env:"FRAUD_NEW_ACCOUNT_DAYS" envDefault:"30"`
+	FraudFirstNTransactions        int `env:"FRAUD_FIRST_N_TRANSACTIONS" envDefault:"3"`
+	FraudDamageClaimCapCents       int `env:"FRAUD_DAMAGE_CLAIM_CAP_CENTS" envDefault:"50000"`  // $500
+	FraudDamageClaimWindowDays     int `env:"FRAUD_DAMAGE_CLAIM_WINDOW_DAYS" envDefault:"60"`
+	HostCancelLateBPS              int `env:"HOST_CANCEL_LATE_BPS" envDefault:"2500"`           // 25%
+	HostCancelVeryLateBPS          int `env:"HOST_CANCEL_VERY_LATE_BPS" envDefault:"5000"`      // 50%
 }
 
 // IsProd reports whether the application is running in a production environment.

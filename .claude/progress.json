@@ -872,7 +872,7 @@
         {
           "id": "6.4",
           "name": "Rating system (backend + RN)",
-          "status": "pending",
+          "status": "completed",
           "model": "sonnet",
           "domain": "backend",
           "dependencies": [
@@ -890,7 +890,8 @@
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s",
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest"
-          ]
+          ],
+          "commitSha": "356ec39bf92ede62f87a9c614976d4f52e04dc75"
         },
         {
           "id": "6.5",

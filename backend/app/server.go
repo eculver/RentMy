@@ -25,6 +25,7 @@ import (
 	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
 	"github.com/giits/rentmy/backend/internal/dispute"
 	"github.com/giits/rentmy/backend/internal/latereturn"
+	"github.com/giits/rentmy/backend/internal/rating"
 	"github.com/giits/rentmy/backend/internal/photodiff"
 	"github.com/giits/rentmy/backend/internal/platform/cv"
 	"github.com/giits/rentmy/backend/internal/agent/verification"
@@ -302,6 +303,11 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	*lateReturnSvcPre = *lateReturnSvc
 	lateReturnHandler := latereturn.NewHandler(lateReturnSvc)
 
+	// Rating system.
+	ratingRepo := rating.NewRepository(pool)
+	ratingSvc := rating.NewService(ratingRepo, riskSvc)
+	ratingHandler := rating.NewHandler(ratingSvc)
+
 	// Build chi router.
 	r := chi.NewRouter()
 	r.Use(httpserver.RequestID)
@@ -328,6 +334,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	photodiffHandler.Mount(apiV1, authMW)
 	disputeHandler.Mount(apiV1, authMW)
 	lateReturnHandler.Mount(apiV1, authMW)
+	ratingHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

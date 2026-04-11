@@ -18,6 +18,7 @@ import (
 
 	"github.com/giits/rentmy/backend/internal/agent/agreement"
 	"github.com/giits/rentmy/backend/internal/agent/appraisal"
+	"github.com/giits/rentmy/backend/internal/agent/backfill"
 	"github.com/giits/rentmy/backend/internal/agent/decision"
 	"github.com/giits/rentmy/backend/internal/agent/risk"
 	"github.com/giits/rentmy/backend/internal/agent/router"
@@ -154,6 +155,16 @@ func run() error {
 	agreementRepo := agreement.NewRepository(pool)
 	agreementSvc := agreement.NewService(agreementRepo, modelRouter, decisionSvc)
 
+	// Build backfill repository and shared progress tracker.
+	// Workers are registered before River starts; appraisalSvcFull is injected after services are built.
+	backfillRepo := backfill.NewRepository(pool)
+	backfillProgress := backfill.NewJobProgress()
+	// Workers are constructed with nil appraisalSvc/riskSvc here to enable pre-River registration.
+	// After services are built, SetDeps is called (see below).
+	backfillAppraisalWorker := backfill.NewBackfillAppraisalWorker(backfillRepo, nil, backfillProgress)
+	backfillReputationWorker := backfill.NewBackfillReputationWorker(backfillRepo, riskSvc, backfillProgress)
+	backfillRiskWorker := backfill.NewBackfillRiskScoreWorker(backfillRepo, riskSvc, backfillProgress)
+
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
 	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
@@ -165,6 +176,9 @@ func run() error {
 	river.AddWorker(workers, appraisalWorker)
 	river.AddWorker(workers, monthlyReputationWorker)
 	river.AddWorker(workers, decayCheckWorker)
+	river.AddWorker(workers, backfillAppraisalWorker)
+	river.AddWorker(workers, backfillReputationWorker)
+	river.AddWorker(workers, backfillRiskWorker)
 
 	// Start River job queue client.
 	riverClient, err := riverpkg.New(ctx, pool, workers)
@@ -270,6 +284,9 @@ func run() error {
 	// automatically trigger AI appraisal.
 	listingSvc.WithAppraisalEnqueuer(appraisalSvcFull)
 
+	// Inject the full appraisal service into the backfill worker now that it is available.
+	backfillAppraisalWorker.SetAppraisalSvc(appraisalSvcFull)
+
 	driveTimeClient := discovery.NewDriveTimeClient(cfg.OSRMBaseURL, redisClient)
 	discoveryRepo := discovery.NewRepository(pool)
 	discoverySvc := discovery.NewService(discoveryRepo, driveTimeClient, discovery.Config{
@@ -352,6 +369,9 @@ func run() error {
 	// Build the AgreementAgent HTTP handler.
 	agreementHandler := agreement.NewHandler(agreementSvc)
 
+	// Build the backfill admin handler.
+	backfillHandler := backfill.NewHandler(riverClient, backfillProgress)
+
 	// Build a single /api/v1 router and mount all service routes onto it.
 	apiV1 := userHandler.Router(authMW)
 	mediaHandler.Mount(apiV1, authMW)
@@ -366,6 +386,7 @@ func run() error {
 	appraisalHandler.Mount(apiV1, authMW)
 	riskHandler.Mount(apiV1, authMW)
 	agreementHandler.Mount(apiV1, authMW)
+	backfillHandler.Mount(apiV1, authMW)
 	r.Mount("/api/v1", apiV1)
 
 	// Debug route group.

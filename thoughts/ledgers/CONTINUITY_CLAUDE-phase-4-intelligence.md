@@ -14,9 +14,9 @@ AI takes over verification, appraisal, risk scoring, and agreement generation. L
 | 4.2 | VerificationAgent | completed | f67e68b | task-4.2-verification-agent |
 | 4.3 | AppraisalAgent | completed | 4f86e34 | task-4.3-appraisal-agent |
 | 4.4 | RiskAgent | completed | e613b60 | task-4.4-risk-agent |
-| 4.5 | AgreementAgent | pending | — | — |
-| 4.6 | Wire KYC into booking flow (RN) | pending | — | — |
-| 4.7 | Wire AI autofill into listing creation (RN) | pending | — | — |
+| 4.5 | AgreementAgent | completed | e3104da | task-4.5-agreement-agent |
+| 4.6 | Wire KYC into booking flow (RN) | completed | c95c3ae | task-4.6-kyc-booking-flow |
+| 4.7 | Wire AI autofill into listing creation (RN) | completed | 3a4527b | task-4.7-ai-autofill |
 | 4.8 | Backfill existing data | pending | — | — |
 
 ---

@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-03T00:00:00Z",
+  "lastUpdated": "2026-04-04T00:00:00Z",
   "lastSession": {
-    "taskId": "1.3",
+    "taskId": "1.4",
     "status": "completed",
-    "commitSha": "4650d50",
+    "commitSha": "6757a98",
     "timestamp": "2026-04-04T00:00:00Z"
   },
   "phases": [
@@ -183,7 +183,7 @@
         {
           "id": "1.4",
           "name": "Auth screens (RN)",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "1.1"
@@ -192,7 +192,10 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
-          ]
+          ],
+          "commitSha": "6757a98",
+          "handoff": "thoughts/handoffs/phase-1-supply/task-14-auth-screens.md",
+          "verificationPassed": true
         },
         {
           "id": "1.5",

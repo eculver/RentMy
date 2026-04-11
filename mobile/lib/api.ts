@@ -19,7 +19,10 @@ export const api = ky.create({
     afterResponse: [
       async (_request, _options, response) => {
         if (response.status === 401) {
-          useAuthStore.getState().logout();
+          const refreshed = await useAuthStore.getState().refreshTokens();
+          if (!refreshed) {
+            await useAuthStore.getState().logout();
+          }
         }
       },
     ],

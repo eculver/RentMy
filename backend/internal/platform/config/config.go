@@ -14,7 +14,7 @@ type Config struct {
 	Env string `env:"ENV" envDefault:"development"`
 
 	// DatabaseURL is the PostgreSQL connection string.
-	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://rentmy:rentmy@localhost:5432/rentmy?sslmode=disable"`
+	DatabaseURL string `env:"DATABASE_URL" envDefault:"postgres://rentmy:rentmy@localhost:5433/rentmy?sslmode=disable"`
 
 	// RedisURL is the Redis connection string.
 	RedisURL string `env:"REDIS_URL" envDefault:"redis://localhost:6380"`

@@ -267,7 +267,7 @@ All configuration is via environment variables. Copy `.env.example` to `.env` fo
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `PORT` | 8080 | Backend HTTP port |
-| `DATABASE_URL` | `postgres://rentmy:rentmy@localhost:5432/rentmy` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgres://rentmy:rentmy@localhost:5433/rentmy` | PostgreSQL connection string |
 | `REDIS_URL` | `redis://localhost:6380` | Redis connection string |
 | `S3_ENDPOINT` | `http://localhost:9002` | S3/MinIO endpoint |
 | `S3_ACCESS_KEY` | `minioadmin` | S3 access key |

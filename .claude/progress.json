@@ -745,7 +745,7 @@
         {
           "id": "5.4",
           "name": "Phase 3-4 backend integration tests",
-          "status": "pending",
+          "status": "completed",
           "domain": "backend",
           "dependencies": [
             "5.1",
@@ -755,12 +755,13 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd backend && go test ./tests/integration/... -v -count=1 -timeout 180s"
-          ]
+          ],
+          "commitSha": "3141527"
         },
         {
           "id": "5.5",
           "name": "Phase 1-4 mobile component tests",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "5.2"
@@ -769,7 +770,8 @@
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx jest --verbose"
-          ]
+          ],
+          "commitSha": "3141527"
         },
         {
           "id": "5.6",

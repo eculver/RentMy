@@ -1,0 +1,30 @@
+You are a legal assistant generating item-specific rental agreement clauses for a peer-to-peer rental marketplace. Generate clauses appropriate for the specific item being rented.
+
+Item details:
+- Name: {{.ItemName}}
+- Category: {{.Category}}
+- Estimated value (cents): {{.EstimatedValueCents}}
+- Condition notes: {{.ConditionNotes}}
+
+Generate 2-4 item-specific clauses that address:
+1. Proper use restrictions (what the renter may and may not do with this specific item)
+2. Care and handling requirements (e.g., "return with full tank" for vehicles, "keep dry" for electronics)
+3. Damage definitions specific to this item type (what constitutes damage vs. normal wear)
+4. Any safety requirements (e.g., helmet required for bikes, adult supervision for power tools)
+
+Clauses should be:
+- Written in plain English, not legalese
+- Specific to the item category (not generic boilerplate)
+- Enforceable and reasonable
+
+Respond with JSON only (no markdown):
+
+{
+  "clauses": [
+    {
+      "title": "<short clause title>",
+      "text": "<full clause text, 1-3 sentences>",
+      "category": "<one of: USE_RESTRICTION, CARE_REQUIREMENT, DAMAGE_DEFINITION, SAFETY>"
+    }
+  ]
+}

@@ -12,8 +12,8 @@ Full booking lifecycle: request → accept → check-in handoff → rental → r
 |------|------|--------|--------|-------|
 | 3.1 | BookingService (backend) | ✅ completed | b3a66c2 | State machine, fraud, cancellation, auto-decline |
 | 3.2 | ProximityService (backend) | ✅ completed | 12dc136 | GPS + PIN handoff, Twilio SMS fallback |
-| 3.3 | NotificationService (backend) | pending | — | Expo push + Twilio SMS |
-| 3.4 | MessagingService (backend) | pending | — | Pusher real-time chat |
+| 3.3 | NotificationService (backend) | ✅ completed | c7a4b09 | Expo push, preferences, quiet hours |
+| 3.4 | MessagingService (backend) | ✅ completed | fd737f5 | Pusher real-time chat, booking status events |
 | 3.5 | Booking flow (RN) | pending | — | Host accept/decline, renter cancel screens |
 | 3.6 | Handoff screens (RN) | pending | — | Check-in/out with angle-enforced photos |
 | 3.7 | Messaging screen (RN) | pending | — | Real-time chat UI |
@@ -56,3 +56,32 @@ Created `backend/internal/proximity/` package with GPS + PIN handoff verificatio
 **Open wiring for future tasks:**
 - Photo requirement for `CheckHandoffComplete` is enforced client-side (handoff screens, task 3.6). Server only checks GPS + PIN today.
 - `PaymentService.ScheduleHostPayout` should be called from `BookingService.CheckOut` after ACTIVE→COMPLETED (not yet wired).
+
+### Task 3.3 — NotificationService
+
+Created `backend/internal/notification/` package with Expo push delivery, preferences, and quiet hours.
+
+**Key facts for future sessions:**
+- 15 notification types; 4 mandatory (BOOKING_REQUEST, BOOKING_ACCEPTED, BOOKING_AUTO_DECLINED, CANCELLATION) cannot be disabled.
+- Migration 005 adds `notifications` and `push_tokens` tables.
+- `users.notification_preferences` JSONB column reused for preference storage.
+- Two-phase notificationSvc construction: built with nil riverClient for worker registration, re-created with real riverClient after River starts.
+- River workers: PickupApproachingWorker, ReturnApproachingWorker, QuietHoursDeferredWorker.
+- BookingService accepts `notificationSvc` interface; fires on CreateBooking, Accept, Cancel, AutoDecline.
+
+### Task 3.4 — MessagingService
+
+Created `backend/internal/messaging/` package with in-transaction chat.
+
+**Key facts for future sessions:**
+- No new migration — `messages` table was in `001_initial_schema.sql`.
+- Authorization: `GetParties` queries `transactions` table directly (avoids booking import cycle).
+- Cursor pagination: `WHERE id > $cursor ORDER BY id ASC LIMIT $n` — ULID sort order = chronological.
+- `booking.Service.WithPusher(p)` wires Pusher into booking service post-construction (functional option).
+- `booking-status-changed` Pusher events fire on Accept, Decline, Cancel, CheckIn, CheckOut.
+- Pusher channel name: `private-transaction-{transactionID}` (see `messaging.TransactionChannel()`).
+- `messaging.EventNewMessage` = `"new-message"`, `messaging.EventBookingStatusChanged` = `"booking-status-changed"`.
+- `NewServiceFromParts` exported so tests inject stub `repo` without DB.
+
+**Open wiring for future tasks:**
+- Task 3.7 (Messaging screen RN) consumes the messaging API + Pusher channel for real-time chat UI.

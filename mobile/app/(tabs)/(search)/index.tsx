@@ -6,7 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useDebouncedCallback } from "use-debounce";
@@ -54,13 +54,22 @@ function activeFilterCount(filters: SearchFilters): number {
 
 export default function SearchScreen() {
   const router = useRouter();
-  const { lat, lng } = useLocation();
+  const { lat, lng, loading: locationLoading } = useLocation();
   const { query, filters, setQuery, setFilters, resetFilters } = useSearchStore();
   const filterSheetRef = useRef<BottomSheet>(null);
+
+  // B4 fix: controlled input — mirrors the debounced store value in local state
+  // so the text field shows the current query when navigating back to this screen.
+  const [inputValue, setInputValue] = useState(query);
 
   const debouncedSetQuery = useDebouncedCallback((value: string) => {
     setQuery(value);
   }, 300);
+
+  const handleInputChange = useCallback((text: string) => {
+    setInputValue(text);
+    debouncedSetQuery(text);
+  }, [debouncedSetQuery]);
 
   const {
     data,
@@ -105,7 +114,8 @@ export default function SearchScreen() {
           <View className="flex-1 flex-row items-center bg-gray-100 rounded-2xl px-3 py-2 gap-x-2">
             <Ionicons name="search-outline" size={18} color="#9ca3af" />
             <TextInput
-              onChangeText={debouncedSetQuery}
+              value={inputValue}
+              onChangeText={handleInputChange}
               placeholder="Search listings…"
               placeholderTextColor="#9ca3af"
               returnKeyType="search"
@@ -139,6 +149,15 @@ export default function SearchScreen() {
       {/* Results */}
       {query.length === 0 ? (
         <EmptyIdle />
+      ) : locationLoading || lat === null || lng === null ? (
+        // B3 fix: TanStack Query v5 returns isLoading=false when enabled=false.
+        // Show a location-wait state instead of "No results" while GPS is acquiring.
+        <View className="flex-1 items-center justify-center px-8">
+          <ActivityIndicator size="large" color="#0284c7" />
+          <Text className="text-sm text-gray-500 text-center mt-3">
+            Waiting for location…
+          </Text>
+        </View>
       ) : isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#0284c7" />

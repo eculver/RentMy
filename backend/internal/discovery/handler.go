@@ -62,7 +62,11 @@ func (h *Handler) feed(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not fetch feed")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"listings": listings, "count": len(listings)})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"listings":   listings,
+		"count":      len(listings),
+		"nextCursor": minID(listings),
+	})
 }
 
 // search handles GET /api/v1/discovery/search
@@ -122,7 +126,11 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not search listings")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"listings": listings, "count": len(listings)})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"listings":   listings,
+		"count":      len(listings),
+		"nextCursor": minID(listings),
+	})
 }
 
 // mapView handles GET /api/v1/discovery/map
@@ -191,4 +199,22 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 // writeError writes a JSON error response.
 func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
+}
+
+// minID returns the smallest ULID string among the given listings.
+// Because ULIDs are lexicographically sortable and the DB orders results by
+// id DESC, the minimum ID is the last item in DB order — the correct cursor
+// for keyset pagination. Using the final ranked item's ID would be wrong
+// because re-ranking changes the order, causing duplicates or gaps on page 2+.
+func minID(listings []*RankedListing) string {
+	if len(listings) == 0 {
+		return ""
+	}
+	min := listings[0].ID
+	for _, l := range listings[1:] {
+		if l.ID < min {
+			min = l.ID
+		}
+	}
+	return min
 }

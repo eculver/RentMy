@@ -14,7 +14,7 @@ func TestRegisterAndLogin(t *testing.T) {
 	// Register a new user.
 	regResp := DoJSON(t, client, http.MethodPost, ts.URL+"/api/v1/auth/register", map[string]any{
 		"email":    "alice@example.com",
-		"password": "supersecret1",
+		"password": "Supersecret1",
 		"name":     "Alice Test",
 	}, "")
 	defer DrainBody(regResp)
@@ -51,7 +51,7 @@ func TestRegisterAndLogin(t *testing.T) {
 	// Login with the same credentials.
 	loginResp := DoJSON(t, client, http.MethodPost, ts.URL+"/api/v1/auth/login", map[string]any{
 		"email":    "alice@example.com",
-		"password": "supersecret1",
+		"password": "Supersecret1",
 	}, "")
 	defer DrainBody(loginResp)
 
@@ -79,7 +79,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 
 	body := map[string]any{
 		"email":    "dup@example.com",
-		"password": "supersecret1",
+		"password": "Supersecret1",
 		"name":     "Dup User",
 	}
 

@@ -11,7 +11,8 @@
 | 8.4 | Fix: Feed + Listing Detail + Checkout Bugs | completed | task-8.4-fix-feed-listing-checkout-bugs | 2bb354a |
 | 8.5 | Audit: Search + Map | completed | task-8.5-audit-search-map | 035f291 |
 | 8.6 | Fix: Search + Map Bugs | completed | task-8.6-fix-search-map-bugs | 5cbb9a8 |
-| 8.7–8.19 | Remaining audit/fix/docs/verification tasks | pending | — | — |
+| 8.7 | Audit: Booking + Handoff | completed | task-8.7-audit-booking-handoff | 3bd3319 |
+| 8.8–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
 
 ---
 
@@ -71,6 +72,16 @@ All 5 audit bugs resolved. Key context for future tasks:
 - `handler.go`: `minID(listings)` helper; `feed` + `search` endpoints return `nextCursor` (min ULID = last in DB order)
 - `useDiscovery.ts`: `FeedResponse.nextCursor?: string`; `getNextPageParam` uses `nextCursor` with fallback
 - Pre-existing TS error in `(profile)/index.tsx` (router path types) — not introduced by 8.6
+
+---
+
+## Booking + Handoff Audit Findings (task 8.7)
+
+8 bugs documented in `thoughts/audits/phase-8-visual-qa/audit-booking-handoff.md`. 3 medium, 5 low severity. No critical bugs. All flows structurally sound; full simulator testing not possible (no seeded bookings). Key bugs for task 8.8:
+
+- BUG-BH-1: cost breakdown $0 on first start date selection (onChangeStart else-branch doesn't call setAmounts)
+- BUG-BH-3: Maps URL uses listing ULID not coordinates (backend needs to return listing address)
+- BUG-BH-4: "Report an issue" shows stale placeholder Alert (should navigate to dispute screen)
 
 ---
 

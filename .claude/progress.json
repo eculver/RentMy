@@ -808,7 +808,7 @@
           "dependencies": [
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-61",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-61",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a711 (photo diff pipeline, two-stage)"
           ],
@@ -831,7 +831,7 @@
             "6.1",
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-62",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-62",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a720 (escalation gate)",
             "rentmy-prd-v8.md \u00a77 (hold allocation)"
@@ -854,7 +854,7 @@
           "dependencies": [
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-63",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-63",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a719 (late return escalation)"
           ],
@@ -878,7 +878,7 @@
             "5.1",
             "5.2"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-64",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-64",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a715 (rating bubbles)"
           ],
@@ -902,7 +902,7 @@
             "6.4",
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-65",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-65",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a78 (reputation scoring)"
           ],
@@ -923,7 +923,7 @@
           "dependencies": [
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-66",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-66",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
           ],
@@ -948,7 +948,7 @@
             "6.5",
             "5.1"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-67",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-67",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a731 (agent learning framework)"
           ],
@@ -973,7 +973,7 @@
             "6.4",
             "5.2"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-68",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-68",
           "prdRefs": [],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
@@ -990,7 +990,7 @@
           "dependencies": [
             "6.6"
           ],
-          "planRef": ".claude/plan/phase-6-closing-loop.md#step-69",
+          "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-69",
           "prdRefs": [
             "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
           ],

@@ -213,7 +213,6 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	opsAgent := ops.New(opsRepo, opsCollector, opsAlertRouter)
 	opsWorker := ops.NewHealthCheckWorker(opsAgent)
 	river.AddWorker(workers, opsWorker)
-
 	// Schedule periodic jobs for guarantee fund monitoring.
 	periodicJobs := []*river.PeriodicJob{
 		river.NewPeriodicJob(

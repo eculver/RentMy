@@ -25,6 +25,10 @@ export interface Booking {
   actualStart?: string;
   actualEnd?: string;
   createdAt: string;
+  // Enriched fields from single-booking endpoint
+  renterName?: string;
+  listingLat?: number;
+  listingLng?: number;
 }
 
 interface BookingResponse {

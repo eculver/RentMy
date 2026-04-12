@@ -90,7 +90,7 @@ export default function IncomingRequest({
   const busy = accepting || declining;
 
   return (
-    <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3 mx-4">
+    <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
       {/* Header */}
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-base font-semibold text-gray-900">

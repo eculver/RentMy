@@ -21,15 +21,22 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 }
 
 // FindByID fetches a booking by its transaction ID.
+// It enriches the result with the renter's display name and the listing's
+// GPS coordinates (both nullable — the listing may have no location set).
 func (r *Repository) FindByID(ctx context.Context, id string) (Booking, error) {
 	const q = `
-		SELECT id, renter_id, host_id, listing_id,
-		       scheduled_start, scheduled_end, status,
-		       COALESCE(cancelled_by, ''),
-		       ROUND(COALESCE(cancellation_fee, 0) * 100)::bigint,
-		       actual_start, actual_end, created_at
-		FROM transactions
-		WHERE id = $1`
+		SELECT t.id, t.renter_id, t.host_id, t.listing_id,
+		       t.scheduled_start, t.scheduled_end, t.status,
+		       COALESCE(t.cancelled_by, ''),
+		       ROUND(COALESCE(t.cancellation_fee, 0) * 100)::bigint,
+		       t.actual_start, t.actual_end, t.created_at,
+		       NULLIF(u.name, ''),
+		       ST_Y(l.location::geometry),
+		       ST_X(l.location::geometry)
+		FROM transactions t
+		LEFT JOIN users u ON u.id = t.renter_id
+		LEFT JOIN listings l ON l.id = t.listing_id
+		WHERE t.id = $1`
 
 	var b Booking
 	err := r.pool.QueryRow(ctx, q, id).Scan(
@@ -37,6 +44,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (Booking, error) {
 		&b.ScheduledStart, &b.ScheduledEnd, &b.Status,
 		&b.CancelledBy, &b.CancellationFee,
 		&b.ActualStart, &b.ActualEnd, &b.CreatedAt,
+		&b.RenterName, &b.ListingLat, &b.ListingLng,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Booking{}, ErrBookingNotFound

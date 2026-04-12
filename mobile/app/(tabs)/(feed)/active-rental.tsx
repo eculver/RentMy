@@ -93,9 +93,10 @@ export default function ActiveRentalScreen() {
   const isLate = remaining < 0;
 
   const handleNavigate = () => {
-    // Open the native Maps app; item pickup address is at the listing location.
-    // Until the booking API returns listing coordinates, we open a generic Maps search.
-    const url = `maps://maps.apple.com/?q=RentMy+pickup+${booking.listingId}`;
+    const url =
+      booking.listingLat != null && booking.listingLng != null
+        ? `maps://maps.apple.com/?ll=${booking.listingLat},${booking.listingLng}&q=Return+location`
+        : "maps://";
     void Linking.openURL(url).catch(() => {
       Alert.alert(
         "Maps unavailable",
@@ -105,11 +106,10 @@ export default function ActiveRentalScreen() {
   };
 
   const handleReportIssue = () => {
-    Alert.alert(
-      "Report an issue",
-      "Issue reporting and dispute flow will be available in a future update.",
-      [{ text: "OK" }],
-    );
+    router.push({
+      pathname: "/(tabs)/(rentals)/dispute" as never,
+      params: { transactionId: booking.id },
+    });
   };
 
   return (

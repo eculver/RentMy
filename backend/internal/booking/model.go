@@ -51,6 +51,10 @@ type Booking struct {
 	ActualStart     *time.Time `json:"actualStart,omitempty"`
 	ActualEnd       *time.Time `json:"actualEnd,omitempty"`
 	CreatedAt       time.Time  `json:"createdAt"`
+	// Enriched fields — populated only by FindByID (single-booking view).
+	RenterName *string  `json:"renterName,omitempty"`
+	ListingLat *float64 `json:"listingLat,omitempty"`
+	ListingLng *float64 `json:"listingLng,omitempty"`
 }
 
 // CreateInput is the input for creating a new booking.

@@ -57,7 +57,7 @@ export default function BookingCard({
   return (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3 mx-4"
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3"
     >
       {/* Header row: title + status badge */}
       <View className="flex-row items-start justify-between gap-x-2">

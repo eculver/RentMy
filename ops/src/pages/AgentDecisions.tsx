@@ -16,9 +16,9 @@ export default function AgentDecisions() {
   const { data: decisions, isLoading } = useQuery({
     queryKey: ['decisions', agentType, escalatedOnly],
     queryFn: () =>
-      api.get('ops/agents/decisions', {
+      api.get('admin/agents/decisions', {
         searchParams: {
-          ...(agentType && { agent_type: agentType }),
+          ...(agentType && { agentType }),
           ...(escalatedOnly && { escalated: 'true' }),
           limit: '50',
         },
@@ -74,8 +74,8 @@ export default function AgentDecisions() {
               >
                 <td className="px-4 py-3 font-mono text-xs">{d.id.slice(0, 10)}...</td>
                 <td className="px-4 py-3">{d.agentType}</td>
-                <td className="px-4 py-3 font-mono text-xs">{d.transactionId.slice(0, 10)}...</td>
-                <td className="px-4 py-3">{(d.confidence * 100).toFixed(0)}%</td>
+                <td className="px-4 py-3 font-mono text-xs">{d.transactionId ? `${d.transactionId.slice(0, 10)}...` : '-'}</td>
+                <td className="px-4 py-3">{d.confidence != null ? `${(d.confidence * 100).toFixed(0)}%` : '-'}</td>
                 <td className="px-4 py-3">{d.escalated ? 'Yes' : 'No'}</td>
                 <td className="px-4 py-3">
                   {d.outcomeCorrect === true && <span className="text-green-600">Correct</span>}

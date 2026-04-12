@@ -33,6 +33,9 @@ func (h *Handler) Mount(r chi.Router, authMW func(http.Handler) http.Handler) {
 		r.Get("/ops/metrics/current", h.handleGetCurrentMetrics)
 		r.Get("/ops/metrics/history", h.handleGetMetricsHistory)
 
+		// Agent metrics.
+		r.Get("/ops/agents/metrics", h.handleGetAgentMetrics)
+
 		// Alerts.
 		r.Get("/ops/alerts", h.handleListAlerts)
 		r.Put("/ops/alerts/{alertId}/acknowledge", h.handleAcknowledgeAlert)
@@ -214,6 +217,17 @@ func (h *Handler) handleUpdateAlertRule(w http.ResponseWriter, r *http.Request) 
 	}
 
 	writeJSON(w, http.StatusOK, existing)
+}
+
+// handleGetAgentMetrics returns 90-day performance metrics per agent type.
+// GET /api/v1/ops/agents/metrics
+func (h *Handler) handleGetAgentMetrics(w http.ResponseWriter, r *http.Request) {
+	metrics, err := h.repo.GetAgentMetrics(r.Context())
+	if err != nil {
+		http.Error(w, "failed to fetch agent metrics", http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, metrics)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

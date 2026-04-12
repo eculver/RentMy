@@ -17,7 +17,10 @@ export default function Dashboard() {
 
   const { data: history } = useQuery({
     queryKey: ['metrics', 'history'],
-    queryFn: () => api.get('ops/metrics/history', { searchParams: { duration: '7d' } }).json<HealthSnapshot[]>(),
+    queryFn: () =>
+      api.get('ops/metrics/history', { searchParams: { duration: '7d' } })
+        .json<{ snapshots: HealthSnapshot[] }>()
+        .then(r => r.snapshots),
     refetchInterval: 120_000,
   })
 

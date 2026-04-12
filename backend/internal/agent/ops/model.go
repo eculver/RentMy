@@ -120,3 +120,38 @@ type AlertFilters struct {
 	Page         int
 	Limit        int
 }
+
+// AgentMetrics holds per-agent performance data for the ops dashboard.
+type AgentMetrics struct {
+	AgentType          string  `json:"agentType"`
+	CorrectnessRate    float64 `json:"correctnessRate"`
+	OverrideRate       float64 `json:"overrideRate"`
+	TotalDecisions     int     `json:"totalDecisions"`
+	PrimaryMetric      string  `json:"primaryMetric"`
+	PrimaryValue       float64 `json:"primaryValue"`
+	PrimaryThreshold   float64 `json:"primaryThreshold"`
+	PrimaryStatus      string  `json:"primaryStatus"`
+	SecondaryMetric    string  `json:"secondaryMetric"`
+	SecondaryValue     float64 `json:"secondaryValue"`
+	SecondaryThreshold float64 `json:"secondaryThreshold"`
+	SecondaryStatus    string  `json:"secondaryStatus"`
+}
+
+// agentMetricSpec defines thresholds for primary and secondary metrics per agent type.
+type agentMetricSpec struct {
+	primary            string
+	primaryThreshold   float64
+	secondary          string
+	secondaryThreshold float64
+}
+
+// agentSpecs maps agent types to their metric specifications.
+var agentSpecs = map[string]agentMetricSpec{
+	"RISK":         {primary: "Correctness Rate", primaryThreshold: 0.85, secondary: "Override Rate", secondaryThreshold: 0.20},
+	"VERIFICATION": {primary: "Correctness Rate", primaryThreshold: 0.95, secondary: "Override Rate", secondaryThreshold: 0.05},
+	"APPRAISAL":    {primary: "Correctness Rate", primaryThreshold: 0.80, secondary: "Override Rate", secondaryThreshold: 0.10},
+	"DISPUTE":      {primary: "Correctness Rate", primaryThreshold: 0.85, secondary: "Override Rate", secondaryThreshold: 0.15},
+	"AGREEMENT":    {primary: "Correctness Rate", primaryThreshold: 0.90, secondary: "Override Rate", secondaryThreshold: 0.12},
+	"FRAUD":        {primary: "Correctness Rate", primaryThreshold: 0.90, secondary: "Override Rate", secondaryThreshold: 0.08},
+	"LATE_RETURN":  {primary: "Correctness Rate", primaryThreshold: 0.85, secondary: "Override Rate", secondaryThreshold: 0.25},
+}

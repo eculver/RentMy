@@ -119,8 +119,8 @@ export interface FraudFlag {
 export interface AgentDecision {
   id: string
   agentType: string
-  transactionId: string
-  confidence: number
+  transactionId?: string
+  confidence?: number
   escalated: boolean
   outcomeCorrect?: boolean
   overrideOf?: string
@@ -135,12 +135,15 @@ export interface AgentDecision {
 // ── Calibration ──
 
 export interface CalibrationBucket {
-  bucketMin: number
-  bucketMax: number
-  decisionCount: number
-  correctCount: number
+  agentType: string
+  bucketLow: number
+  bucketHigh: number
   expectedAccuracy: number
   actualAccuracy: number
+  calibrationError: number
+  totalDecisions: number
+  correctDecisions: number
+  updatedAt: string
 }
 
 // ── Referrals ──

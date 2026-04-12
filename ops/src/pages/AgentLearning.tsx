@@ -26,11 +26,11 @@ interface AgentMetrics {
 }
 
 interface FundHealth {
-  currentBalance: number
-  reserveRequired: number
+  balance: number
+  outstandingGaps: number
+  reserveRatio: number
   lossRatio: number
-  contributions: number
-  claims: number
+  action: string
 }
 
 export default function AgentLearning() {
@@ -39,7 +39,9 @@ export default function AgentLearning() {
   const { data: calibration } = useQuery({
     queryKey: ['agents', 'calibration', selected],
     queryFn: () =>
-      api.get('ops/agents/calibration', { searchParams: { agent_type: selected } }).json<CalibrationBucket[]>(),
+      api.get(`admin/agents/calibration/${selected}`)
+        .json<{ buckets: CalibrationBucket[] }>()
+        .then(r => r.buckets),
   })
 
   const { data: metrics } = useQuery({
@@ -49,7 +51,7 @@ export default function AgentLearning() {
 
   const { data: fund } = useQuery({
     queryKey: ['guarantee', 'health'],
-    queryFn: () => api.get('ops/guarantee/health').json<FundHealth>(),
+    queryFn: () => api.get('admin/guarantee-fund/health').json<FundHealth>(),
   })
 
   const correctnessData = metrics?.map((m) => ({
@@ -147,8 +149,8 @@ export default function AgentLearning() {
       {fund && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <GaugeChart
-            value={fund.currentBalance / 100}
-            max={fund.reserveRequired / 100}
+            value={fund.balance / 100}
+            max={fund.outstandingGaps > 0 ? fund.outstandingGaps / 100 : fund.balance / 100}
             title="Guarantee Fund Health"
             unit="$"
           />

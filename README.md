@@ -156,6 +156,7 @@ RentMy/
 │   ├── lib/                    #   Utilities (API client, auth, hooks)
 │   └── __tests__/              #   Jest + RNTL tests
 │
+├── docs/                       # Project documentation (PRD, roadmap, cross-cutting)
 ├── migrations/                 # Database migrations (goose SQL)
 ├── terraform/                  # Infrastructure as Code
 ├── scripts/                    # Helper scripts

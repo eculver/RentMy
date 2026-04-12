@@ -21,7 +21,8 @@
 | 8.14 | Fix: Profile + Referrals + KYC Bugs | completed | task-8.14-fix-profile-referrals-kyc | e12d34d |
 | 8.15 | Audit: Ops Dashboard + Backend Ops Tools | completed | task-8.15-audit-ops-dashboard | f85b033 |
 | 8.16 | Fix: Ops Dashboard + Backend Ops Tools Bugs | completed | task-8.16-fix-ops-dashboard-bugs | 2d4491d |
-| 8.17–8.19 | Remaining docs/verification tasks | pending | — | — |
+| 8.17 | Documentation Cleanup & Consolidation | completed | task-8.17-doc-consolidation | TBD |
+| 8.18–8.19 | Remaining verification tasks | pending | — | — |
 
 ---
 

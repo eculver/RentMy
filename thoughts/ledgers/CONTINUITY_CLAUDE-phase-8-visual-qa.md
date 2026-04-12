@@ -18,7 +18,9 @@
 | 8.11 | Audit: Rentals + Disputes + Ratings | completed | task-8.11-audit-rentals-disputes | d39a695 |
 | 8.12 | Fix: Rentals + Disputes + Ratings Bugs | completed | task-8.12-fix-rentals-disputes-ratings | 5c3b4eb |
 | 8.13 | Audit: Profile + Referrals + KYC | completed | task-8.13-audit-profile-referrals-kyc | TBD |
-| 8.14–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
+| 8.14 | Fix: Profile + Referrals + KYC Bugs | completed | task-8.14-fix-profile-referrals-kyc | e12d34d |
+| 8.15 | Audit: Ops Dashboard + Backend Ops Tools | completed | task-8.15-audit-ops-dashboard | f85b033 |
+| 8.16–8.19 | Remaining fix/docs/verification tasks | pending | — | — |
 
 ---
 

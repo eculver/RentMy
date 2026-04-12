@@ -13,7 +13,12 @@
 | 8.6 | Fix: Search + Map Bugs | completed | task-8.6-fix-search-map-bugs | 5cbb9a8 |
 | 8.7 | Audit: Booking + Handoff | completed | task-8.7-audit-booking-handoff | 3bd3319 |
 | 8.8 | Fix: Booking + Handoff Bugs | completed | task-8.8-fix-booking-handoff-bugs | c33a4ec |
-| 8.9–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
+| 8.9 | Audit: Messaging | completed | task-8.9-audit-messaging | see progress.json |
+| 8.10 | Fix: Messaging Bugs | completed | task-8.10-fix-messaging-bugs | f26c4a7 |
+| 8.11 | Audit: Rentals + Disputes + Ratings | completed | task-8.11-audit-rentals-disputes | d39a695 |
+| 8.12 | Fix: Rentals + Disputes + Ratings Bugs | completed | task-8.12-fix-rentals-disputes-ratings | 5c3b4eb |
+| 8.13 | Audit: Profile + Referrals + KYC | completed | task-8.13-audit-profile-referrals-kyc | TBD |
+| 8.14–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
 
 ---
 
@@ -83,6 +88,22 @@ All 5 audit bugs resolved. Key context for future tasks:
 - BUG-BH-1: cost breakdown $0 on first start date selection (onChangeStart else-branch doesn't call setAmounts)
 - BUG-BH-3: Maps URL uses listing ULID not coordinates (backend needs to return listing address)
 - BUG-BH-4: "Report an issue" shows stale placeholder Alert (should navigate to dispute screen)
+
+---
+
+---
+
+## Profile + Referrals + KYC Audit Findings (task 8.13)
+
+6 bugs documented in `thoughts/audits/phase-8-visual-qa/audit-profile.md`. 2 critical, 2 high, 1 medium, 1 low.
+
+Key bugs for task 8.14:
+- **BUG-1 [CRITICAL]**: `router.back()` called during render in `CreateListingScreen.native.tsx` (lines 209-211) — must move to `useEffect`
+- **BUG-2 [CRITICAL]**: `ValueOverridePrompt` permanently unreachable — threshold check requires `resolvedSuggestions` which only exists when appraisal is complete, but navigation fires before override can trigger. Fix: move threshold check to a `useEffect` triggered by `appraisalComplete`
+- **BUG-3 [HIGH]**: Profile screen has no entry point to the verify/KYC screen — add "Verify Identity" button conditioned on `identityStatus !== "VERIFIED"`
+- **BUG-4 [HIGH]**: `Clipboard` from `react-native` is `undefined` in Expo SDK 54 — crashes Copy Code button. Fix: `npx expo install expo-clipboard`, use `Clipboard.setStringAsync`
+- **BUG-5 [MEDIUM]**: `ReferralCard` splits combined class string at runtime (`.split(" ")`) — NativeWind antipattern; split into `statusBg`/`statusText` maps
+- **BUG-6 [LOW]**: `ShimmerBar` `width` type assertion — change prop type to `` `${number}%` ``
 
 ---
 

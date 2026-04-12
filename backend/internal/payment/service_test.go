@@ -20,6 +20,7 @@ type mockAdapter struct {
 	createConnectedAcctFn func(ctx context.Context, email string) (string, string, error)
 	createCustomerFn      func(ctx context.Context, email, name string) (string, error)
 	createSetupIntentFn   func(ctx context.Context, customerID string) (string, error)
+	createEphemeralKeyFn  func(ctx context.Context, customerID string) (string, error)
 }
 
 func (m *mockAdapter) AuthorizeHold(ctx context.Context, amount int64, currency, pmID, custID string) (string, error) {
@@ -48,6 +49,9 @@ func (m *mockAdapter) CreateCustomer(ctx context.Context, email, name string) (s
 }
 func (m *mockAdapter) CreateSetupIntent(ctx context.Context, customerID string) (string, error) {
 	return m.createSetupIntentFn(ctx, customerID)
+}
+func (m *mockAdapter) CreateEphemeralKey(ctx context.Context, customerID string) (string, error) {
+	return m.createEphemeralKeyFn(ctx, customerID)
 }
 
 // TestPayoutDelay verifies the payout delay logic without requiring Stripe or DB.

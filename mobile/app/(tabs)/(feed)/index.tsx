@@ -42,7 +42,7 @@ function EmptyState() {
 
 export default function FeedScreen() {
   const router = useRouter();
-  const { lat, lng, loading: locationLoading, error: locationError } = useLocation();
+  const { lat, lng, loading: locationLoading, error: locationError, retry: retryLocation } = useLocation();
 
   const {
     data,
@@ -78,6 +78,12 @@ export default function FeedScreen() {
           Location unavailable
         </Text>
         <Text className="text-sm text-gray-500 text-center mt-2">{locationError}</Text>
+        <Pressable
+          onPress={retryLocation}
+          className="mt-6 px-6 py-3 bg-sky-600 rounded-2xl"
+        >
+          <Text className="text-white font-semibold text-sm">Retry</Text>
+        </Pressable>
       </View>
     );
   }

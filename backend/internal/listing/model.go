@@ -72,6 +72,7 @@ type Listing struct {
 	Location           *Location       `json:"location,omitempty"`
 	Availability       json.RawMessage `json:"availability"`
 	HasVideo           bool            `json:"hasVideo"`
+	Photos             []string        `json:"photos"`
 	Status             ListingStatus   `json:"status"`
 	AppraisalStatus    AppraisalStatus `json:"appraisalStatus"`
 	CreatedAt          time.Time       `json:"createdAt"`

@@ -51,7 +51,13 @@ export default function ListingDetailScreen() {
   const listing = listingData?.listing;
   const isHost = listing?.hostId === user?.id;
 
-  const photos = thumbnailUrl ? [thumbnailUrl] : [];
+  // Use full photo array from API when listing has loaded; fall back to route param thumbnail.
+  const photos =
+    listing?.photos?.length
+      ? listing.photos
+      : thumbnailUrl
+        ? [thumbnailUrl]
+        : [];
   const displayHostName = hostName ?? "Host";
   const displayReputation = parseInt(hostReputation ?? "0", 10);
   const drive = driveLabel(driveTimeMin);
@@ -170,13 +176,11 @@ export default function ListingDetailScreen() {
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4">
         {isHost ? (
           <Pressable
-            className="bg-gray-800 rounded-2xl py-4 items-center"
-            onPress={() => {
-              // Navigate to edit listing — wired in Phase 3+
-            }}
+            disabled
+            className="bg-gray-300 rounded-2xl py-4 items-center"
           >
-            <Text className="text-white font-semibold text-base">
-              Edit Listing
+            <Text className="text-gray-500 font-semibold text-base">
+              Edit Listing (Coming Soon)
             </Text>
           </Pressable>
         ) : (

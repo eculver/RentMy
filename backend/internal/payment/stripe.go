@@ -187,3 +187,18 @@ func (a *StripeAdapter) CreateSetupIntent(ctx context.Context, customerID string
 	}
 	return si.ClientSecret, nil
 }
+
+// CreateEphemeralKey creates a short-lived Stripe Ephemeral Key for a customer.
+// The mobile SDK uses this key to list the customer's saved payment methods.
+func (a *StripeAdapter) CreateEphemeralKey(ctx context.Context, customerID string) (string, error) {
+	params := &stripe.EphemeralKeyParams{
+		Customer:      stripe.String(customerID),
+		StripeVersion: stripe.String("2024-06-20"),
+	}
+	params.Context = ctx
+	key, err := a.sc.EphemeralKeys.New(params)
+	if err != nil {
+		return "", fmt.Errorf("stripe create ephemeral key: %w", err)
+	}
+	return key.Secret, nil
+}

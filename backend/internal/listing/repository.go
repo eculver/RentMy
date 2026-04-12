@@ -90,6 +90,38 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*Listing, error) 
 		}
 		return nil, fmt.Errorf("find listing by id: %w", err)
 	}
+
+	// Fetch attached photo URLs ordered by upload time.
+	// Prefer thumbnail_url for display; fall back to original_url.
+	const photoQ = `
+		SELECT COALESCE(thumbnail_url, original_url)
+		FROM media
+		WHERE listing_id = $1 AND media_type = 'LISTING_PHOTO'
+		ORDER BY created_at`
+
+	rows, err := r.pool.Query(ctx, photoQ, id)
+	if err != nil {
+		return nil, fmt.Errorf("fetch listing photos: %w", err)
+	}
+	defer rows.Close()
+
+	var photos []string
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			return nil, fmt.Errorf("scan photo url: %w", err)
+		}
+		photos = append(photos, url)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate listing photos: %w", err)
+	}
+
+	if photos == nil {
+		photos = []string{}
+	}
+	l.Photos = photos
+
 	return l, nil
 }
 

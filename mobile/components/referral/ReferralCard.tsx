@@ -12,11 +12,18 @@ const statusLabel: Record<Referral["status"], string> = {
   FRAUDULENT: "Flagged",
 };
 
-const statusColor: Record<Referral["status"], string> = {
-  SIGNED_UP: "bg-blue-100 text-blue-700",
-  FIRST_RENTAL_COMPLETED: "bg-yellow-100 text-yellow-700",
-  PAID: "bg-green-100 text-green-700",
-  FRAUDULENT: "bg-red-100 text-red-700",
+const statusBg: Record<Referral["status"], string> = {
+  SIGNED_UP: "bg-blue-100",
+  FIRST_RENTAL_COMPLETED: "bg-yellow-100",
+  PAID: "bg-green-100",
+  FRAUDULENT: "bg-red-100",
+};
+
+const statusText: Record<Referral["status"], string> = {
+  SIGNED_UP: "text-blue-700",
+  FIRST_RENTAL_COMPLETED: "text-yellow-700",
+  PAID: "text-green-700",
+  FRAUDULENT: "text-red-700",
 };
 
 export default function ReferralCard({ referral }: ReferralCardProps) {
@@ -41,8 +48,8 @@ export default function ReferralCard({ referral }: ReferralCardProps) {
       </View>
 
       <View className="items-end gap-y-1">
-        <View className={`px-2 py-0.5 rounded-full ${statusColor[referral.status].split(" ")[0]}`}>
-          <Text className={`text-xs font-medium ${statusColor[referral.status].split(" ")[1]}`}>
+        <View className={`px-2 py-0.5 rounded-full ${statusBg[referral.status]}`}>
+          <Text className={`text-xs font-medium ${statusText[referral.status]}`}>
             {statusLabel[referral.status]}
           </Text>
         </View>

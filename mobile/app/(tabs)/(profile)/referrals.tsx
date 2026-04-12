@@ -7,8 +7,8 @@ import {
   ActivityIndicator,
   Share,
   Platform,
-  Clipboard,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useReferralCode, useMyReferrals, Referral } from "../../../lib/hooks/useReferrals";
 import ReferralCard from "../../../components/referral/ReferralCard";
 
@@ -19,9 +19,9 @@ export default function ReferralsScreen() {
 
   const referrals: Referral[] = referralsData?.referrals ?? [];
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!codeData?.code) return;
-    Clipboard.setString(codeData.code);
+    await Clipboard.setStringAsync(codeData.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

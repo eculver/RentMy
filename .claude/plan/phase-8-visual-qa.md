@@ -1,8 +1,12 @@
 # Phase 8 — Visual QA, Bug Fixing & v0 Stabilization
 
-> **Scope:** Systematically screenshot every mobile screen in iOS Simulator, document bugs, fix them (mobile + backend), consolidate docs, verify compilation/tests.
-> **Exit criteria:** App runs in iOS Simulator with no red screens, all screens render correctly with seeded data, all tests pass, documentation is consolidated.
+> **Scope:** Systematically screenshot every mobile screen in iOS Simulator, audit the ops dashboard via Chrome MCP, document bugs, fix them (mobile + backend + ops), consolidate docs, verify compilation/tests.
+> **Exit criteria:** App runs in iOS Simulator with no red screens, all screens render correctly with seeded data, ops dashboard renders and functions correctly, all tests pass, documentation is consolidated.
 > **Blockers:** All Phase 0-7 tasks completed.
+>
+> **Tools:**
+> - **iOS Simulator** — `xcrun simctl` for mobile screenshots and interaction
+> - **Chrome MCP** (`mcp__Control_Chrome__*`) — for ops dashboard page inspection, console error checking, and content verification. Requires the Claude Chrome extension with `localhost` added to allowed sites.
 
 ---
 
@@ -271,45 +275,59 @@
 - Backend running with seeded data (`cd backend && make dev`)
 - Ops dashboard running (`cd ops && npm run dev`)
 - At least one completed booking in the database (for meaningful metrics)
+- Chrome MCP connected (Claude Chrome extension installed, `localhost` in allowed sites)
+
+**Tools — Chrome MCP:**
+
+Use Chrome MCP to navigate to each page, read rendered content, and check for errors:
+```
+mcp__Control_Chrome__open_url        → Navigate to each dashboard route
+mcp__Control_Chrome__get_page_content → Read rendered HTML to verify data displays
+mcp__Control_Chrome__execute_javascript → Check for console errors, read DOM state, click buttons
+mcp__Control_Chrome__list_tabs       → Verify the ops dashboard tab is active
+```
+
+For each page: (1) navigate via `open_url`, (2) read content via `get_page_content`, (3) check console for errors via `execute_javascript` with `JSON.stringify(window.__consoleErrors || [])`, (4) compare displayed values against API responses from `curl`.
 
 ### Ops Dashboard (ops/)
 
-**Pages to audit:**
+**Pages to audit (use Chrome MCP for each):**
 
-1. **Dashboard** (`/`)
-   - Verify 4 metric category cards render (Business, Trust & Safety, Supply, Demand)
+1. **Dashboard** (`http://localhost:5173/`)
+   - Navigate with `open_url`, verify 4 metric category cards render (Business, Trust & Safety, Supply, Demand)
    - Verify trend charts load (7d gross revenue, fraud flag rate)
    - Check anomaly alert banner appears/hides correctly
+   - Check browser console for JS errors
 
-2. **Alerts** (`/alerts`)
+2. **Alerts** (`http://localhost:5173/alerts`)
    - Verify "Feed" tab shows alert instances (or empty state)
    - Verify "Rules" tab shows all alert rules with correct fields
-   - Test acknowledge button on an alert
+   - Test acknowledge button on an alert via `execute_javascript`
    - Test toggling a rule's enabled state
    - Test editing a rule's threshold
 
-3. **Review Queue** (`/reviews`)
+3. **Review Queue** (`http://localhost:5173/reviews`)
    - Verify fraud flag table renders with filters (Status, Action)
    - Test clicking into a flag detail
 
-4. **Review Detail** (`/reviews/{flagId}`)
+4. **Review Detail** (`http://localhost:5173/reviews/{flagId}`)
    - Verify metadata renders (score, action, signals)
    - Verify evidence viewer component
    - Test resolution buttons (Approve / Override / Request Info)
 
-5. **Agent Decisions** (`/agents/decisions`)
+5. **Agent Decisions** (`http://localhost:5173/agents/decisions`)
    - Verify table renders with agent type filter
    - Test expanding a row to see reasoning/input/decision JSON
 
-6. **Agent Learning** (`/agents/learning`)
+6. **Agent Learning** (`http://localhost:5173/agents/learning`)
    - Verify calibration charts render for each agent type
    - Verify guarantee fund gauges show balance/reserve ratio
 
-7. **Referrals** (`/referrals`)
+7. **Referrals** (`http://localhost:5173/referrals`)
    - Verify stats cards render (Total Codes, Conversions, Payouts, Rate)
    - Verify referral table with status column
 
-8. **Login** (`/login`)
+8. **Login** (`http://localhost:5173/login`)
    - Verify login works with seeded user credentials
    - Verify 401 redirect when token is missing/expired
 
@@ -364,9 +382,10 @@ Verify River workers are registered and scheduled:
 
 **Goal:** Fix all bugs documented in audit-ops-tools.md.
 
-**Verification:**
-- All dashboard pages render without console errors
-- All ops API endpoints return 200 with valid JSON
+**Verification (use Chrome MCP to verify dashboard fixes):**
+- Re-navigate each dashboard page via `mcp__Control_Chrome__open_url` and confirm fixes render correctly
+- Check browser console via `mcp__Control_Chrome__execute_javascript` — zero JS errors on all pages
+- All ops API endpoints return 200 with valid JSON (`curl`)
 - `cd ops && npx tsc --noEmit`
 - `cd backend && go vet ./...`
 - `cd backend && go build -o /dev/null ./cmd/server`
@@ -420,9 +439,11 @@ Fix any failures found.
 **What to do:**
 1. Full walkthrough of every tab in iOS Simulator
 2. Screenshot each main screen in final state
-3. Run full compilation and test suites
-4. Verify all doc references are valid
-5. Write summary: `thoughts/audits/phase-8-visual-qa/final-report.md`
+3. Full walkthrough of every ops dashboard page via Chrome MCP (`mcp__Control_Chrome__open_url` + `get_page_content`)
+4. Verify zero JS console errors across all ops pages
+5. Run full compilation and test suites
+6. Verify all doc references are valid
+7. Write summary: `thoughts/audits/phase-8-visual-qa/final-report.md`
 
 **Verification:**
 ```bash

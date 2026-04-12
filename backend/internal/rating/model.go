@@ -100,12 +100,12 @@ func ValidateBubblesForHost(bubbles []Bubble) error {
 
 // Rating is the rating domain model.
 type Rating struct {
-	ID            string
-	TransactionID string
-	FromUserID    string
-	ToUserID      string
-	Bubbles       []Bubble
-	CreatedAt     time.Time
+	ID            string    `json:"id"`
+	TransactionID string    `json:"transactionId"`
+	FromUserID    string    `json:"fromUserId"`
+	ToUserID      string    `json:"toUserId"`
+	Bubbles       []Bubble  `json:"bubbles"`
+	CreatedAt     time.Time `json:"createdAt"`
 }
 
 // CreateRatingInput is the input for submitting a new rating.

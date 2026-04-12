@@ -232,6 +232,11 @@ export default function RentalsScreen() {
         pathname: "/(tabs)/(feed)/active-rental" as never,
         params: { transactionId: booking.id },
       });
+    } else if (booking.status === "DISPUTED") {
+      router.push({
+        pathname: "/(tabs)/(rentals)/dispute-status" as never,
+        params: { transactionId: booking.id },
+      });
     } else {
       router.push({
         pathname: "/(tabs)/(feed)/booking-status" as never,

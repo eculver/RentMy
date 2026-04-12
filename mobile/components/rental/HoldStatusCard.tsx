@@ -26,10 +26,9 @@ interface BarSegmentProps {
   cents: number;
   total: number;
   color: string;
-  textColor: string;
 }
 
-function BarSegment({ label, cents, total, color, textColor }: BarSegmentProps) {
+function BarSegment({ label, cents, total, color }: BarSegmentProps) {
   if (cents <= 0) return null;
   const pct = Math.min(100, (cents / total) * 100);
 
@@ -47,8 +46,6 @@ function BarSegment({ label, cents, total, color, textColor }: BarSegmentProps) 
           style={{ width: `${pct}%` }}
         />
       </View>
-      {/* suppress unused textColor — reserved for future label styling */}
-      {textColor === "" && null}
     </View>
   );
 }
@@ -90,28 +87,24 @@ export default function HoldStatusCard({ allocation }: HoldStatusCardProps) {
           cents={capturedLateCents}
           total={totalAuthorized}
           color="bg-amber-400"
-          textColor="text-amber-700"
         />
         <BarSegment
           label="Damage charge"
           cents={capturedDamageCents}
           total={totalAuthorized}
           color="bg-red-400"
-          textColor="text-red-700"
         />
         <BarSegment
           label="Damage reserve"
           cents={damageReserveCents}
           total={totalAuthorized}
           color="bg-orange-300"
-          textColor="text-orange-700"
         />
         <BarSegment
           label="Released"
           cents={releasedCents}
           total={totalAuthorized}
           color="bg-green-400"
-          textColor="text-green-700"
         />
 
         {/* Released status callout */}

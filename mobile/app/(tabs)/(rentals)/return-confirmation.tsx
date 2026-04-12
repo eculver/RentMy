@@ -16,7 +16,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useBooking } from "../../../lib/hooks/useBooking";
-import { useTransactionDisputes } from "../../../lib/hooks/useDispute";
+import { useTransactionDisputes, CLOSED_STATUSES } from "../../../lib/hooks/useDispute";
 import HoldStatusCard from "../../../components/rental/HoldStatusCard";
 
 type Params = {
@@ -76,13 +76,12 @@ export default function ReturnConfirmationScreen() {
 
   const { booking } = data;
   const hasOpenDispute = (disputes ?? []).some(
-    (d) => d.status !== "RESOLVED" && d.status !== "CLOSED",
+    (d) => !CLOSED_STATUSES.includes(d.status),
   );
   const isCompleted = booking.status === "COMPLETED";
 
-  // Build a placeholder hold allocation from the booking.
-  // In a real implementation these would come from the transaction/hold API.
-  // For now we show zero allocations until the backend returns them.
+  // Hold allocation data is not yet returned by the booking API.
+  // HoldStatusCard is hidden until the backend exposes these values.
   const holdAllocation = {
     authorizedCents: 0,
     capturedLateCents: 0,
@@ -90,6 +89,7 @@ export default function ReturnConfirmationScreen() {
     damageReserveCents: 0,
     releasedCents: 0,
   };
+  const hasHoldData = holdAllocation.authorizedCents > 0;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -173,8 +173,8 @@ export default function ReturnConfirmationScreen() {
           )}
         </View>
 
-        {/* Hold status */}
-        <HoldStatusCard allocation={holdAllocation} />
+        {/* Hold status — only shown once the backend returns real hold data */}
+        {hasHoldData && <HoldStatusCard allocation={holdAllocation} />}
 
         {/* Photo diff pending notice */}
         {isCompleted && !hasOpenDispute && (

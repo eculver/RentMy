@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBooking } from "./useBooking";
-import { useTransactionDisputes } from "./useDispute";
+import { useTransactionDisputes, CLOSED_STATUSES } from "./useDispute";
 import { useTransactionRatings } from "./useRatings";
 import { usePusher } from "./usePusher";
 
@@ -43,9 +43,8 @@ export function usePostRental(
   const isDisputed = booking?.status === "DISPUTED";
 
   const hasOpenDispute =
-    (disputes ?? []).some(
-      (d) => d.status !== "RESOLVED" && d.status !== "CLOSED",
-    ) || isDisputed;
+    (disputes ?? []).some((d) => !CLOSED_STATUSES.includes(d.status)) ||
+    isDisputed;
 
   const hasRated =
     (ratings ?? []).some((r) => r.fromUserId === currentUserId) ?? false;

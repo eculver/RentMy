@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-07",
+  "lastUpdated": "2026-04-11",
   "lastSession": {
-    "task": "7.3",
-    "status": "completed",
-    "branch": "task-7.3-ops-dashboard"
+    "task": "8.0",
+    "status": "in_progress",
+    "branch": "phase-8-visual-qa"
   },
   "phases": [
     {
@@ -1121,6 +1121,227 @@
             "cd mobile && npx jest"
           ],
           "commitSha": "e195c3d"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Visual QA, Bug Fixing & v0 Stabilization",
+      "status": "pending",
+      "blockedBy": [7],
+      "tasks": [
+        {
+          "id": "8.0",
+          "name": "Bootstrap: Full Stack + iOS Simulator + Seed Data",
+          "status": "in_progress",
+          "domain": "fullstack",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-80",
+          "verificationCommands": [
+            "curl -sf http://localhost:8080/health",
+            "xcrun simctl io booted screenshot /tmp/rentmy-bootstrap.png"
+          ]
+        },
+        {
+          "id": "8.1",
+          "name": "Audit: Auth Flow (Login + Register)",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-81",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.2",
+          "name": "Fix: Auth Flow Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.1"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-82",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.3",
+          "name": "Audit: Feed + Listing Detail + Checkout",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-83",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.4",
+          "name": "Fix: Feed + Listing Detail + Checkout Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.3"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-84",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.5",
+          "name": "Audit: Search + Map",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-85",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.6",
+          "name": "Fix: Search + Map Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.5"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-86",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.7",
+          "name": "Audit: Booking + Handoff",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-87",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.8",
+          "name": "Fix: Booking + Handoff Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.7"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-88",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.9",
+          "name": "Audit: Messaging",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-89",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.10",
+          "name": "Fix: Messaging Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.9"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-810",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.11",
+          "name": "Audit: Rentals + Disputes + Ratings",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-811",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.12",
+          "name": "Fix: Rentals + Disputes + Ratings Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.11"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-812",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.13",
+          "name": "Audit: Profile + Referrals + KYC",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.0"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-813",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.14",
+          "name": "Fix: Profile + Referrals + KYC Bugs",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["8.13"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-814",
+          "verificationCommands": [
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest",
+            "cd backend && go vet ./...",
+            "cd backend && go build -o /dev/null ./cmd/server"
+          ]
+        },
+        {
+          "id": "8.15",
+          "name": "Documentation Cleanup & Consolidation",
+          "status": "pending",
+          "domain": "docs",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-815",
+          "verificationCommands": []
+        },
+        {
+          "id": "8.16",
+          "name": "Compilation & Test Suite Health Check",
+          "status": "pending",
+          "domain": "fullstack",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-816",
+          "verificationCommands": [
+            "cd backend && go build -o /dev/null ./cmd/server",
+            "cd backend && go vet ./...",
+            "cd backend && go test ./... -count=1",
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx expo export --platform ios",
+            "cd mobile && npx jest --ci"
+          ]
+        },
+        {
+          "id": "8.17",
+          "name": "Final Verification Pass",
+          "status": "pending",
+          "domain": "fullstack",
+          "dependencies": ["8.2", "8.4", "8.6", "8.8", "8.10", "8.12", "8.14", "8.15", "8.16"],
+          "planRef": ".claude/plan/phase-8-visual-qa.md#step-817",
+          "verificationCommands": [
+            "cd backend && go build -o /dev/null ./cmd/server",
+            "cd backend && go vet ./...",
+            "cd backend && go test ./... -count=1",
+            "cd mobile && npx tsc --noEmit",
+            "cd mobile && npx jest --ci"
+          ]
         }
       ]
     }

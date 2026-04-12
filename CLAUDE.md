@@ -96,6 +96,7 @@ Every session follows this protocol. No exceptions.
    - Push the branch:
      - Try: `/opt/homebrew/bin/gt submit --no-edit`
      - If gt fails: `git push -u origin task-{N}.{M}-{short-name}`
+   - **Update PR description** (see [PR Descriptions](#pr-descriptions) below)
 10. **If verification fails:** fix the issue and retry. Do NOT move to the next task
 
 ### Recovery Protocol
@@ -348,10 +349,43 @@ git push -u origin task-1.1-user-service
 
 - **Conventional Commits:** `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`
 - Imperative, present-tense messages — explain *why*, not *what*
+- **Keep commit messages short:** subject line (≤72 chars) + optional body (≤5 lines). Detailed reasoning goes in `thoughts/commits/{short-sha}/reasoning.md`, NOT in the commit message — because `gt submit` uses the commit message as the PR description
 - One logical change per commit
 - Write `thoughts/commits/{short-sha}/reasoning.md` for each commit
-- Include Terraform plan snippets in PRs when IaC changes are involved
 - Never commit credentials, `.env`, `.tfstate`, or plan files
+
+### PR Descriptions
+
+`gt submit --no-edit` creates PRs using the commit message as the description. Since commit messages should be concise, **update the PR description after submitting** to provide useful context for reviewers.
+
+After `gt submit` (or `git push`), update the PR:
+
+```bash
+# Get the PR number for the current branch
+PR_URL=$(gh pr view --json url -q '.url' 2>/dev/null)
+
+# Update with a topical description
+gh pr edit --body "$(cat <<'EOF'
+## Summary
+- <1-3 bullets: what changed and why>
+
+## What's in this PR
+- <key files or modules touched>
+
+## Test plan
+- [ ] <verification steps>
+EOF
+)"
+```
+
+**If `gh` is not authenticated**, skip this step — the commit message is still the fallback description. Do NOT fail the task over a missing PR description.
+
+**PR description rules:**
+- **Short and topical** — 5-15 lines max, not a copy of the handoff doc
+- Lead with *what* changed and *why*, not implementation details
+- Do NOT include: full file listings, line-by-line diffs, reasoning docs, or progress.json updates
+- Do NOT duplicate the commit message — add context the commit message doesn't have
+- Include Terraform plan snippets only when IaC changes are involved
 
 ---
 

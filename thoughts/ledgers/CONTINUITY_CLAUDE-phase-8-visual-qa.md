@@ -12,7 +12,8 @@
 | 8.5 | Audit: Search + Map | completed | task-8.5-audit-search-map | 035f291 |
 | 8.6 | Fix: Search + Map Bugs | completed | task-8.6-fix-search-map-bugs | 5cbb9a8 |
 | 8.7 | Audit: Booking + Handoff | completed | task-8.7-audit-booking-handoff | 3bd3319 |
-| 8.8–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
+| 8.8 | Fix: Booking + Handoff Bugs | completed | task-8.8-fix-booking-handoff-bugs | c33a4ec |
+| 8.9–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
 
 ---
 

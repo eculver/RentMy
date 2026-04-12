@@ -1,16 +1,22 @@
-# Phase 7 — Operations + Growth — Continuity Ledger
+# Phase 7 — Operations: Continuity Ledger
 
-## Task 7.0: Full-Stack Build Verification & Fix Pass
+## Task 7.0 — Full-Stack Build Verification
+- Status: COMPLETED
+- Verified all packages build and existing tests pass
 
-**Status:** Completed
-**Branch:** `task-7.0-fullstack-build-verification`
-**Commit:** `1654218`
-**Date:** 2026-04-07
+## Task 7.1 — OpsAgent (backend)
+- Status: COMPLETED
+- Health monitoring, anomaly detection, alert routing via River periodic job
+- HTTP API at /api/v1/ops/metrics/* and /api/v1/ops/alerts/*
 
-### What happened
+## Task 7.2 — FraudAgent (backend)
+- Status: COMPLETED
+- Signal detection, pattern analysis, fraud flag lifecycle
+- HTTP API at /api/v1/ops/fraud/*
 
-Full-stack build verification gate. Backend was clean — no issues. Mobile had 15 TypeScript module resolution errors from platform-split components (`.native.tsx` + `.web.tsx` without base `.tsx` files) and 1 type error in StripeProviderWrapper. Created 9 base re-export stubs and fixed the type cast. All 6 verification checks now pass.
-
-### What's next
-
-Tasks 7.1 (OpsAgent), 7.2 (FraudAgent), and 7.4 (Referral system) are unblocked and can proceed. 7.1 and 7.4 are independent of each other.
+## Task 7.3 — Ops Dashboard (web)
+- Status: COMPLETED
+- Vite + React + TypeScript + Tailwind CSS dashboard in /ops
+- 7 pages: Dashboard, ReviewQueue, ReviewDetail, AgentDecisions, AgentLearning, Alerts, Referrals
+- Auth gate with JWT, ky v2 HTTP client, TanStack Query
+- Recharts for calibration, trend, bar, and gauge charts

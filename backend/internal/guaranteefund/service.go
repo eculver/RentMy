@@ -11,6 +11,17 @@ import (
 	"github.com/giits/rentmy/backend/internal/platform/ulid"
 )
 
+// RepositoryInterface defines the data operations needed by the guarantee fund service.
+type RepositoryInterface interface {
+	InsertEntry(ctx context.Context, tx pgx.Tx, entry Entry) error
+	GetCurrentBalance(ctx context.Context) (int64, error)
+	GetOutstandingGaps(ctx context.Context) (int64, error)
+	GetRolling90DayClaims(ctx context.Context) (int64, error)
+	GetRolling90DayContributions(ctx context.Context) (int64, error)
+	GetEntries(ctx context.Context, limit, offset int) ([]Entry, int, error)
+	BeginTx(ctx context.Context) (pgx.Tx, error)
+}
+
 // Config holds tunable guarantee fund parameters.
 type Config struct {
 	// ReserveRatioNormal is the threshold above which the fund is healthy (default 0.15 = 15%).
@@ -25,13 +36,13 @@ type Config struct {
 
 // Service implements the guarantee fund business logic.
 type Service struct {
-	repo        *Repository
+	repo        RepositoryInterface
 	riverClient *river.Client[pgx.Tx]
 	cfg         Config
 }
 
 // NewService creates a Service with the given dependencies.
-func NewService(repo *Repository, riverClient *river.Client[pgx.Tx], cfg Config) *Service {
+func NewService(repo RepositoryInterface, riverClient *river.Client[pgx.Tx], cfg Config) *Service {
 	return &Service{
 		repo:        repo,
 		riverClient: riverClient,
@@ -55,14 +66,14 @@ func (s *Service) Contribute(ctx context.Context, tx pgx.Tx, transactionID strin
 
 // Claim draws from the guarantee fund to cover damage shortfalls.
 // The fund balance cannot go negative — only the available amount is disbursed.
-// Returns the actual amount claimed (may be less than requested if fund is low).
-func (s *Service) Claim(ctx context.Context, transactionID string, amount int64) (int64, error) {
+// Returns a ClaimResult indicating what was requested, claimed, and any shortfall.
+func (s *Service) Claim(ctx context.Context, transactionID string, amount int64) (ClaimResult, error) {
 	balance, err := s.repo.GetCurrentBalance(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("get fund balance: %w", err)
+		return ClaimResult{}, fmt.Errorf("get fund balance: %w", err)
 	}
 	if balance <= 0 {
-		return 0, ErrFundEmpty
+		return ClaimResult{}, ErrFundEmpty
 	}
 
 	claimAmount := amount
@@ -72,7 +83,7 @@ func (s *Service) Claim(ctx context.Context, transactionID string, amount int64)
 
 	tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("begin tx: %w", err)
+		return ClaimResult{}, fmt.Errorf("begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
@@ -83,18 +94,25 @@ func (s *Service) Claim(ctx context.Context, transactionID string, amount int64)
 		Amount:        -claimAmount,
 	}
 	if err := s.repo.InsertEntry(ctx, tx, entry); err != nil {
-		return 0, fmt.Errorf("insert claim entry: %w", err)
+		return ClaimResult{}, fmt.Errorf("insert claim entry: %w", err)
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return 0, fmt.Errorf("commit claim: %w", err)
+		return ClaimResult{}, fmt.Errorf("commit claim: %w", err)
+	}
+
+	result := ClaimResult{
+		Requested: amount,
+		Claimed:   claimAmount,
+		Shortfall: amount - claimAmount,
 	}
 
 	slog.Info("guaranteefund: claim processed",
 		"transactionId", transactionID,
-		"requested", amount,
-		"claimed", claimAmount,
+		"requested", result.Requested,
+		"claimed", result.Claimed,
+		"shortfall", result.Shortfall,
 	)
-	return claimAmount, nil
+	return result, nil
 }
 
 // RecordCardRecovery records a recovery from a renter's card, restoring fund balance.

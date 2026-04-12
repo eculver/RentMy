@@ -1,6 +1,6 @@
 # Phase 6 — Returns, Disputes, Trust — Progress Ledger
 
-## Status: In Progress
+## Status: Complete
 
 ## Tasks
 
@@ -13,7 +13,8 @@
 | 6.5 | Reputation score recalculation | Completed | task-6.5-reputation-score-recalculation | 30a9259 |
 | 6.6 | Guarantee fund accounting | Completed | task-6.6-guarantee-fund-accounting | d9589b0 |
 | 6.7 | Outcome linking (Agent Learning Framework) | Completed | task-6.7-outcome-linking | 9bc1807 |
-| 6.8 | Post-rental flow (RN) | Pending | — | — |
+| 6.8 | Post-rental flow (RN) | Completed | task-6.8-post-rental-flow | 31e3fbb |
+| 6.9 | Guarantee fund refinement | Completed | task-6.9-guarantee-fund-refinement | 93c629b |
 
 ## Notes
 
@@ -84,3 +85,14 @@
 - Admin endpoints: calibration overview, per-agent calibration, paginated decisions with outcome data
 - 6 unit tests + 10 integration tests; all existing tests continue to pass
 - No migration needed — uses existing `outcome_id`/`outcome_correct` columns from migration 006
+
+### Task 6.9 — Guarantee Fund Refinement (refines 6.6)
+- Eliminated duplicate guarantee fund types/methods from `payment` package — now delegates to `guaranteefund.Service`
+- `payment.Service` accepts `*guaranteefund.Service` as constructor dependency
+- Wired River periodic jobs: `FundHealthCheckJob` (hourly), `LossRatioCheckJob` (daily) via `river.Config.PeriodicJobs`
+- Enhanced `Claim()` to return `ClaimResult{Requested, Claimed, Shortfall}` struct
+- `dispute/hold.go:CaptureAndEscalate` now records `CollectionsReferral` for partial claims
+- Added `RepositoryInterface` to enable mock-based testing
+- 11 new unit tests (contribute, claim full/partial/empty, fund health, double-entry integrity)
+- 2 new integration tests (admin endpoints, ledger integrity)
+- All existing tests continue to pass

@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/giits/rentmy/backend/internal/guaranteefund"
 	"github.com/giits/rentmy/backend/internal/payment"
 )
 
 // HoldService manages hold allocation captures for dispute resolution.
-// It delegates to the payment service for actual Stripe operations.
+// It delegates to the payment service for actual Stripe operations and
+// to the guarantee fund service for fund claims.
 type HoldService struct {
-	paymentSvc *payment.Service
+	paymentSvc       *payment.Service
+	guaranteeFundSvc *guaranteefund.Service
 }
 
 // NewHoldService creates a HoldService.
-func NewHoldService(paymentSvc *payment.Service) *HoldService {
-	return &HoldService{paymentSvc: paymentSvc}
+func NewHoldService(paymentSvc *payment.Service, guaranteeFundSvc *guaranteefund.Service) *HoldService {
+	return &HoldService{paymentSvc: paymentSvc, guaranteeFundSvc: guaranteeFundSvc}
 }
 
 // CaptureForDamage captures funds from the hold for damage charges.
@@ -77,8 +80,19 @@ func (h *HoldService) CaptureAndEscalate(ctx context.Context, transactionID stri
 			"amount", difference,
 			"error", err,
 		)
-		if fundErr := h.paymentSvc.ClaimGuaranteeFund(ctx, transactionID, difference); fundErr != nil {
+		result, fundErr := h.guaranteeFundSvc.Claim(ctx, transactionID, difference)
+		if fundErr != nil {
 			return fmt.Errorf("guarantee fund claim failed: %w (card charge: %w)", fundErr, err)
+		}
+		if result.Shortfall > 0 {
+			slog.Warn("dispute: partial fund claim, referring remainder to collections",
+				"transactionId", transactionID,
+				"claimed", result.Claimed,
+				"shortfall", result.Shortfall,
+			)
+			if refErr := h.guaranteeFundSvc.RecordCollectionsReferral(ctx, transactionID, result.Shortfall); refErr != nil {
+				return fmt.Errorf("collections referral failed: %w", refErr)
+			}
 		}
 	}
 

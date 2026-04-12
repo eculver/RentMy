@@ -46,6 +46,13 @@ type FundHealth struct {
 	Action          ReserveAction `json:"action"`
 }
 
+// ClaimResult describes what happened during a claim attempt.
+type ClaimResult struct {
+	Requested int64 `json:"requested"` // amount originally requested (cents)
+	Claimed   int64 `json:"claimed"`   // amount actually disbursed from fund (cents)
+	Shortfall int64 `json:"shortfall"` // remaining uncovered amount (cents)
+}
+
 // Sentinel errors.
 var (
 	ErrFundEmpty         = errors.New("guarantee fund is empty")

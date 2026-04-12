@@ -741,17 +741,65 @@ INSERT INTO alert_rules (id, metric_name, operator, threshold, severity, channel
 
 ---
 
+---
+
+### Step 7.0 — Full-Stack Build Verification & Fix Pass
+
+**Goal:** Before adding any new features, verify that the entire codebase actually builds and runs. Previous phases introduced code that passes `tsc --noEmit` and `go build` but fails at runtime (broken asset paths, missing config plugin entries, Metro bundler errors). This step catches and fixes all such issues.
+
+**Why this exists:** `tsc --noEmit` checks types but does NOT run the Metro bundler. `require("../path/to/asset.png")` passes TypeScript if there's a declaration for `*.png`, but Metro will fail if the file doesn't exist. Similarly, `go build` compiles the binary but doesn't verify that all services start correctly against real infrastructure.
+
+**Verification steps (all must pass):**
+
+1. **Backend build + start:**
+   ```bash
+   cd backend && go vet ./...
+   cd backend && go build -o /dev/null ./cmd/server
+   # Start docker-compose, run the server, hit /health
+   docker compose up -d
+   cd backend && make dev &
+   sleep 5 && curl -sf http://localhost:8080/health
+   ```
+
+2. **Mobile Metro bundle (the missing check):**
+   ```bash
+   cd mobile && npm ci
+   cd mobile && npx tsc --noEmit
+   cd mobile && npx expo export --platform web
+   ```
+   The `expo export` step runs the Metro bundler end-to-end. If any `require()` references a file that doesn't exist, or any config plugin is invalid, this will fail. This is the check that was missing from Phases 1-6.
+
+3. **All existing tests pass:**
+   ```bash
+   cd backend && go test ./... -v -count=1 -timeout 120s
+   cd backend && go test ./tests/integration/... -v -count=1 -timeout 300s
+   cd mobile && npx jest --ci
+   ```
+
+**What to fix:** Any build failures found in the steps above. Common issues to look for:
+- Asset `require()` paths that point to nonexistent files
+- Config plugins in `app.json` for packages that don't provide them
+- Missing environment variables that prevent server startup
+- Import paths that reference moved or renamed modules
+- Expo Router route groups with missing layout files
+
+**Exit criteria:** All three verification steps pass with zero errors. Do NOT proceed to 7.1 until this is green.
+
+---
+
 ## Implementation Order
 
 | Step | What | Day | Depends On |
 |------|------|-----|------------|
-| 7.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | Phase 6 complete |
+| 7.0 | Full-stack build verification & fix pass | Day 1 | Phase 6 complete |
+| 7.1 | OpsAgent + metrics + alerts (backend) | Day 1-4 | 7.0 (build is green) |
 | 7.2 | FraudAgent + signals + patterns (backend) | Day 3-6 | 7.1 (shares ops alert routing) |
 | 7.3 | Ops dashboard (web) | Day 5-10 | 7.1, 7.2 (needs API endpoints to render) |
-| 7.4 | Referral system (backend + RN) | Day 5-8 | Phase 6 complete (needs transaction completion hook) |
+| 7.4 | Referral system (backend + RN) | Day 5-8 | 7.0 (build is green, needs transaction completion hook) |
 | 7.5 | Agent learning endpoints (backend) | Day 7-9 | 7.1 (extends ops handler) |
 | 7.6 | Human review queue (backend) | Day 8-10 | 7.1, 7.2 (review items created by agent escalations) |
 
-Steps 7.1 and 7.4 are independent and can start in parallel (ops metrics vs. referral system).
+Step 7.0 runs first and gates everything else. No new feature work until the build is clean.
+Steps 7.1 and 7.4 are independent and can start in parallel after 7.0 passes.
 Step 7.3 (dashboard) can start UI scaffolding on Day 5 while backend endpoints are still being built — mock data first, wire to real API as endpoints land.
 Steps 7.5 and 7.6 extend 7.1's handler and can be developed in parallel with each other once 7.1 is complete.

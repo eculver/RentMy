@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
+	"github.com/giits/rentmy/backend/internal/guaranteefund"
 	"github.com/giits/rentmy/backend/internal/platform/ulid"
 )
 
@@ -21,19 +22,21 @@ type Config struct {
 
 // Service implements the payment domain business logic.
 type Service struct {
-	repo        *Repository
-	adapter     PaymentAdapter
-	riverClient *river.Client[pgx.Tx]
-	cfg         Config
+	repo            *Repository
+	adapter         PaymentAdapter
+	riverClient     *river.Client[pgx.Tx]
+	guaranteeFundSvc *guaranteefund.Service
+	cfg             Config
 }
 
 // NewService creates a Service with the given dependencies and config.
-func NewService(repo *Repository, adapter PaymentAdapter, riverClient *river.Client[pgx.Tx], cfg Config) *Service {
+func NewService(repo *Repository, adapter PaymentAdapter, riverClient *river.Client[pgx.Tx], guaranteeFundSvc *guaranteefund.Service, cfg Config) *Service {
 	return &Service{
-		repo:        repo,
-		adapter:     adapter,
-		riverClient: riverClient,
-		cfg:         cfg,
+		repo:            repo,
+		adapter:         adapter,
+		riverClient:     riverClient,
+		guaranteeFundSvc: guaranteeFundSvc,
+		cfg:             cfg,
 	}
 }
 
@@ -128,14 +131,8 @@ func (s *Service) CreateBooking(ctx context.Context, in BookingInput) (BookingRe
 		return BookingResult{}, fmt.Errorf("create transaction record: %w", err)
 	}
 
-	fundEntry := GuaranteeFundEntry{
-		ID:            ulid.New(),
-		TransactionID: transactionID,
-		EntryType:     "CONTRIBUTION",
-		Amount:        guaranteeContribution,
-	}
-	if err := s.repo.InsertGuaranteeFundEntry(ctx, dbTx, fundEntry); err != nil {
-		return BookingResult{}, fmt.Errorf("insert guarantee fund entry: %w", err)
+	if err := s.guaranteeFundSvc.Contribute(ctx, dbTx, transactionID, guaranteeContribution); err != nil {
+		return BookingResult{}, fmt.Errorf("guarantee fund contribution: %w", err)
 	}
 
 	if err := dbTx.Commit(ctx); err != nil {
@@ -295,30 +292,6 @@ func (s *Service) payoutDelay(ctx context.Context, hostID string) (time.Duration
 	return 0, nil
 }
 
-// GetGuaranteeFundHealth returns the current state of the guarantee fund.
-func (s *Service) GetGuaranteeFundHealth(ctx context.Context) (GuaranteeFundHealth, error) {
-	balance, err := s.repo.GetGuaranteeFundBalance(ctx)
-	if err != nil {
-		return GuaranteeFundHealth{}, fmt.Errorf("get guarantee fund balance: %w", err)
-	}
-
-	gaps, err := s.repo.GetTotalOutstandingGuaranteeGaps(ctx)
-	if err != nil {
-		return GuaranteeFundHealth{}, fmt.Errorf("get outstanding guarantee gaps: %w", err)
-	}
-
-	var ratio float64
-	if gaps > 0 {
-		ratio = float64(balance) / float64(gaps)
-	}
-
-	return GuaranteeFundHealth{
-		Balance:         balance,
-		OutstandingGaps: gaps,
-		ReserveRatio:    ratio,
-	}, nil
-}
-
 // OnboardHost creates a Stripe Express connected account for a host and returns the onboarding URL.
 func (s *Service) OnboardHost(ctx context.Context, userID string) (OnboardHostResult, error) {
 	email, name, err := s.repo.GetUserEmailAndName(ctx, userID)
@@ -433,38 +406,3 @@ func (s *Service) ChargeForDamageOverflow(ctx context.Context, transactionID str
 	return nil
 }
 
-// ClaimGuaranteeFund draws from the guarantee fund to cover damage shortfalls.
-// The fund balance cannot go negative — only the available amount is disbursed.
-func (s *Service) ClaimGuaranteeFund(ctx context.Context, transactionID string, amount int64) error {
-	balance, err := s.repo.GetGuaranteeFundBalance(ctx)
-	if err != nil {
-		return fmt.Errorf("get fund balance: %w", err)
-	}
-	if balance <= 0 {
-		return fmt.Errorf("guarantee fund empty, cannot claim %d cents", amount)
-	}
-	claimAmount := amount
-	if claimAmount > balance {
-		claimAmount = balance
-	}
-
-	tx, err := s.repo.BeginTx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
-	entry := GuaranteeFundEntry{
-		ID:            ulid.New(),
-		TransactionID: transactionID,
-		EntryType:     "CLAIM",
-		Amount:        -claimAmount,
-	}
-	if err := s.repo.InsertGuaranteeFundEntry(ctx, tx, entry); err != nil {
-		return fmt.Errorf("insert claim entry: %w", err)
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("commit claim: %w", err)
-	}
-	return nil
-}

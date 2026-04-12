@@ -247,6 +247,7 @@ func CleanupDB(t *testing.T, pool *pgxpool.Pool) {
 
 	_, err := pool.Exec(ctx, `
 		TRUNCATE TABLE
+			guarantee_fund_entries,
 			disputes,
 			agent_decisions,
 			agreements,

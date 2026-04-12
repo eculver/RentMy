@@ -281,10 +281,11 @@ mobile/__tests__/
 A task is complete when:
 1. Code compiles (`go build`, `tsc --noEmit`)
 2. Linter passes (`go vet`)
-3. **New unit tests pass** for business logic
-4. **New integration tests pass** for API endpoints (backend tasks)
-5. **New component/screen tests pass** (mobile tasks)
-6. **All existing tests still pass** (`go test ./...`, `npx jest`)
+3. **Metro bundler succeeds** for mobile tasks (`npx expo export --platform web`) — this catches broken asset `require()` paths and invalid config plugins that `tsc --noEmit` misses
+4. **New unit tests pass** for business logic
+5. **New integration tests pass** for API endpoints (backend tasks)
+6. **New component/screen tests pass** (mobile tasks)
+7. **All existing tests still pass** (`go test ./...`, `npx jest`)
 
 ---
 

@@ -10,7 +10,8 @@
 | 8.3 | Audit: Feed + Listing Detail + Checkout | completed | task-8.3-audit-feed-listing | a643ee0 |
 | 8.4 | Fix: Feed + Listing Detail + Checkout Bugs | completed | task-8.4-fix-feed-listing-checkout-bugs | 2bb354a |
 | 8.5 | Audit: Search + Map | completed | task-8.5-audit-search-map | 035f291 |
-| 8.6–8.19 | Remaining fix/audit/docs/verification tasks | pending | — | — |
+| 8.6 | Fix: Search + Map Bugs | completed | task-8.6-fix-search-map-bugs | 5cbb9a8 |
+| 8.7–8.19 | Remaining audit/fix/docs/verification tasks | pending | — | — |
 
 ---
 
@@ -61,12 +62,15 @@ Key changes for future context:
 
 5 bugs documented in `thoughts/audits/phase-8-visual-qa/audit-search-map.md`.
 
-Key bugs for task 8.6:
-- Map markers never appear on initial load (bounds=null until pan)
-- Map error state missing Retry (useLocation.retry unused in MapScreen)
-- Search shows "No results" prematurely when location not yet loaded
-- Search TextInput uncontrolled (no `value` prop)
-- Pagination cursor derived from re-ranked list, not DB-ordered list
+## Search + Map Fixes (task 8.6)
+
+All 5 audit bugs resolved. Key context for future tasks:
+
+- `MapScreen.native.tsx`: `useEffect` initializes `bounds` from lat/lng on mount; `retry` wired to error state Retry button
+- `(search)/index.tsx`: location-loading guard before result render; TextInput now controlled with `inputValue` state
+- `handler.go`: `minID(listings)` helper; `feed` + `search` endpoints return `nextCursor` (min ULID = last in DB order)
+- `useDiscovery.ts`: `FeedResponse.nextCursor?: string`; `getNextPageParam` uses `nextCursor` with fallback
+- Pre-existing TS error in `(profile)/index.tsx` (router path types) — not introduced by 8.6
 
 ---
 

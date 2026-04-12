@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 const MAX_LENGTH = 2000;
 
 interface MessageInputProps {
-  onSend: (content: string) => void;
+  onSend: (content: string) => Promise<void> | void;
   isSending: boolean;
   disabled?: boolean;
 }
@@ -13,11 +13,16 @@ interface MessageInputProps {
 export default function MessageInput({ onSend, isSending, disabled = false }: MessageInputProps) {
   const [text, setText] = useState("");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isSending || disabled) return;
-    onSend(trimmed);
-    setText("");
+    try {
+      await onSend(trimmed);
+      // Clear only after the send succeeds so the user can retry on failure.
+      setText("");
+    } catch {
+      // Keep the text so the user can retry.
+    }
   };
 
   const canSend = text.trim().length > 0 && !isSending && !disabled;
@@ -38,7 +43,7 @@ export default function MessageInput({ onSend, isSending, disabled = false }: Me
       />
       <Pressable
         className={`w-10 h-10 rounded-full items-center justify-center ${canSend ? "bg-sky-600" : "bg-gray-200"}`}
-        onPress={handleSend}
+        onPress={() => void handleSend()}
         disabled={!canSend}
         hitSlop={8}
       >

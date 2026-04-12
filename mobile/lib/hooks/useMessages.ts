@@ -17,9 +17,16 @@ interface MessagesPage {
 
 /**
  * Cursor-paginated message list for a booking.
+ *
+ * Pagination direction: pages[0] always holds the newest messages; each
+ * subsequent page (fetched via fetchNextPage / onStartReached) holds older
+ * messages. Within each page, messages are sorted oldest-first. The
+ * conversation screen reverses the page order before rendering so that the
+ * FlatList displays oldest-at-top, newest-at-bottom.
+ *
  * Subscribes to `private-transaction-{id}` / `new-message` via Pusher —
- * each new event prepends the incoming message to the first page of cache
- * so it appears instantly without a full refetch.
+ * each new event appends to pages[0] (the newest page) so it appears
+ * instantly without a full refetch.
  */
 export function useMessages(transactionId: string | null) {
   const queryClient = useQueryClient();
@@ -33,9 +40,10 @@ export function useMessages(transactionId: string | null) {
         ["messages", transactionId],
         (old) => {
           if (!old) return old;
-          // Append to the last page so the flat list sees it in chronological order
+          // Append to pages[0] — the newest page — so the message appears at
+          // the bottom of the chat after the caller reverses page order.
           const pages = old.pages.map((page, i) => {
-            if (i !== old.pages.length - 1) return page;
+            if (i !== 0) return page;
             return { ...page, messages: [...page.messages, msg] };
           });
           return { ...old, pages };
@@ -54,6 +62,8 @@ export function useMessages(transactionId: string | null) {
         .json<MessagesPage>();
     },
     initialPageParam: undefined,
+    // nextCursor points to the oldest message in the current page; fetching
+    // it loads the next older batch (correct for scroll-to-top load-more).
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: transactionId !== null,
   });
@@ -61,7 +71,9 @@ export function useMessages(transactionId: string | null) {
 
 /**
  * Sends a message to the given booking thread.
- * On success, appends the returned message to the query cache.
+ * On success, appends the returned message to pages[0] (newest page) so it
+ * appears at the bottom of the chat.
+ * Returns a Promise so callers can await success before clearing the input.
  */
 export function useSendMessage(transactionId: string) {
   const queryClient = useQueryClient();
@@ -76,8 +88,9 @@ export function useSendMessage(transactionId: string) {
         ["messages", transactionId],
         (old) => {
           if (!old) return old;
+          // Append to pages[0] — the newest page.
           const pages = old.pages.map((page, i) => {
-            if (i !== old.pages.length - 1) return page;
+            if (i !== 0) return page;
             return { ...page, messages: [...page.messages, message] };
           });
           return { ...old, pages };

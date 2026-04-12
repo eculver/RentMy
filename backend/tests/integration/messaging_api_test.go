@@ -31,8 +31,12 @@ func TestSendMessageSuccess(t *testing.T) {
 		t.Fatalf("expected 201, got %d: %s", resp.StatusCode, rb)
 	}
 
-	var msg messaging.Message
-	MustDecodeJSON(t, resp, &msg)
+	// Backend wraps the message in { "message": {...} }.
+	var envelope struct {
+		Message messaging.Message `json:"message"`
+	}
+	MustDecodeJSON(t, resp, &envelope)
+	msg := envelope.Message
 
 	if msg.ID == "" {
 		t.Error("expected non-empty message ID")
@@ -294,5 +298,129 @@ func TestGetMessagesBookingNotFound(t *testing.T) {
 
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", resp.StatusCode)
+	}
+}
+
+// TestGetConversationsEmpty verifies GET /users/me/conversations returns an empty list
+// when the user has no bookings.
+func TestGetConversationsEmpty(t *testing.T) {
+	ts, client := NewTestServer(t)
+	pool := NewTestDB(t)
+	CleanupDB(t, pool)
+
+	u := CreateTestUser(t, pool)
+	token := LoginTestUser(t, client, ts.URL, *u.Email, "password123")
+
+	resp := DoJSON(t, client, http.MethodGet, ts.URL+"/api/v1/users/me/conversations", nil, token)
+	defer DrainBody(resp)
+
+	if resp.StatusCode != http.StatusOK {
+		rb, _ := readBody(resp)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, rb)
+	}
+
+	var result struct {
+		Conversations []messaging.Conversation `json:"conversations"`
+	}
+	MustDecodeJSON(t, resp, &result)
+
+	if len(result.Conversations) != 0 {
+		t.Errorf("len(conversations) = %d, want 0", len(result.Conversations))
+	}
+}
+
+// TestGetConversationsWithBooking verifies GET /users/me/conversations returns the
+// booking thread once a message has been sent.
+func TestGetConversationsWithBooking(t *testing.T) {
+	ts, client := NewTestServer(t)
+	pool := NewTestDB(t)
+	CleanupDB(t, pool)
+
+	host := CreateTestUser(t, pool)
+	renter := CreateTestUser(t, pool)
+	l := CreateTestListing(t, pool, host.ID)
+	b := CreateTestBooking(t, pool, renter.ID, l.ID)
+
+	renterToken := LoginTestUser(t, client, ts.URL, *renter.Email, "password123")
+
+	// Send a message so the conversation shows up.
+	msgResp := DoJSON(t, client, http.MethodPost, ts.URL+"/api/v1/bookings/"+b.ID+"/messages",
+		map[string]string{"content": "Hey!"}, renterToken)
+	DrainBody(msgResp)
+	if msgResp.StatusCode != http.StatusCreated {
+		t.Fatalf("send message: expected 201, got %d", msgResp.StatusCode)
+	}
+
+	resp := DoJSON(t, client, http.MethodGet, ts.URL+"/api/v1/users/me/conversations", nil, renterToken)
+	defer DrainBody(resp)
+
+	if resp.StatusCode != http.StatusOK {
+		rb, _ := readBody(resp)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, rb)
+	}
+
+	var result struct {
+		Conversations []messaging.Conversation `json:"conversations"`
+	}
+	MustDecodeJSON(t, resp, &result)
+
+	if len(result.Conversations) != 1 {
+		t.Fatalf("len(conversations) = %d, want 1", len(result.Conversations))
+	}
+
+	conv := result.Conversations[0]
+	if conv.TransactionID != b.ID {
+		t.Errorf("transactionId = %q, want %q", conv.TransactionID, b.ID)
+	}
+	if conv.LastMessage == nil || *conv.LastMessage != "Hey!" {
+		t.Errorf("lastMessage = %v, want \"Hey!\"", conv.LastMessage)
+	}
+	if conv.BookingStatus == "" {
+		t.Error("expected non-empty bookingStatus")
+	}
+}
+
+// TestGetConversationsRequiresAuth verifies GET /users/me/conversations returns 401
+// without an auth token.
+func TestGetConversationsRequiresAuth(t *testing.T) {
+	ts, client := NewTestServer(t)
+
+	resp := DoJSON(t, client, http.MethodGet, ts.URL+"/api/v1/users/me/conversations", nil, "")
+	defer DrainBody(resp)
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.StatusCode)
+	}
+}
+
+// TestPusherAuthRequiresAuth verifies POST /pusher/auth returns 401 without a token.
+func TestPusherAuthRequiresAuth(t *testing.T) {
+	ts, client := NewTestServer(t)
+
+	resp := DoJSON(t, client, http.MethodPost, ts.URL+"/api/v1/pusher/auth", nil, "")
+	defer DrainBody(resp)
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.StatusCode)
+	}
+}
+
+// TestPusherAuthServiceUnavailable verifies POST /pusher/auth returns 503 when
+// Pusher is not configured (as in the test environment).
+func TestPusherAuthServiceUnavailable(t *testing.T) {
+	ts, client := NewTestServer(t)
+	pool := NewTestDB(t)
+	CleanupDB(t, pool)
+
+	u := CreateTestUser(t, pool)
+	token := LoginTestUser(t, client, ts.URL, *u.Email, "password123")
+
+	// Send form-encoded body as Pusher JS client would.
+	resp := DoJSON(t, client, http.MethodPost, ts.URL+"/api/v1/pusher/auth",
+		map[string]string{"socket_id": "123.456", "channel_name": "private-transaction-test"}, token)
+	defer DrainBody(resp)
+
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 (Pusher not configured), got %d", resp.StatusCode)
 	}
 }

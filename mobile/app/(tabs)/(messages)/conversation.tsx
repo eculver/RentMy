@@ -4,9 +4,9 @@
  * Features:
  * - FlatList in chronological order (oldest at top, newest at bottom)
  * - Auto-scroll to bottom on mount and when a new message arrives
- * - Load-more on scroll to top (cursor pagination)
+ * - Load-more on scroll to top (cursor pagination, loads older messages)
  * - Pusher subscription appends incoming messages live
- * - Text input with send button; disabled while sending
+ * - Text input with send button; disabled while sending; cleared only on success
  */
 import { useRef, useEffect, useCallback } from "react";
 import {
@@ -46,12 +46,15 @@ export default function ConversationScreen() {
     error,
   } = useMessages(transactionId ?? null);
 
-  const { mutate: sendMessage, isPending: isSending } = useSendMessage(transactionId ?? "");
+  const { mutateAsync: sendMessageAsync, isPending: isSending } = useSendMessage(transactionId ?? "");
 
-  // Flatten pages into a single array (oldest first)
-  const messages: Message[] = data?.pages.flatMap((p) => p.messages) ?? [];
+  // Pages are ordered newest-first (pages[0] = newest). Reverse so the flat
+  // list sees oldest-first, which renders oldest-at-top, newest-at-bottom.
+  const messages: Message[] = data?.pages
+    ? [...data.pages].reverse().flatMap((p) => p.messages)
+    : [];
 
-  // Scroll to bottom when the first page loads or when a new message arrives
+  // Scroll to bottom when the first page loads or when a new message arrives.
   const lastMessageId = messages[messages.length - 1]?.id;
   useEffect(() => {
     if (messages.length > 0) {
@@ -65,11 +68,12 @@ export default function ConversationScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Returns a Promise so MessageInput can clear the text only after success.
   const handleSend = useCallback(
-    (content: string) => {
-      sendMessage(content);
+    (content: string): Promise<void> => {
+      return sendMessageAsync(content).then(() => undefined);
     },
-    [sendMessage],
+    [sendMessageAsync],
   );
 
   if (isLoading) {

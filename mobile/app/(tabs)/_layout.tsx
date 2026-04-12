@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUnreadCount } from "../../lib/hooks/useConversations";
+import { useConversations } from "../../lib/hooks/useConversations";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -10,8 +10,11 @@ function TabIcon({ name, color, size }: { name: IconName; color: string; size: n
 }
 
 export default function TabLayout() {
-  const { data: unreadData } = useUnreadCount();
-  const unreadCount = unreadData?.count ?? 0;
+  const { data: conversationsData } = useConversations();
+  const unreadCount = (conversationsData?.conversations ?? []).reduce(
+    (sum, c) => sum + c.unreadCount,
+    0,
+  );
   const insets = useSafeAreaInsets();
 
   return (

@@ -1491,7 +1491,7 @@
         {
           "id": "9.1",
           "name": "E2E: Authentication flows",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.0"
@@ -1502,7 +1502,8 @@
           ],
           "prdRefs": [
             "rentmy-prd-v8.md#section-4"
-          ]
+          ],
+          "commitSha": "2b7f0a9"
         },
         {
           "id": "9.2",

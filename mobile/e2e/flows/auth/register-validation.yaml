@@ -1,0 +1,39 @@
+appId: ${APP_ID}
+name: "Auth - Register (validation: empty fields)"
+env:
+  APP_ID: com.rentmy.app
+---
+- clearState
+
+- launchApp
+
+- assertVisible:
+    id: "screen-login"
+
+- tapOn:
+    id: "btn-create-account"
+
+- assertVisible:
+    id: "screen-register"
+
+# Submit with all fields empty — Zod validation should fire immediately
+- tapOn:
+    id: "btn-register"
+
+# react-hook-form + Zod surfaces field errors inline on the inputs;
+# the error text is rendered next to each field via the Input component.
+# At minimum we assert the form did NOT submit (still on register screen).
+- assertVisible:
+    id: "screen-register"
+
+# Now fill only email (invalid format) and submit — expect email error
+- tapOn:
+    id: "input-email"
+- inputText: "not-an-email"
+
+- tapOn:
+    id: "btn-register"
+
+# Still on register screen; no API call made
+- assertVisible:
+    id: "screen-register"

@@ -17,7 +17,7 @@ export default function ProfileScreen() {
   const summary = summaryData?.summary ?? [];
 
   return (
-    <View className="flex-1 bg-white">
+    <View testID="screen-profile" className="flex-1 bg-white">
       {/* Header */}
       <View className="px-6 pt-14 pb-6 border-b border-gray-100">
         <View className="flex-row items-center justify-between">
@@ -114,6 +114,7 @@ export default function ProfileScreen() {
       {/* Sign out */}
       <View className="px-6 pb-8">
         <Pressable
+          testID="btn-sign-out"
           className="w-full border border-red-300 py-3 rounded-xl items-center"
           onPress={logout}
         >

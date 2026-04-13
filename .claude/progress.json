@@ -1491,7 +1491,7 @@
         {
           "id": "9.1",
           "name": "E2E: Authentication flows",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.0"

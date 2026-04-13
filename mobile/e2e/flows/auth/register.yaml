@@ -1,0 +1,45 @@
+appId: ${APP_ID}
+name: "Auth - Register (happy path)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Generate a unique email so this test is idempotent across runs.
+- runScript: e2e/scripts/gen-unique-email.js
+
+- clearState
+
+- launchApp
+
+# Should start at login screen
+- assertVisible:
+    id: "screen-login"
+
+# Navigate to register
+- tapOn:
+    id: "btn-create-account"
+
+- assertVisible:
+    id: "screen-register"
+
+# Fill the registration form
+- tapOn:
+    id: "input-name"
+- inputText: "E2E Test User"
+
+- tapOn:
+    id: "input-email"
+- inputText: ${UNIQUE_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: "Password123"
+
+# Submit
+- tapOn:
+    id: "btn-register"
+
+# On success, the auth store logs the user in and the root layout
+# redirects to tabs → feed screen.
+- assertVisible:
+    id: "screen-feed"
+    timeout: 8000

@@ -51,7 +51,7 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 items-center justify-center bg-white px-6 py-12">
+        <View className="flex-1 items-center justify-center bg-white px-6 py-12" testID="screen-login">
           <Text className="text-3xl font-bold mb-2">RentMy</Text>
           <Text className="text-gray-500 mb-8">Rent anything nearby, fast</Text>
 
@@ -66,6 +66,7 @@ export default function LoginScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  testID="input-email"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -83,6 +84,7 @@ export default function LoginScreen() {
                   placeholder="••••••••"
                   secureTextEntry
                   autoComplete="current-password"
+                  testID="input-password"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -99,6 +101,7 @@ export default function LoginScreen() {
               title="Sign In"
               onPress={handleSubmit(onSubmit)}
               loading={isSubmitting}
+              testID="btn-sign-in"
             />
           </View>
 

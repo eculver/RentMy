@@ -1,6 +1,7 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUnreadCount } from "../../lib/hooks/useConversations";
+import { useAuthStore } from "../../lib/auth";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -9,8 +10,13 @@ function TabIcon({ name, color, size }: { name: IconName; color: string; size: n
 }
 
 export default function TabLayout() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.count ?? 0;
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <Tabs

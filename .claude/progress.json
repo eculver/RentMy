@@ -1560,7 +1560,7 @@
         {
           "id": "9.5",
           "name": "E2E: Booking request & status flows",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.1",
@@ -1574,7 +1574,8 @@
             "rentmy-prd-v8.md#section-7",
             "rentmy-prd-v8.md#section-8"
           ],
-          "recommendedModel": "opus"
+          "recommendedModel": "opus",
+          "commitSha": "571c388"
         },
         {
           "id": "9.6",

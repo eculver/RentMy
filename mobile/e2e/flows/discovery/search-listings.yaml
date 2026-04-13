@@ -1,0 +1,64 @@
+appId: ${APP_ID}
+name: "Discovery - Search listings"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Navigate to the Search tab
+- tapOn: "Search"
+
+- assertVisible:
+    id: "screen-search"
+    timeout: 4000
+
+# Type a query — "camera" matches seeded host listings
+- tapOn:
+    id: "search-input"
+- inputText: "camera"
+
+# Debounce fires after 300ms; wait for results to appear
+- assertVisible:
+    id: "search-results"
+    timeout: 8000
+
+# Clear the query — results should disappear and idle state returns
+- clearText:
+    id: "search-input"
+
+# Idle empty-state should be visible (no results when query is empty)
+- assertNotVisible:
+    id: "search-results"
+
+# Type a new query to test filter flow
+- tapOn:
+    id: "search-input"
+- inputText: "tent"
+
+- assertVisible:
+    id: "search-results"
+    timeout: 8000
+
+# Open the filter sheet
+- tapOn:
+    id: "btn-filter"
+
+- assertVisible:
+    id: "filter-sheet"
+    timeout: 4000
+
+# Select the "15 min" drive-time filter option
+- tapOn:
+    text: "15 min"
+
+# Apply filters
+- tapOn:
+    id: "btn-apply-filters"
+
+# Filter sheet should close; results should refresh
+- assertNotVisible:
+    id: "filter-sheet"
+
+- assertVisible:
+    id: "screen-search"

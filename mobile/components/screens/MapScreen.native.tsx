@@ -89,8 +89,9 @@ export default function MapScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View testID="screen-map" className="flex-1">
       <MapView
+        testID="map-container"
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         initialRegion={initialRegion}

@@ -68,11 +68,11 @@ const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
         enablePanDownToClose
         backdropComponent={renderBackdrop}
       >
-        <BottomSheetView className="px-5 pb-8">
+        <BottomSheetView testID="filter-sheet" className="px-5 pb-8">
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6">
             <Text className="text-lg font-semibold text-gray-900">Filters</Text>
-            <Pressable onPress={handleReset}>
+            <Pressable testID="btn-reset-filters" onPress={handleReset}>
               <Text className="text-sm text-sky-600 font-medium">Reset all</Text>
             </Pressable>
           </View>
@@ -135,6 +135,7 @@ const FilterSheet = forwardRef<BottomSheet, FilterSheetProps>(
 
           {/* Apply */}
           <Pressable
+            testID="btn-apply-filters"
             onPress={handleApply}
             className="bg-sky-600 rounded-2xl py-3 items-center"
           >

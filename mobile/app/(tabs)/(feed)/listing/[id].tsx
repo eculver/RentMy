@@ -90,10 +90,11 @@ export default function ListingDetailScreen() {
   const price = priceLabel(listing.pricePerHour, listing.pricePerDay);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-listing-detail" className="flex-1 bg-white">
       {/* Back button overlaid on the photo */}
       <View className="absolute top-12 left-4 z-10">
         <Pressable
+          testID="btn-back"
           onPress={() => router.back()}
           className="w-9 h-9 bg-black/40 rounded-full items-center justify-center"
           hitSlop={8}

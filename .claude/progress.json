@@ -1508,7 +1508,7 @@
         {
           "id": "9.2",
           "name": "E2E: Discovery flows (feed, search, map)",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.0"

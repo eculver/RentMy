@@ -1508,7 +1508,7 @@
         {
           "id": "9.2",
           "name": "E2E: Discovery flows (feed, search, map)",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.0"
@@ -1519,7 +1519,8 @@
           ],
           "prdRefs": [
             "rentmy-prd-v8.md#section-6"
-          ]
+          ],
+          "commitSha": "3c82a28"
         },
         {
           "id": "9.3",

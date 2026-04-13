@@ -1543,7 +1543,7 @@
         {
           "id": "9.4",
           "name": "E2E: Profile & referral flows",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.0"
@@ -1554,7 +1554,8 @@
           ],
           "prdRefs": [
             "rentmy-prd-v8.md#section-15"
-          ]
+          ],
+          "commitSha": "c49dd9b"
         },
         {
           "id": "9.5",

@@ -64,7 +64,7 @@ export default function FeedScreen() {
 
   if (locationLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white" testID="screen-feed">
         <ActivityIndicator size="large" color="#0284c7" />
         <Text className="text-gray-500 mt-3 text-sm">Getting your location…</Text>
       </View>
@@ -73,7 +73,7 @@ export default function FeedScreen() {
 
   if (locationError) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
+      <View className="flex-1 items-center justify-center bg-white px-8" testID="screen-feed">
         <Text className="text-lg font-semibold text-gray-800 text-center">
           Location unavailable
         </Text>
@@ -83,7 +83,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50" testID="screen-feed">
       {isLoading ? (
         <View className="pt-4">
           {[1, 2, 3].map((i) => (

@@ -222,6 +222,7 @@ export default function BookingStatusScreen() {
         {isHost && booking.status === "REQUESTED" && (
           <IncomingRequest
             booking={booking}
+            renterName={booking.renterName}
             onAccept={handleAccept}
             onDecline={handleDecline}
           />
@@ -289,7 +290,10 @@ export default function BookingStatusScreen() {
                 <Pressable
                   className="bg-gray-100 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                   onPress={() => {
-                    const url = `maps://maps.apple.com/?q=RentMy+pickup+${booking.listingId}`;
+                    const url =
+                      booking.listingLat != null && booking.listingLng != null
+                        ? `maps://maps.apple.com/?ll=${booking.listingLat},${booking.listingLng}&q=Pickup+location`
+                        : "maps://";
                     void Linking.openURL(url).catch(() =>
                       Alert.alert("Maps unavailable", "Could not open Maps on this device."),
                     );
@@ -340,7 +344,13 @@ export default function BookingStatusScreen() {
               className="border border-gray-200 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/(messages)" as never,
+                  pathname: "/(tabs)/(messages)/conversation" as never,
+                  params: {
+                    transactionId: booking.id,
+                    otherPartyName: isHost
+                      ? (booking.renterName ?? "Renter")
+                      : "Host",
+                  },
                 })
               }
             >

@@ -161,8 +161,15 @@ export default function BookingRequestScreen() {
           start={scheduledStart}
           end={scheduledEnd}
           onChangeStart={(s) => {
-            if (scheduledEnd) handleScheduleChange(s, scheduledEnd);
-            else setSchedule(s, new Date(s.getTime() + 3_600_000));
+            if (scheduledEnd) {
+              handleScheduleChange(s, scheduledEnd);
+            } else {
+              const autoEnd = new Date(s.getTime() + 3_600_000);
+              setSchedule(s, autoEnd);
+              const hold = holdEstimate?.holdAmount ?? 0;
+              const fee = estimateRentalFee(pricePerHour, pricePerDay, s, autoEnd);
+              setAmounts(hold, fee);
+            }
           }}
           onChangeEnd={(e) => {
             if (scheduledStart) handleScheduleChange(scheduledStart, e);

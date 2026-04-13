@@ -35,8 +35,10 @@ export default function CheckOutScreen() {
   const user = useAuthStore((s) => s.user);
 
   const { data: bookingData, isLoading } = useBooking(transactionId ?? null);
+  // Default to true (more restrictive: requires GPS+photos) while data loads.
+  // Once bookingData is available the correct role is computed.
   const isRenter =
-    bookingData !== undefined && user?.id === bookingData.booking.renterId;
+    bookingData === undefined ? true : user?.id === bookingData.booking.renterId;
 
   const proximity = useProximity(transactionId ?? "", "CHECK_OUT", isRenter);
 

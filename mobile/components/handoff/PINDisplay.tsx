@@ -25,14 +25,18 @@ interface PINDisplayProps {
   pin?: string;
 }
 
+const E164_RE = /^\+[1-9]\d{6,14}$/;
+
 export default function PINDisplay({ transactionId, pin }: PINDisplayProps) {
   const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const isValidPhone = E164_RE.test(phone.trim());
+
   const handleSendSMS = async () => {
-    if (!phone.trim()) {
-      Alert.alert("Phone required", "Enter the renter's phone number (E.164 format, e.g. +12135551234).");
+    if (!isValidPhone) {
+      Alert.alert("Invalid phone number", "Enter the renter's number in E.164 format, e.g. +12135551234.");
       return;
     }
 
@@ -106,9 +110,9 @@ export default function PINDisplay({ transactionId, pin }: PINDisplayProps) {
           />
           <Pressable
             onPress={handleSendSMS}
-            disabled={sending || !phone.trim()}
+            disabled={sending || !isValidPhone}
             className={`rounded-xl py-3 items-center flex-row justify-center gap-x-2 ${
-              sending || !phone.trim() ? "bg-gray-200" : "bg-sky-600"
+              sending || !isValidPhone ? "bg-gray-200" : "bg-sky-600"
             }`}
           >
             {sending ? (
@@ -118,7 +122,7 @@ export default function PINDisplay({ transactionId, pin }: PINDisplayProps) {
             )}
             <Text
               className={`text-sm font-semibold ${
-                sending || !phone.trim() ? "text-gray-400" : "text-white"
+                sending || !isValidPhone ? "text-gray-400" : "text-white"
               }`}
             >
               {sending ? "Sending…" : "Send PIN"}

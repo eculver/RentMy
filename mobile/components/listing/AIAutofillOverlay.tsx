@@ -6,7 +6,7 @@ interface AIAutofillOverlayProps {
   error?: string | null;
 }
 
-function ShimmerBar({ width, delay }: { width: string; delay: number }) {
+function ShimmerBar({ width, delay }: { width: `${number}%`; delay: number }) {
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -31,7 +31,7 @@ function ShimmerBar({ width, delay }: { width: string; delay: number }) {
 
   return (
     <Animated.View
-      style={{ opacity, width: width as `${number}%` }}
+      style={{ opacity, width }}
       className="h-4 bg-gray-200 rounded-md mb-2"
     />
   );

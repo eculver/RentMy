@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { View, Text } from "react-native";
 import { router } from "expo-router";
 import { HTTPError } from "ky";
@@ -45,6 +45,8 @@ export default function CreateListingScreen() {
     null
   );
 
+  const overrideChecked = useRef(false);
+
   const { data: appraisal, isLoading: appraisalLoading } =
     useAppraisal(listingId);
 
@@ -71,6 +73,30 @@ export default function CreateListingScreen() {
         estimatedValueCents: appraisal.estimatedValueCents,
       }
     : aiSuggestions;
+
+  // BUG-1 fix: navigate in effect, never in render.
+  // BUG-2 fix: check override threshold here, after appraisal resolves.
+  useEffect(() => {
+    if (!appraisalComplete) return;
+
+    if (!overrideChecked.current) {
+      overrideChecked.current = true;
+
+      if (pendingPriceDollars != null && appraisal?.estimatedValueCents != null) {
+        const aiDailyValueDollars =
+          appraisal.estimatedValueCents / 100 / DAILY_PRICE_DIVISOR;
+        if (pendingPriceDollars > aiDailyValueDollars * OVERRIDE_THRESHOLD_MULTIPLIER) {
+          setOverrideVisible(true);
+          return;
+        }
+      }
+
+      router.back();
+    } else if (!overrideVisible) {
+      // Override was shown and dismissed — navigate back
+      router.back();
+    }
+  }, [appraisalComplete, overrideVisible, pendingPriceDollars, appraisal?.estimatedValueCents]);
 
   const handleCapture = (photo: CapturedPhoto) => {
     setCaptures((prev) => [...prev, photo]);
@@ -152,15 +178,6 @@ export default function CreateListingScreen() {
 
   const handlePricePerDayChange = (dollars: number) => {
     setPendingPriceDollars(dollars);
-    if (!resolvedSuggestions?.estimatedValueCents) return;
-
-    const aiDailyValueDollars =
-      resolvedSuggestions.estimatedValueCents /
-      100 /
-      DAILY_PRICE_DIVISOR;
-    if (dollars > aiDailyValueDollars * OVERRIDE_THRESHOLD_MULTIPLIER) {
-      setOverrideVisible(true);
-    }
   };
 
   if (step === "camera") {
@@ -205,11 +222,6 @@ export default function CreateListingScreen() {
       );
     }
 
-    // Appraisal complete — navigate back (listing is ready)
-    if (appraisalComplete && !overrideVisible) {
-      router.back();
-      return null;
-    }
   }
 
   return (

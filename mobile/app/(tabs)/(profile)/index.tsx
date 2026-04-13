@@ -45,6 +45,15 @@ export default function ProfileScreen() {
         >
           <Text className="text-sky-600 font-semibold">Invite Friends — Earn $20</Text>
         </Pressable>
+
+        {user?.identityStatus !== "VERIFIED" && (
+          <Pressable
+            className="mt-3 w-full border border-amber-400 py-3 rounded-xl items-center"
+            onPress={() => router.push("/(tabs)/(profile)/verify")}
+          >
+            <Text className="text-amber-600 font-semibold">Verify Identity</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Rating bubbles section */}

@@ -22,3 +22,16 @@
   - Tab navigation via `tapOn: text: "TabName, tab.*"` matching iOS accessibility text
   - Keyboard dismissal on register form: tap non-interactive subtitle text instead of `hideKeyboard`
 - **Verification:** `maestro test mobile/e2e/flows/auth/` — 6/6 Flows Passed in 3m 12s
+
+## Task 9.2: E2E Discovery Flows (Feed, Search, Map)
+- **Status:** Completed
+- **Branch:** `task-9.2-e2e-discovery-flows`
+- **Bugs fixed:** 8 (missing testIDs on all discovery screens, no seeded listings, invalid Maestro syntax in YAML flows, Google Maps SDK crash, broken listing detail back navigation, listing detail testID only on success state, keyboard covers FilterSheet, BottomSheet invisible to Maestro)
+- **Key decisions:**
+  - Switched from Google Maps (`PROVIDER_GOOGLE`) to Apple Maps (default) — no API key needed
+  - Added native Stack header with "Back" button to listing detail screen (removed custom absolute-positioned back button)
+  - Added `Keyboard.dismiss()` when opening the filter sheet
+  - Used coordinate-based taps for BottomSheet elements (Maestro can't find elements inside `@gorhom/bottom-sheet`)
+  - Extended seed script to create 5 keyword-rich listings (camera, tent, etc.) near LA and activate them via `docker exec` SQL
+  - Added `testID="screen-listing-detail"` to all 3 render states (loading, error, success)
+- **Verification:** `maestro test mobile/e2e/flows/discovery/` — 3/3 Flows Passed in 1m 57s. Auth regression: 6/6 Passed in 2m 51s.

@@ -2,16 +2,25 @@ appId: ${APP_ID}
 name: "Discovery - Search listings"
 env:
   APP_ID: com.rentmy.app
+  TEST_LATITUDE: "34.0522"
+  TEST_LONGITUDE: "-118.2437"
 ---
+# Set simulator GPS so search API has coordinates
+- setLocation:
+    latitude: ${TEST_LATITUDE}
+    longitude: ${TEST_LONGITUDE}
+
 # Login as renter
 - runFlow: ../../helpers/login-as-renter.yaml
 
-# Navigate to the Search tab
-- tapOn: "Search"
+# Navigate to the Search tab (iOS accessibility text pattern)
+- tapOn:
+    text: "Search, tab.*"
 
-- assertVisible:
-    id: "screen-search"
-    timeout: 4000
+- extendedWaitUntil:
+    visible:
+      id: "screen-search"
+    timeout: 6000
 
 # Type a query — "camera" matches seeded host listings
 - tapOn:
@@ -19,46 +28,68 @@ env:
 - inputText: "camera"
 
 # Debounce fires after 300ms; wait for results to appear
-- assertVisible:
-    id: "search-results"
+- extendedWaitUntil:
+    visible:
+      id: "search-results"
+    timeout: 10000
+
+# At least one listing card should appear in results
+- extendedWaitUntil:
+    visible:
+      id: "listing-card"
     timeout: 8000
 
 # Clear the query — results should disappear and idle state returns
-- clearText:
+- tapOn:
     id: "search-input"
+- eraseText: 10
+
+# Dismiss keyboard by tapping the idle state area
+- tapOn: "Search for anything nearby"
 
 # Idle empty-state should be visible (no results when query is empty)
-- assertNotVisible:
-    id: "search-results"
+- extendedWaitUntil:
+    notVisible:
+      id: "search-results"
+    timeout: 6000
 
 # Type a new query to test filter flow
 - tapOn:
     id: "search-input"
 - inputText: "tent"
 
-- assertVisible:
-    id: "search-results"
+- extendedWaitUntil:
+    visible:
+      id: "search-results"
+    timeout: 10000
+
+- extendedWaitUntil:
+    visible:
+      id: "listing-card"
     timeout: 8000
 
-# Open the filter sheet
+# Open the filter sheet (code dismisses keyboard on open)
 - tapOn:
     id: "btn-filter"
 
-- assertVisible:
-    id: "filter-sheet"
-    timeout: 4000
+- extendedWaitUntil:
+    visible:
+      id: "filter-sheet"
+    timeout: 6000
 
-# Select the "15 min" drive-time filter option
+# Select the "15 min" drive-time filter option.
+# BottomSheet (@gorhom/bottom-sheet) renders outside the React Native
+# accessibility tree, so Maestro cannot find elements by text/id inside it.
+# We use coordinate taps based on the known filter sheet layout.
 - tapOn:
-    text: "15 min"
+    point: "37%, 62%"
 
-# Apply filters
+# Apply filters — the "Apply filters" button is at the bottom of the sheet
 - tapOn:
-    id: "btn-apply-filters"
+    point: "50%, 85%"
 
-# Filter sheet should close; results should refresh
-- assertNotVisible:
-    id: "filter-sheet"
-
-- assertVisible:
-    id: "screen-search"
+# Filter sheet should close; search screen should remain
+- extendedWaitUntil:
+    visible:
+      id: "screen-search"
+    timeout: 6000

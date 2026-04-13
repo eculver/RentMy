@@ -92,6 +92,7 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
+          testID="feed-list"
           data={listings}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (

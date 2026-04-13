@@ -61,7 +61,7 @@ export default function RegisterScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 items-center justify-center bg-white px-6 py-12">
+        <View className="flex-1 items-center justify-center bg-white px-6 py-12" testID="screen-register">
           <Text className="text-2xl font-bold mb-2">Create Account</Text>
           <Text className="text-gray-500 mb-8">Join RentMy to start renting</Text>
 
@@ -75,6 +75,7 @@ export default function RegisterScreen() {
                   placeholder="Jane Smith"
                   autoCapitalize="words"
                   autoComplete="name"
+                  testID="input-name"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -93,6 +94,7 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoComplete="email"
+                  testID="input-email"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -110,6 +112,7 @@ export default function RegisterScreen() {
                   placeholder="••••••••"
                   secureTextEntry
                   autoComplete="new-password"
+                  testID="input-password"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -135,13 +138,14 @@ export default function RegisterScreen() {
             />
 
             {apiError && (
-              <Text className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
+              <Text testID="error-message" className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
             )}
 
             <Button
               title="Create Account"
               onPress={handleSubmit(onSubmit)}
               loading={isSubmitting}
+              testID="btn-register"
             />
           </View>
 

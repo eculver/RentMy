@@ -1,0 +1,40 @@
+appId: ${APP_ID}
+name: "Profile - View profile screen (happy path)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter — the seeded bob@test.com account has no listings,
+# so the empty state renders; that is what we assert.
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+
+# Profile screen loads
+- assertVisible:
+    id: "screen-profile"
+    timeout: 6000
+
+# User name and email are rendered in the header
+- assertVisible:
+    id: "profile-name"
+
+- assertVisible:
+    id: "profile-email"
+
+# "Create Listing" nav button is always visible
+- assertVisible:
+    id: "btn-create-listing-nav"
+
+# "Invite Friends" button is always visible
+- assertVisible:
+    id: "btn-invite-friends"
+
+# bob@test.com has no listings — empty state should render
+- assertVisible:
+    id: "profile-listings-empty"
+    timeout: 8000
+
+# Sign Out button is present (tested fully in sign-out.yaml)
+- assertVisible:
+    id: "btn-sign-out"

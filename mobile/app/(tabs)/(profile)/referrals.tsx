@@ -36,7 +36,7 @@ export default function ReferralsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View testID="screen-referrals" className="flex-1 bg-white">
       {/* Header */}
       <View className="px-6 pt-14 pb-6 border-b border-gray-100">
         <Text className="text-2xl font-bold text-gray-900">Invite Friends</Text>
@@ -54,7 +54,7 @@ export default function ReferralsScreen() {
             <Text className="text-xs text-sky-500 font-semibold uppercase tracking-widest mb-2">
               Your Referral Code
             </Text>
-            <Text className="text-3xl font-bold text-sky-700 tracking-widest mb-4">
+            <Text testID="referral-code" className="text-3xl font-bold text-sky-700 tracking-widest mb-4">
               {codeData?.code ?? "—"}
             </Text>
 
@@ -69,6 +69,7 @@ export default function ReferralsScreen() {
               </Pressable>
 
               <Pressable
+                testID="btn-share-referral"
                 className="flex-1 border border-sky-600 py-3 rounded-xl items-center"
                 onPress={handleShare}
               >

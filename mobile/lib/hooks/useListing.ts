@@ -13,6 +13,7 @@ export interface ListingDetail {
   location?: { lat: number; lng: number };
   availability: unknown;
   hasVideo: boolean;
+  photos: string[];
   status: "PENDING" | "ACTIVE" | "FLAGGED" | "SUSPENDED";
   createdAt: string;
   estimatedValue?: number;

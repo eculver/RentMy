@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 
 interface SetupResponse {
   customerId: string;
+  ephemeralKey: string;
   clientSecret: string;
 }
 
@@ -32,7 +33,7 @@ export default function PaymentMethodSelector({
       const { error: initError } = await initPaymentSheet({
         merchantDisplayName: "RentMy",
         customerId: setup.customerId,
-        customerEphemeralKeySecret: setup.clientSecret,
+        customerEphemeralKeySecret: setup.ephemeralKey,
         setupIntentClientSecret: setup.clientSecret,
         allowsDelayedPaymentMethods: false,
       });

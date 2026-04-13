@@ -55,6 +55,11 @@ type PaymentAdapter interface {
 	// CreateSetupIntent creates a SetupIntent for saving a payment method.
 	// Returns the client secret for the mobile SDK.
 	CreateSetupIntent(ctx context.Context, customerID string) (clientSecret string, err error)
+
+	// CreateEphemeralKey creates a short-lived Stripe Ephemeral Key for a customer.
+	// The ephemeral key allows the mobile SDK to read the customer's saved payment methods.
+	// Returns the raw ephemeral key secret (not the key object ID).
+	CreateEphemeralKey(ctx context.Context, customerID string) (ephemeralKeySecret string, err error)
 }
 
 // HoldAllocation tracks how the hold authorized at booking has been used.
@@ -141,6 +146,7 @@ type OnboardHostResult struct {
 // SetupPaymentResult is returned after a renter's payment setup is created.
 type SetupPaymentResult struct {
 	CustomerID   string `json:"customerId"`
+	EphemeralKey string `json:"ephemeralKey"`
 	ClientSecret string `json:"clientSecret"`
 }
 

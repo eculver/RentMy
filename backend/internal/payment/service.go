@@ -339,6 +339,11 @@ func (s *Service) SetupRenterPayment(ctx context.Context, userID string) (SetupP
 		}
 	}
 
+	ephemeralKey, err := s.adapter.CreateEphemeralKey(ctx, customerID)
+	if err != nil {
+		return SetupPaymentResult{}, fmt.Errorf("create ephemeral key: %w", err)
+	}
+
 	clientSecret, err := s.adapter.CreateSetupIntent(ctx, customerID)
 	if err != nil {
 		return SetupPaymentResult{}, fmt.Errorf("create setup intent: %w", err)
@@ -346,6 +351,7 @@ func (s *Service) SetupRenterPayment(ctx context.Context, userID string) (SetupP
 
 	return SetupPaymentResult{
 		CustomerID:   customerID,
+		EphemeralKey: ephemeralKey,
 		ClientSecret: clientSecret,
 	}, nil
 }

@@ -7,6 +7,7 @@ type ConfirmationParams = {
   transactionId: string;
   holdAmount: string;
   rentalFee: string;
+  platformFee: string;
   totalImpact: string;
   scheduledStart: string;
   scheduledEnd: string;
@@ -74,6 +75,15 @@ export default function ConfirmationScreen() {
             </Text>
           </View>
 
+          {params.platformFee && parseInt(params.platformFee, 10) > 0 && (
+            <View className="px-4 py-3 border-b border-gray-100 flex-row justify-between">
+              <Text className="text-sm text-gray-600">Platform fee</Text>
+              <Text className="text-sm font-medium text-gray-900">
+                {dollars(params.platformFee)}
+              </Text>
+            </View>
+          )}
+
           <View className="px-4 py-3 border-b border-gray-100 flex-row justify-between">
             <Text className="text-sm text-gray-600">Hold (released on return)</Text>
             <Text className="text-sm font-medium text-gray-900">
@@ -107,7 +117,7 @@ export default function ConfirmationScreen() {
 
           <Pressable
             className="border border-gray-200 rounded-2xl py-4 items-center"
-            onPress={() => router.replace("/(tabs)/(feed)")}
+            onPress={() => router.replace("/(tabs)/(rentals)" as never)}
           >
             <Text className="text-gray-700 font-semibold text-base">
               View My Bookings

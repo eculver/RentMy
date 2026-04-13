@@ -119,8 +119,17 @@ function CheckoutContent({ id }: { id: string }) {
       reset();
 
       router.replace({
-        pathname: "/(tabs)/(feed)/booking-status" as never,
-        params: { transactionId: result.transactionId },
+        pathname: "/(tabs)/(feed)/listing/[id]/confirmation" as never,
+        params: {
+          id,
+          transactionId: result.transactionId,
+          holdAmount: String(result.holdAmount),
+          rentalFee: String(result.rentalFee),
+          platformFee: String(result.platformFee),
+          totalImpact: String(result.totalImpact),
+          scheduledStart: scheduledStart!.toISOString(),
+          scheduledEnd: scheduledEnd!.toISOString(),
+        },
       });
     } catch (err: unknown) {
       const message =
@@ -163,13 +172,20 @@ function CheckoutContent({ id }: { id: string }) {
           }}
         />
 
-        {/* Cost breakdown — shown once dates are selected */}
+        {/* Cost breakdown — shown once dates are selected and hold estimate is loaded */}
         {scheduledStart && scheduledEnd && (
-          <CostBreakdown
-            rentalFee={rentalFee}
-            holdAmount={displayHold}
-            totalImpact={displayHold + rentalFee}
-          />
+          holdEstimate == null ? (
+            <View className="flex-row items-center gap-x-2 py-2">
+              <ActivityIndicator size="small" color="#0284c7" />
+              <Text className="text-sm text-gray-500">Calculating costs…</Text>
+            </View>
+          ) : (
+            <CostBreakdown
+              rentalFee={rentalFee}
+              holdAmount={displayHold}
+              totalImpact={displayHold + rentalFee}
+            />
+          )
         )}
 
         {/* Payment method */}

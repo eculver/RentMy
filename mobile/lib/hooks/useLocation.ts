@@ -7,12 +7,14 @@ export interface LocationState {
   lng: number | null;
   loading: boolean;
   error: string | null;
+  retry: () => void;
 }
 
 export function useLocation(): LocationState {
   const { lat, lng, setLocation } = useLocationStore();
   const [loading, setLoading] = useState(lat === null);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     // If we already have a cached position, skip the permission request
@@ -48,7 +50,9 @@ export function useLocation(): LocationState {
     return () => {
       cancelled = true;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { lat, lng, loading, error };
+  const retry = () => setRetryCount((c) => c + 1);
+
+  return { lat, lng, loading, error, retry };
 }

@@ -1,0 +1,10 @@
+appId: ${APP_ID}
+name: "Helper - Navigate to tab"
+env:
+  APP_ID: com.rentmy.app
+  TAB_NAME: Feed
+---
+# Reusable helper: taps a tab bar item by label text.
+# Set TAB_NAME to one of: Feed, Search, Map, Rentals, Messages, Profile
+
+- tapOn: ${TAB_NAME}

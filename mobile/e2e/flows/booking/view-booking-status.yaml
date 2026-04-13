@@ -1,0 +1,49 @@
+appId: ${APP_ID}
+name: "Booking - View booking status (REQUESTED)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - app built with EXPO_PUBLIC_E2E_MODE=true
+#
+# Creates a booking in REQUESTED state via the test-only API, then logs in as
+# renter and asserts the status screen shows "Waiting for host".
+
+# ── 1. Seed a REQUESTED booking via API ──────────────────────────────────────
+- runScript: e2e/scripts/seed-booking.js
+  env:
+    API_URL: ${API_URL}
+    RENTER_EMAIL: ${RENTER_EMAIL}
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the pending booking row (status = REQUESTED/Pending) ──────────────
+- tapOn:
+    id: "rental-row"
+
+# ── 5. Assert booking status screen shows "Waiting for host" ─────────────────
+- assertVisible:
+    id: "screen-booking-status"
+    timeout: 5000
+
+- assertVisible:
+    id: "booking-status-label"
+    timeout: 3000
+
+- assertVisible: "Waiting for host"
+
+# ── 6. Cancel button is visible (booking is still pending) ───────────────────
+- assertVisible:
+    id: "btn-cancel-booking"

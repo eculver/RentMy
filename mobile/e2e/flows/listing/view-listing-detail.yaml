@@ -1,0 +1,43 @@
+appId: ${APP_ID}
+name: "Listing - View listing detail (happy path)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter — alice@test.com owns 5 seeded listings visible in the feed.
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Feed tab should be active and at least one listing card visible
+- assertVisible:
+    id: "screen-feed"
+
+- assertVisible:
+    id: "listing-card"
+    timeout: 10000
+
+# Tap the first listing card to navigate to its detail screen
+- tapOn:
+    id: "listing-card"
+
+# Detail screen loads
+- assertVisible:
+    id: "screen-listing-detail"
+    timeout: 8000
+
+# "Rent Now" CTA visible (renter perspective — not the host)
+- assertVisible:
+    id: "btn-rent-now"
+
+# Scroll down to verify price/description/host sections render
+- scrollDown
+
+# Scroll back up
+- scrollUp
+
+# Navigate back via the back button
+- tapOn:
+    id: "btn-back"
+
+# Feed is visible again after back navigation
+- assertVisible:
+    id: "screen-feed"
+    timeout: 6000

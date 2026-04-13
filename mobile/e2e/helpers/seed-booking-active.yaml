@@ -1,0 +1,22 @@
+appId: ${APP_ID}
+name: "Helper - Seed an ACTIVE booking via API"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+---
+# Creates a booking in ACTIVE state via the test-only backend endpoint.
+# All CHECK_IN proximity proofs are pre-verified; the host's CHECK_OUT proof
+# is also pre-verified so only the renter must complete GPS verify during
+# the check-out flow.
+#
+# Requires: backend running with E2E_MODE=true
+#
+# After this helper runs:
+#   ${TRANSACTION_ID} — booking ID
+
+- runScript: e2e/scripts/seed-booking.js
+  env:
+    API_URL: ${API_URL}
+    RENTER_EMAIL: ${RENTER_EMAIL}
+    STATUS: ACTIVE

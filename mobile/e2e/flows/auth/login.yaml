@@ -1,0 +1,34 @@
+appId: ${APP_ID}
+name: "Auth - Login (happy path)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Ensure we start from a clean state (logged out)
+- clearState
+
+- launchApp
+
+# Assert the login screen is visible
+- assertVisible:
+    id: "screen-login"
+
+# Enter credentials
+- tapOn:
+    id: "input-email"
+- inputText: ${RENTER_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: ${RENTER_PASSWORD}
+
+# Submit
+- tapOn:
+    id: "btn-sign-in"
+
+# Assert we land on the feed screen
+- assertVisible:
+    id: "screen-feed"
+    timeout: 8000

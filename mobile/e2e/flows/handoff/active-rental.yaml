@@ -1,0 +1,51 @@
+appId: ${APP_ID}
+name: "Handoff - Active rental screen (countdown, navigate, checkout CTA)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#
+# Seeds an ACTIVE booking and verifies the active-rental management screen:
+#   - Countdown timer is visible
+#   - "Navigate to return" button is visible
+#   - "Start check-out" button is visible
+
+# ── 1. Seed an ACTIVE booking ────────────────────────────────────────────────
+- runFlow: e2e/helpers/seed-booking-active.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the ACTIVE booking row (navigates directly to active-rental) ───────
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-active-rental"
+    timeout: 6000
+
+# ── 5. Assert countdown timer is visible ─────────────────────────────────────
+- assertVisible:
+    id: "active-rental-countdown"
+
+# ── 6. Assert action buttons are visible ─────────────────────────────────────
+- assertVisible:
+    id: "btn-navigate-return"
+
+- assertVisible:
+    id: "btn-start-checkout"
+
+- assertVisible:
+    id: "btn-report-issue"

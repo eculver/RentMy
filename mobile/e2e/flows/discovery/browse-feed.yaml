@@ -1,0 +1,47 @@
+appId: ${APP_ID}
+name: "Discovery - Browse feed (happy path)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter — feed is the default landing tab after login
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Feed tab should be active and visible
+- assertVisible:
+    id: "screen-feed"
+
+# Wait for at least one listing card to appear
+# (backend feed API + location permission must resolve)
+- assertVisible:
+    id: "listing-card"
+    timeout: 10000
+
+# Scroll down to load more cards (exercises infinite-scroll pagination)
+- scrollDown
+
+# Pull-to-refresh: swipe down on the feed list to reload
+- swipeDown:
+    element:
+      id: "feed-list"
+
+# Cards still visible after refresh
+- assertVisible:
+    id: "listing-card"
+    timeout: 8000
+
+# Tap a listing card to navigate to the detail screen
+- tapOn:
+    id: "listing-card"
+
+# Listing detail screen should render
+- assertVisible:
+    id: "screen-listing-detail"
+    timeout: 8000
+
+# Navigate back using the back button
+- tapOn:
+    id: "btn-back"
+
+# Feed is visible again
+- assertVisible:
+    id: "screen-feed"

@@ -1,0 +1,51 @@
+appId: ${APP_ID}
+name: "Auth - Logout"
+env:
+  APP_ID: com.rentmy.app
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+- clearState
+
+- launchApp
+
+- assertVisible:
+    id: "screen-login"
+
+# Log in first
+- tapOn:
+    id: "input-email"
+- inputText: ${RENTER_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: ${RENTER_PASSWORD}
+
+- tapOn:
+    id: "btn-sign-in"
+
+- assertVisible:
+    id: "screen-feed"
+    timeout: 8000
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+
+- assertVisible:
+    id: "screen-profile"
+    timeout: 4000
+
+# Tap Sign Out
+- tapOn:
+    id: "btn-sign-out"
+
+# Root layout detects isAuthenticated=false and redirects to login
+- assertVisible:
+    id: "screen-login"
+    timeout: 4000
+
+# Verify tabs are inaccessible — login screen is the only thing visible
+- assertNotVisible:
+    id: "screen-feed"
+- assertNotVisible:
+    id: "screen-profile"

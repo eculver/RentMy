@@ -1,0 +1,96 @@
+appId: ${APP_ID}
+name: "Handoff - Check-out (GPS + photos → COMPLETED)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#
+# Seeds an ACTIVE booking where the host's CHECK_OUT proof is pre-verified.
+# The renter then:
+#   1. Navigates to active-rental → check-out screen
+#   2. Verifies GPS (E2E: backend bypass accepts any coordinates)
+#   3. Takes 3 fixture photos (E2E: camera bypass)
+#   4. Completes check-out → booking transitions to COMPLETED
+#   5. Return-confirmation screen renders
+
+# ── 1. Seed an ACTIVE booking (host CHECK_OUT pre-verified) ──────────────────
+- runFlow: e2e/helpers/seed-booking-active.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the ACTIVE rental row → active-rental screen ──────────────────────
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-active-rental"
+    timeout: 6000
+
+# ── 5. Tap "Start check-out" → check-out screen ───────────────────────────────
+- tapOn:
+    id: "btn-start-checkout"
+
+- assertVisible:
+    id: "screen-check-out"
+    timeout: 5000
+
+# ── 6. Verify GPS (E2E mode: backend accepts any coordinates) ─────────────────
+- assertVisible:
+    id: "btn-verify-location"
+
+- tapOn:
+    id: "btn-verify-location"
+
+- assertVisible: "Location verified"
+  timeout: 6000
+
+# ── 7. Take 3 fixture photos ─────────────────────────────────────────────────
+- tapOn:
+    id: "btn-open-camera"
+
+- assertVisible:
+    id: "camera-e2e-bypass"
+    timeout: 4000
+
+# Add 3 fixture photos in a single camera-open session
+- tapOn:
+    id: "btn-e2e-use-fixture"
+
+- tapOn:
+    id: "btn-e2e-use-fixture"
+
+- tapOn:
+    id: "btn-e2e-use-fixture"
+
+# Return to check-out screen
+- tapOn:
+    id: "btn-e2e-continue"
+
+- assertVisible:
+    id: "screen-check-out"
+    timeout: 4000
+
+# ── 8. Complete check-out ────────────────────────────────────────────────────
+- tapOn:
+    id: "btn-complete-checkout"
+
+# ── 9. Assert return-confirmation screen renders ──────────────────────────────
+- assertVisible:
+    id: "screen-return-confirmation"
+    timeout: 8000
+
+- assertVisible:
+    id: "return-status-label"

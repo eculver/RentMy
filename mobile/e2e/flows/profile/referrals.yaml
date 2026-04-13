@@ -1,0 +1,32 @@
+appId: ${APP_ID}
+name: "Profile - Referrals screen (happy path)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+
+- assertVisible:
+    id: "screen-profile"
+    timeout: 6000
+
+# Tap the "Invite Friends" button to navigate to the referrals screen
+- tapOn:
+    id: "btn-invite-friends"
+
+# Referrals screen loads
+- assertVisible:
+    id: "screen-referrals"
+    timeout: 6000
+
+# The referral code card loads from the API — wait for it
+- assertVisible:
+    id: "referral-code"
+    timeout: 8000
+
+# Share button is always visible alongside the code
+- assertVisible:
+    id: "btn-share-referral"

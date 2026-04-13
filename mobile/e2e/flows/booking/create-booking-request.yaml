@@ -1,0 +1,81 @@
+appId: ${APP_ID}
+name: "Booking - Create booking request (happy path)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with seeded data AND E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - alice@test.com has at least one active listing visible in the feed
+#   - bob@test.com identity_status = VERIFIED (migration 016 ensures this)
+#
+# Flow: login → feed → tap listing → Rent Now → checkout (KYC passes, E2E payment
+# auto-selected) → select dates → confirm → booking confirmation screen.
+
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 2. Navigate to Feed tab (already there post-login) ───────────────────────
+- assertVisible:
+    id: "screen-feed"
+
+# ── 3. Tap first listing card ────────────────────────────────────────────────
+- tapOn:
+    id: "listing-card"
+
+- assertVisible:
+    id: "screen-listing-detail"
+    timeout: 5000
+
+# ── 4. Tap "Rent Now" ────────────────────────────────────────────────────────
+- tapOn:
+    id: "btn-rent-now"
+
+# ── 5. Assert checkout screen ────────────────────────────────────────────────
+- assertVisible:
+    id: "screen-checkout"
+    timeout: 5000
+
+# ── 6. Select start date: tap centre of start label to initialise, then
+#       increment start time forward by 4 hours so the end can be set later. ──
+- tapOn:
+    id: "lbl-start-date"
+
+- tapOn:
+    id: "btn-start-increase"
+
+- tapOn:
+    id: "btn-start-increase"
+
+- tapOn:
+    id: "btn-start-increase"
+
+- tapOn:
+    id: "btn-start-increase"
+
+# ── 7. Increment end date by 2 hours beyond start ────────────────────────────
+- tapOn:
+    id: "lbl-end-date"
+
+- tapOn:
+    id: "btn-end-increase"
+
+- tapOn:
+    id: "btn-end-increase"
+
+# ── 8. E2E payment method is auto-selected (no Stripe sheet shown) ───────────
+- assertVisible:
+    id: "payment-method-selected"
+    timeout: 3000
+
+# ── 9. Confirm booking ───────────────────────────────────────────────────────
+- tapOn:
+    id: "btn-confirm-booking"
+
+# ── 10. Assert booking confirmation screen ───────────────────────────────────
+- assertVisible:
+    id: "screen-booking-confirmation"
+    timeout: 10000

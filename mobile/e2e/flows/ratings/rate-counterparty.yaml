@@ -1,0 +1,68 @@
+appId: ${APP_ID}
+name: "Ratings - Rate a counterparty after a completed rental (happy path)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#
+# Flow: seed COMPLETED booking → login → Rentals → tap COMPLETED row →
+#       return-confirmation screen → tap "Rate this rental" → rate screen →
+#       select a rating bubble → submit → success message shown.
+
+# ── 1. Seed a COMPLETED booking ──────────────────────────────────────────────
+- runFlow: e2e/helpers/seed-booking-completed.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ────────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the COMPLETED rental row → return-confirmation screen ──────────────
+- assertVisible:
+    id: "rental-row"
+    timeout: 5000
+
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-return-confirmation"
+    timeout: 6000
+
+# ── 5. Tap "Rate this rental" button → rate screen ───────────────────────────
+- tapOn:
+    id: "btn-rate-rental"
+
+- assertVisible:
+    id: "screen-rate"
+    timeout: 5000
+
+# ── 6. Rating bubble grid is visible ─────────────────────────────────────────
+- assertVisible:
+    id: "rating-bubbles-container"
+    timeout: 5000
+
+# ── 7. Select a renter bubble (e.g. "Good communication") ────────────────────
+- tapOn:
+    id: "rating-bubble-GOOD_COMMUNICATION"
+
+# ── 8. Submit the rating ─────────────────────────────────────────────────────
+- tapOn:
+    id: "btn-submit-rating"
+
+# ── 9. Success message appears ───────────────────────────────────────────────
+- assertVisible:
+    id: "rating-success-message"
+    timeout: 8000
+
+- assertVisible: "Rating submitted!"

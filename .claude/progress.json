@@ -1472,18 +1472,19 @@
       "tasks": [
         {
           "id": "9.0",
-          "name": "Maestro setup & test infrastructure",
+          "name": "Get the app running (build + backend + simulator + first test)",
           "status": "pending",
-          "domain": "mobile",
+          "domain": "fullstack",
           "dependencies": [],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-90",
           "verificationCommands": [
             "maestro --version",
-            "cd mobile && maestro test e2e/flows/auth/login.yaml",
-            "make test-mobile-e2e-auth"
+            "curl -sf http://localhost:8080/health",
+            "maestro test mobile/e2e/flows/auth/login.yaml"
           ],
           "prdRefs": [],
-          "recommendedModel": "opus"
+          "requiredModel": "opus",
+          "notes": "Fix ALL build/backend/login bugs. Handoff must include full maestro test output."
         },
         {
           "id": "9.1",
@@ -1493,9 +1494,10 @@
           "dependencies": ["9.0"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-91",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/auth/"
+            "maestro test mobile/e2e/flows/auth/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-4"]
+          "prdRefs": ["rentmy-prd-v8.md#section-4"],
+          "requiredModel": "opus"
         },
         {
           "id": "9.2",
@@ -1505,9 +1507,10 @@
           "dependencies": ["9.0"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-92",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/discovery/"
+            "maestro test mobile/e2e/flows/discovery/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-6"]
+          "prdRefs": ["rentmy-prd-v8.md#section-6"],
+          "requiredModel": "opus"
         },
         {
           "id": "9.3",
@@ -1517,10 +1520,10 @@
           "dependencies": ["9.0"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-93",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/listing/"
+            "maestro test mobile/e2e/flows/listing/"
           ],
           "prdRefs": ["rentmy-prd-v8.md#section-5"],
-          "recommendedModel": "opus"
+          "requiredModel": "opus"
         },
         {
           "id": "9.4",
@@ -1530,9 +1533,10 @@
           "dependencies": ["9.0"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-94",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/profile/"
+            "maestro test mobile/e2e/flows/profile/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-15"]
+          "prdRefs": ["rentmy-prd-v8.md#section-15"],
+          "requiredModel": "opus"
         },
         {
           "id": "9.5",
@@ -1542,10 +1546,10 @@
           "dependencies": ["9.1", "9.3"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-95",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/booking/"
+            "maestro test mobile/e2e/flows/booking/"
           ],
           "prdRefs": ["rentmy-prd-v8.md#section-7", "rentmy-prd-v8.md#section-8"],
-          "recommendedModel": "opus"
+          "requiredModel": "opus"
         },
         {
           "id": "9.6",
@@ -1555,10 +1559,10 @@
           "dependencies": ["9.5"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-96",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/handoff/"
+            "maestro test mobile/e2e/flows/handoff/"
           ],
           "prdRefs": ["rentmy-prd-v8.md#section-9", "rentmy-prd-v8.md#section-10"],
-          "recommendedModel": "opus"
+          "requiredModel": "opus"
         },
         {
           "id": "9.7",
@@ -1568,10 +1572,10 @@
           "dependencies": ["9.1"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-97",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/messaging/"
+            "maestro test mobile/e2e/flows/messaging/"
           ],
           "prdRefs": ["rentmy-prd-v8.md#section-12"],
-          "recommendedModel": "opus"
+          "requiredModel": "opus"
         },
         {
           "id": "9.8",
@@ -1581,14 +1585,15 @@
           "dependencies": ["9.5"],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-98",
           "verificationCommands": [
-            "cd mobile && maestro test e2e/flows/disputes/",
-            "cd mobile && maestro test e2e/flows/ratings/"
+            "maestro test mobile/e2e/flows/disputes/",
+            "maestro test mobile/e2e/flows/ratings/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-11", "rentmy-prd-v8.md#section-13"]
+          "prdRefs": ["rentmy-prd-v8.md#section-11", "rentmy-prd-v8.md#section-13"],
+          "requiredModel": "opus"
         },
         {
           "id": "9.9",
-          "name": "Full regression suite & reliability",
+          "name": "Full regression suite & reliability (3 consecutive green runs)",
           "status": "pending",
           "domain": "mobile",
           "dependencies": ["9.1", "9.2", "9.3", "9.4", "9.5", "9.6", "9.7", "9.8"],
@@ -1598,7 +1603,9 @@
             "make test-mobile-e2e",
             "make test-mobile-e2e"
           ],
-          "prdRefs": []
+          "prdRefs": [],
+          "requiredModel": "opus",
+          "notes": "Handoff must include full terminal output of all 3 runs."
         },
         {
           "id": "9.10",
@@ -1611,11 +1618,11 @@
             "make test-mobile-e2e-cloud"
           ],
           "prdRefs": [],
-          "recommendedModel": "opus"
+          "requiredModel": "opus"
         },
         {
           "id": "9.11",
-          "name": "Documentation & handoff",
+          "name": "Documentation & CLAUDE.md update",
           "status": "pending",
           "domain": "docs",
           "dependencies": ["9.10"],
@@ -1623,7 +1630,8 @@
           "verificationCommands": [
             "test -f mobile/e2e/README.md"
           ],
-          "prdRefs": []
+          "prdRefs": [],
+          "requiredModel": "opus"
         }
       ]
     }

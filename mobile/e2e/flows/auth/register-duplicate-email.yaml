@@ -1,0 +1,44 @@
+appId: ${APP_ID}
+name: "Auth - Register (error: duplicate email)"
+env:
+  APP_ID: com.rentmy.app
+  # Use a seeded account email — guaranteed to already exist
+  RENTER_EMAIL: bob@test.com
+---
+- clearState
+
+- launchApp
+
+- assertVisible:
+    id: "screen-login"
+
+- tapOn:
+    id: "btn-create-account"
+
+- assertVisible:
+    id: "screen-register"
+
+# Attempt to register with an already-registered email
+- tapOn:
+    id: "input-name"
+- inputText: "Duplicate User"
+
+- tapOn:
+    id: "input-email"
+- inputText: ${RENTER_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: "Password123"
+
+- tapOn:
+    id: "btn-register"
+
+# Backend returns 409 → register.tsx sets apiError → error-message appears
+- assertVisible:
+    id: "error-message"
+    timeout: 6000
+
+# Still on register screen (no redirect)
+- assertVisible:
+    id: "screen-register"

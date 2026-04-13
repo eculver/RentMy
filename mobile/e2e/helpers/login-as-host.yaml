@@ -1,0 +1,31 @@
+appId: ${APP_ID}
+name: "Helper - Login as host (alice@test.com)"
+env:
+  APP_ID: com.rentmy.app
+  HOST_EMAIL: alice@test.com
+  HOST_PASSWORD: password123
+---
+# Reusable helper: logs in as the seeded host account.
+# Call with runFlow before flows that require an authenticated host.
+
+- clearState
+
+- launchApp
+
+- assertVisible:
+    id: "screen-login"
+
+- tapOn:
+    id: "input-email"
+- inputText: ${HOST_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: ${HOST_PASSWORD}
+
+- tapOn:
+    id: "btn-sign-in"
+
+- assertVisible:
+    id: "screen-feed"
+    timeout: 8000

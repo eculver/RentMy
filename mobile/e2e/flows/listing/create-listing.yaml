@@ -1,0 +1,89 @@
+appId: ${APP_ID}
+name: "Listing - Create listing (E2E_MODE camera bypass)"
+env:
+  APP_ID: com.rentmy.app
+---
+# Prerequisites:
+#   - App built with EXPO_PUBLIC_E2E_MODE=true (enables camera bypass).
+#     Build: EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - Backend running with seeded data (alice@test.com is the host).
+
+# Login as host — alice@test.com owns existing listings and can create new ones.
+- runFlow: ../../helpers/login-as-host.yaml
+
+# Navigate to the Profile tab
+- tapOn: "Profile"
+
+- assertVisible:
+    id: "screen-profile"
+    timeout: 6000
+
+# Tap "Create Listing" navigation button in the profile header
+- tapOn:
+    id: "btn-create-listing-nav"
+
+# Create listing screen loads — camera step first (E2E bypass active)
+- assertVisible:
+    id: "screen-create-listing"
+    timeout: 8000
+
+# E2E bypass: use the fixture photo button instead of native camera
+- assertVisible:
+    id: "camera-e2e-bypass"
+
+- tapOn:
+    id: "btn-e2e-use-fixture"
+
+# Continue button appears after one fixture photo is provided
+- assertVisible:
+    id: "btn-e2e-continue"
+    timeout: 4000
+
+- tapOn:
+    id: "btn-e2e-continue"
+
+# Form step renders
+- assertVisible:
+    id: "screen-create-listing"
+    timeout: 6000
+
+# Fill in the listing title
+- tapOn:
+    id: "input-listing-title"
+- clearText
+- inputText: "E2E Test Power Drill"
+
+# Fill in the description
+- tapOn:
+    id: "input-listing-description"
+- clearText
+- inputText: "A reliable power drill available for short-term rental. Good condition."
+
+# Fill in price per day
+- tapOn:
+    id: "input-listing-price-per-day"
+- clearText
+- inputText: "20"
+
+# Fill in latitude (Los Angeles — matches seeded listing coordinates)
+- tapOn:
+    id: "input-listing-lat"
+- clearText
+- inputText: "34.0522"
+
+# Fill in longitude
+- tapOn:
+    id: "input-listing-lng"
+- clearText
+- inputText: "-118.2437"
+
+# Submit the form
+- tapOn:
+    id: "btn-create-listing"
+
+# After submit, AI appraisal begins — the overlay or the form disappears.
+# We wait for the app to navigate back to the profile screen once done.
+# The appraisal overlay may display briefly before resolving.
+- assertVisible:
+    id: "screen-profile"
+    timeout: 20000

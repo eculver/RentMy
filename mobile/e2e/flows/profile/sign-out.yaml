@@ -1,0 +1,29 @@
+appId: ${APP_ID}
+name: "Profile - Sign out"
+env:
+  APP_ID: com.rentmy.app
+---
+# Login as renter
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Navigate to Profile tab
+- tapOn: "Profile"
+
+- assertVisible:
+    id: "screen-profile"
+    timeout: 6000
+
+# Tap Sign Out
+- tapOn:
+    id: "btn-sign-out"
+
+# Root layout detects isAuthenticated=false and redirects to login screen
+- assertVisible:
+    id: "screen-login"
+    timeout: 6000
+
+# Auth gate is active — tabs and authenticated screens are not visible
+- assertNotVisible:
+    id: "screen-feed"
+- assertNotVisible:
+    id: "screen-profile"

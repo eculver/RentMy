@@ -1,0 +1,75 @@
+appId: ${APP_ID}
+name: "Disputes - File a dispute from an active rental (happy path)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#
+# Flow: seed ACTIVE booking → login → Rentals → tap active row → active-rental
+#       screen → tap "Report an issue" → dispute screen → select DAMAGE reason
+#       → enter description → submit → dispute-status screen renders.
+
+# ── 1. Seed an ACTIVE booking ─────────────────────────────────────────────────
+- runFlow: e2e/helpers/seed-booking-active.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ────────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the ACTIVE rental row → active-rental screen ──────────────────────
+- assertVisible:
+    id: "rental-row"
+    timeout: 5000
+
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-active-rental"
+    timeout: 6000
+
+# ── 5. Tap "Report an issue" to open the dispute filing screen ────────────────
+- tapOn:
+    id: "btn-report-issue"
+
+- assertVisible:
+    id: "screen-dispute"
+    timeout: 5000
+
+# ── 6. Select the DAMAGE reason ───────────────────────────────────────────────
+- tapOn:
+    id: "dispute-reason-DAMAGE"
+
+- assertVisible: "Damage"
+
+# ── 7. Enter a description (minimum 10 characters) ────────────────────────────
+- tapOn:
+    id: "input-dispute-description"
+
+- inputText: "The frame was visibly dented on the left side upon return."
+
+# ── 8. Submit the dispute ─────────────────────────────────────────────────────
+- tapOn:
+    id: "btn-submit-dispute"
+
+# ── 9. Dispute-status screen renders with timeline ────────────────────────────
+- assertVisible:
+    id: "screen-dispute-status"
+    timeout: 8000
+
+- assertVisible:
+    id: "dispute-timeline"
+    timeout: 5000
+
+- assertVisible: "Dispute status"

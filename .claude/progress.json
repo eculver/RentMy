@@ -1525,7 +1525,7 @@
         {
           "id": "9.3",
           "name": "E2E: Listing detail & creation",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.0"

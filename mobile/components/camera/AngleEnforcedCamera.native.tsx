@@ -9,6 +9,9 @@ import {
 import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
 import { useGyroscope, angularDistance, type Orientation } from "../../lib/hooks/useGyroscope";
 
+// Sentinel path used in E2E mode — signals that no real file upload should occur.
+export const E2E_FIXTURE_PATH = "e2e://fixture-photo.jpg";
+
 export interface CapturedPhoto {
   path: string;
   orientation: Orientation;
@@ -30,6 +33,8 @@ const MIN_ANGLE_DEG = 30;
  * - Soft-blocks shutter when current angle is <30° from any existing capture (warns but still allows).
  * - Stores roll/pitch/yaw orientation metadata with each captured photo.
  */
+const IS_E2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+
 export default function AngleEnforcedCamera({
   captures,
   onCapture,
@@ -41,6 +46,38 @@ export default function AngleEnforcedCamera({
   const cameraRef = useRef<Camera>(null);
   const orientation = useGyroscope(100);
   const [isCapturing, setIsCapturing] = useState(false);
+
+  // E2E bypass: skip native camera, provide fixture captures via button press.
+  if (IS_E2E) {
+    const fixtureOrientation: Orientation = { roll: 0, pitch: 0, yaw: 0 };
+    return (
+      <View testID="camera-e2e-bypass" className="flex-1 bg-black items-center justify-center px-8">
+        <Text className="text-white text-base font-medium mb-6 text-center">
+          E2E Mode — Camera bypassed
+        </Text>
+        {captures.length === 0 && (
+          <Pressable
+            testID="btn-e2e-use-fixture"
+            onPress={() => onCapture({ path: E2E_FIXTURE_PATH, orientation: fixtureOrientation })}
+            className="bg-sky-600 px-8 py-3 rounded-xl mb-4"
+          >
+            <Text className="text-white font-semibold text-base">Use Fixture Photo</Text>
+          </Pressable>
+        )}
+        {captures.length > 0 && onDone && (
+          <Pressable
+            testID="btn-e2e-continue"
+            onPress={onDone}
+            className="bg-green-600 px-8 py-3 rounded-xl"
+          >
+            <Text className="text-white font-semibold text-base">
+              Continue — {captures.length} photo{captures.length !== 1 ? "s" : ""}
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
 
   const isFull = captures.length >= maxPhotos;
 

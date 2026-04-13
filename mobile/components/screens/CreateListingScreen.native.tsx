@@ -5,6 +5,7 @@ import { HTTPError } from "ky";
 import { api } from "../../lib/api";
 import AngleEnforcedCamera, {
   type CapturedPhoto,
+  E2E_FIXTURE_PATH,
 } from "../camera/AngleEnforcedCamera";
 import ListingForm, {
   type ListingFormData,
@@ -109,9 +110,10 @@ export default function CreateListingScreen() {
   const handleFormSubmit = async (formData: ListingFormData) => {
     setApiError(null);
     try {
-      // 1. Upload each captured photo
+      // 1. Upload each captured photo (skipped in E2E mode — fixture paths are sentinels only).
       const mediaIds: string[] = [];
       for (const capture of captures) {
+        if (capture.path === E2E_FIXTURE_PATH) continue;
         const fd = new FormData();
         const uri = capture.path.startsWith("file://")
           ? capture.path
@@ -182,7 +184,7 @@ export default function CreateListingScreen() {
 
   if (step === "camera") {
     return (
-      <View className="flex-1 bg-black">
+      <View testID="screen-create-listing" className="flex-1 bg-black">
         <AngleEnforcedCamera
           captures={captures}
           onCapture={handleCapture}
@@ -225,10 +227,10 @@ export default function CreateListingScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View testID="screen-create-listing" className="flex-1 bg-white">
       {apiError && (
         <View className="px-6 pt-4">
-          <Text className="text-red-500 text-sm text-center">{apiError}</Text>
+          <Text testID="error-create-listing" className="text-red-500 text-sm text-center">{apiError}</Text>
         </View>
       )}
       <ListingForm

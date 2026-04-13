@@ -186,6 +186,7 @@ export default function ListingDetailScreen() {
           </Pressable>
         ) : (
           <Pressable
+            testID="btn-rent-now"
             className="bg-sky-600 rounded-2xl py-4 items-center"
             onPress={() =>
               router.push({

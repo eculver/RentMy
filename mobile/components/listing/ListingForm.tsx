@@ -209,6 +209,7 @@ export default function ListingForm({
                   {aiFilledFields.has("title") && <AIBadge />}
                 </View>
                 <Input
+                  testID="input-listing-title"
                   placeholder="e.g. Ocean kayak, DSLR camera, power drill"
                   value={value}
                   onChangeText={(text) => {
@@ -234,6 +235,7 @@ export default function ListingForm({
                   {aiFilledFields.has("description") && <AIBadge />}
                 </View>
                 <Input
+                  testID="input-listing-description"
                   placeholder="Describe your item, condition, and any special notes"
                   value={value}
                   onChangeText={(text) => {
@@ -264,6 +266,7 @@ export default function ListingForm({
                       {aiFilledFields.has("pricePerDay") && <AIBadge />}
                     </View>
                     <Input
+                      testID="input-listing-price-per-day"
                       placeholder="25"
                       keyboardType="decimal-pad"
                       value={
@@ -363,6 +366,7 @@ export default function ListingForm({
                 name="lat"
                 render={({ field: { value, onChange, onBlur } }) => (
                   <Input
+                    testID="input-listing-lat"
                     label="Latitude"
                     placeholder="33.77"
                     keyboardType="decimal-pad"
@@ -384,6 +388,7 @@ export default function ListingForm({
                 name="lng"
                 render={({ field: { value, onChange, onBlur } }) => (
                   <Input
+                    testID="input-listing-lng"
                     label="Longitude"
                     placeholder="-118.19"
                     keyboardType="decimal-pad"
@@ -402,6 +407,7 @@ export default function ListingForm({
           </View>
 
           <Button
+            testID="btn-create-listing"
             title="Create Listing"
             onPress={onFormSubmit}
             loading={isSubmitting}

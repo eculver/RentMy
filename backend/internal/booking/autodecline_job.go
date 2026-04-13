@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/giits/rentmy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"

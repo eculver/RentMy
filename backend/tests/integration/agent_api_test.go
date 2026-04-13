@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/agent/risk"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/risk"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // TestGetReputationNotFound verifies GET /users/:id/reputation returns 404 when the

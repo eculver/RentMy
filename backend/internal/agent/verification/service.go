@@ -12,10 +12,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/agent/router"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
-	"github.com/giits/rentmy/backend/internal/user"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/router"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/user"
 )
 
 // attemptRepository is the persistence interface for VerificationAttempt records.

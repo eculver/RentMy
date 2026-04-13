@@ -11,8 +11,8 @@ import (
 
 	"github.com/riverqueue/river"
 
-	"github.com/giits/rentmy/backend/internal/agent/appraisal"
-	"github.com/giits/rentmy/backend/internal/agent/risk"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/appraisal"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/risk"
 )
 
 // ----- BackfillAppraisalJob -----

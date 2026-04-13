@@ -6,14 +6,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/latereturn"
-	"github.com/giits/rentmy/backend/internal/messaging"
-	"github.com/giits/rentmy/backend/internal/notification"
-	"github.com/giits/rentmy/backend/internal/outcome"
-	"github.com/giits/rentmy/backend/internal/payment"
-	"github.com/giits/rentmy/backend/internal/proximity"
+	"github.com/Brett2thered/RentMy/backend/internal/latereturn"
+	"github.com/Brett2thered/RentMy/backend/internal/messaging"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/outcome"
+	"github.com/Brett2thered/RentMy/backend/internal/payment"
+	"github.com/Brett2thered/RentMy/backend/internal/proximity"
 
-	risk "github.com/giits/rentmy/backend/internal/agent/risk"
+	risk "github.com/Brett2thered/RentMy/backend/internal/agent/risk"
 )
 
 // Config holds tunable parameters for the booking service.

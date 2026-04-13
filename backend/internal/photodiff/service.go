@@ -9,10 +9,10 @@ import (
 	"log/slog"
 	"strings"
 
-	agentrouter "github.com/giits/rentmy/backend/internal/agent/router"
-	"github.com/giits/rentmy/backend/internal/media"
-	"github.com/giits/rentmy/backend/internal/platform/cv"
-	locals3 "github.com/giits/rentmy/backend/internal/platform/s3"
+	agentrouter "github.com/Brett2thered/RentMy/backend/internal/agent/router"
+	"github.com/Brett2thered/RentMy/backend/internal/media"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/cv"
+	locals3 "github.com/Brett2thered/RentMy/backend/internal/platform/s3"
 )
 
 // Service orchestrates the two-stage photo diff pipeline:

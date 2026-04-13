@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/giits/rentmy/backend/internal/platform/auth"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/auth"
 )
 
 // Handler holds the HTTP handlers for the media domain.

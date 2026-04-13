@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/giits/rentmy/backend/internal/notification"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // TestNotificationListEmpty verifies GET /notifications returns an empty list for a new user.

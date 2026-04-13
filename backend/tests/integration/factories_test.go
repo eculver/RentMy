@@ -12,10 +12,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/giits/rentmy/backend/internal/booking"
-	"github.com/giits/rentmy/backend/internal/listing"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
-	"github.com/giits/rentmy/backend/internal/user"
+	"github.com/Brett2thered/RentMy/backend/internal/booking"
+	"github.com/Brett2thered/RentMy/backend/internal/listing"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/user"
 )
 
 // CreateTestUser inserts a user with a bcrypt-hashed password directly into the

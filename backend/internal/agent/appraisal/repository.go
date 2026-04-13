@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/giits/rentmy/backend/internal/listing"
+	"github.com/Brett2thered/RentMy/backend/internal/listing"
 )
 
 // ErrNotFound is returned when no appraisal record exists for a listing.

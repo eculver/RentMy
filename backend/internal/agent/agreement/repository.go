@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // Repository handles Postgres persistence for the agreement domain.

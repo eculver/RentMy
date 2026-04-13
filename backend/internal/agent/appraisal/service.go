@@ -14,11 +14,11 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/agent/router"
-	"github.com/giits/rentmy/backend/internal/listing"
-	"github.com/giits/rentmy/backend/internal/media"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/router"
+	"github.com/Brett2thered/RentMy/backend/internal/listing"
+	"github.com/Brett2thered/RentMy/backend/internal/media"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // appraisalRepository is the persistence interface for Appraisal records.

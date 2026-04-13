@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/giits/rentmy/backend/internal/proximity"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/proximity"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // TestProximityVerifyGPSRequiresAuth verifies POST /proximity/verify returns 401 without auth.

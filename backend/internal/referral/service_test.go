@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/referral"
+	"github.com/Brett2thered/RentMy/backend/internal/referral"
 )
 
 // --- fakes ---

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/listing"
-	"github.com/giits/rentmy/backend/internal/media"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/listing"
+	"github.com/Brett2thered/RentMy/backend/internal/media"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // --- fakes ---

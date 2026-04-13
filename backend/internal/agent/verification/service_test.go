@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/user"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/user"
 )
 
 // --- fakes ---

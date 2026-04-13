@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
 )
 
 // Repository handles persistence for outcome linking and calibration data.

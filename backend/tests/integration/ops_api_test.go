@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/agent/ops"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/ops"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // registerTestUser is a helper that registers a user and returns the access token.

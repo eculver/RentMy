@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/giits/rentmy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
 )
 
 // repo is the interface the service uses to interact with the messaging store.

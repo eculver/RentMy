@@ -7,7 +7,7 @@ package outcome
 import (
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
 )
 
 // OutcomeRule defines how correctness is evaluated for a specific agent type.

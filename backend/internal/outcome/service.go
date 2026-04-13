@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // Service implements the outcome linking and calibration business logic.

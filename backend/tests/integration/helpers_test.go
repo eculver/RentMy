@@ -30,12 +30,12 @@ import (
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 
-	"github.com/giits/rentmy/backend/app"
-	"github.com/giits/rentmy/backend/internal/platform/config"
-	"github.com/giits/rentmy/backend/internal/platform/postgres"
-	localredis "github.com/giits/rentmy/backend/internal/platform/redis"
-	riverpkg "github.com/giits/rentmy/backend/internal/platform/river"
-	"github.com/giits/rentmy/backend/migrations"
+	"github.com/Brett2thered/RentMy/backend/app"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/config"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/postgres"
+	localredis "github.com/Brett2thered/RentMy/backend/internal/platform/redis"
+	riverpkg "github.com/Brett2thered/RentMy/backend/internal/platform/river"
+	"github.com/Brett2thered/RentMy/backend/migrations"
 )
 
 // package-level vars set by TestMain and shared across all tests in the binary.

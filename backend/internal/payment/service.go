@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 
-	"github.com/giits/rentmy/backend/internal/guaranteefund"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/guaranteefund"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // Config holds tunable payment parameters loaded from the environment.

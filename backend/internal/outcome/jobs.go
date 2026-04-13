@@ -10,7 +10,7 @@ import (
 	"github.com/riverqueue/river"
 	rivertype "github.com/riverqueue/river/rivertype"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
 )
 
 // OutcomeLinkJobArgs are the arguments for the outcome linking River job.

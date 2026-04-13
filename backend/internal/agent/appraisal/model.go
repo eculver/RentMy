@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/listing"
+	"github.com/Brett2thered/RentMy/backend/internal/listing"
 )
 
 // Appraisal is the stored appraisal record for a listing.

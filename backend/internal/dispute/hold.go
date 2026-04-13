@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/giits/rentmy/backend/internal/guaranteefund"
-	"github.com/giits/rentmy/backend/internal/payment"
+	"github.com/Brett2thered/RentMy/backend/internal/guaranteefund"
+	"github.com/Brett2thered/RentMy/backend/internal/payment"
 )
 
 // HoldService manages hold allocation captures for dispute resolution.

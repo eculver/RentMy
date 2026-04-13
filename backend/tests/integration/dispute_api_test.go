@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/giits/rentmy/backend/internal/dispute"
+	"github.com/Brett2thered/RentMy/backend/internal/dispute"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

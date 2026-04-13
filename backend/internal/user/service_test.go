@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/platform/auth"
-	"github.com/giits/rentmy/backend/internal/user"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/auth"
+	"github.com/Brett2thered/RentMy/backend/internal/user"
 )
 
 // fakeRepo is an in-memory user repository for unit tests.

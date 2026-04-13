@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // AlertRouter evaluates rules against a snapshot and dispatches alerts.

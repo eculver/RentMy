@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/giits/rentmy/backend/internal/messaging"
-	"github.com/giits/rentmy/backend/internal/notification"
+	"github.com/Brett2thered/RentMy/backend/internal/messaging"
+	"github.com/Brett2thered/RentMy/backend/internal/notification"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

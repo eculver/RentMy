@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/guaranteefund"
-	"github.com/giits/rentmy/backend/internal/platform/ulid" // used by insertGuaranteeFundEntry
+	"github.com/Brett2thered/RentMy/backend/internal/guaranteefund"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid" // used by insertGuaranteeFundEntry
 )
 
 // insertGuaranteeFundEntry directly inserts a ledger entry for testing.

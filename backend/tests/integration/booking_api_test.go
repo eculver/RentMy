@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/booking"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/booking"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // TestBookingGetNotFound verifies GET /bookings/:id returns 404 for a missing booking.

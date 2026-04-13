@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // jsonMarshal is a package-level alias so repository.go can call it without importing encoding/json.

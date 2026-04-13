@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/agent/risk"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/risk"
 )
 
 // --- fakes ---

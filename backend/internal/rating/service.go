@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/giits/rentmy/backend/internal/agent/risk"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/risk"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // riskAgent is the subset of risk.Service that the rating service requires.

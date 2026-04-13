@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/giits/rentmy/backend/internal/messaging"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/messaging"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // TestSendMessageSuccess verifies POST /bookings/:id/messages creates a message.

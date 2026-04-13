@@ -11,9 +11,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/agent/router"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/router"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 

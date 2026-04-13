@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/giits/rentmy/backend/internal/agent/decision"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/agent/decision"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // Agent orchestrates fraud detection: per-transaction signal evaluation and

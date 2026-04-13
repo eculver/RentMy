@@ -9,8 +9,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/giits/rentmy/backend/internal/platform/auth"
-	"github.com/giits/rentmy/backend/internal/platform/ulid"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/auth"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/ulid"
 )
 
 // ErrBadCredentials is returned when login email/password do not match.

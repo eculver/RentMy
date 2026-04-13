@@ -8,15 +8,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/giits/rentmy/backend/app"
-	"github.com/giits/rentmy/backend/internal/platform/config"
-	"github.com/giits/rentmy/backend/internal/platform/httpserver"
-	"github.com/giits/rentmy/backend/internal/platform/postgres"
-	"github.com/giits/rentmy/backend/internal/platform/pusher"
-	localredis "github.com/giits/rentmy/backend/internal/platform/redis"
-	riverpkg "github.com/giits/rentmy/backend/internal/platform/river"
-	locals3 "github.com/giits/rentmy/backend/internal/platform/s3"
-	"github.com/giits/rentmy/backend/migrations"
+	"github.com/Brett2thered/RentMy/backend/app"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/config"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/httpserver"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/postgres"
+	"github.com/Brett2thered/RentMy/backend/internal/platform/pusher"
+	localredis "github.com/Brett2thered/RentMy/backend/internal/platform/redis"
+	riverpkg "github.com/Brett2thered/RentMy/backend/internal/platform/river"
+	locals3 "github.com/Brett2thered/RentMy/backend/internal/platform/s3"
+	"github.com/Brett2thered/RentMy/backend/migrations"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/giits/rentmy/backend
+module github.com/Brett2thered/RentMy/backend
 
 go 1.25.0
 

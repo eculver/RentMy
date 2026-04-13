@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/giits/rentmy/backend/internal/rating"
+	"github.com/Brett2thered/RentMy/backend/internal/rating"
 )
 
 func TestSubmitRating_RenterRatesHost(t *testing.T) {

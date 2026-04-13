@@ -1,0 +1,63 @@
+appId: ${APP_ID}
+name: "Booking - Renter cancels booking request"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#
+# Seeds a REQUESTED booking, then logs in as renter and cancels it.
+# Verifies status changes to CANCELLED.
+
+# ── 1. Seed a REQUESTED booking ──────────────────────────────────────────────
+- runScript: e2e/scripts/seed-booking.js
+  env:
+    API_URL: ${API_URL}
+    RENTER_EMAIL: ${RENTER_EMAIL}
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the pending booking row ───────────────────────────────────────────
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-booking-status"
+    timeout: 5000
+
+# ── 5. Tap "Cancel booking" ──────────────────────────────────────────────────
+- assertVisible:
+    id: "btn-cancel-booking"
+
+- tapOn:
+    id: "btn-cancel-booking"
+
+# ── 6. Confirm cancellation in the modal ─────────────────────────────────────
+# The CancelConfirmation modal has "Keep booking" (dismiss) and "Cancel booking" (confirm).
+# Two elements with text "Cancel booking" exist: the original button and the modal button.
+# Use index 1 to target the modal's confirm button (index 0 is behind the modal).
+- assertVisible: "Cancel this booking?"
+    timeout: 3000
+
+- tapOn:
+    text: "Cancel booking"
+    index: 1
+
+# ── 7. Status changes to "Booking cancelled" ─────────────────────────────────
+- assertVisible:
+    id: "booking-status-label"
+    timeout: 8000
+
+- assertVisible: "Booking cancelled"

@@ -182,7 +182,7 @@ export default function BookingStatusScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-booking-status" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -210,7 +210,7 @@ export default function BookingStatusScreen() {
           >
             <Ionicons name={iconName} size={36} color={iconColor} />
           </View>
-          <Text className="text-xl font-bold text-gray-900 text-center">
+          <Text testID="booking-status-label" className="text-xl font-bold text-gray-900 text-center">
             {STATUS_LABEL[booking.status]}
           </Text>
           <Text className="text-sm text-gray-500 text-center mt-1 px-4 leading-relaxed">
@@ -288,6 +288,7 @@ export default function BookingStatusScreen() {
             {isRenter && booking.status === "ACCEPTED" && (
               <>
                 <Pressable
+                  testID="btn-navigate-pickup"
                   className="bg-gray-100 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                   onPress={() => {
                     const url =
@@ -305,6 +306,7 @@ export default function BookingStatusScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
+                  testID="btn-start-checkin"
                   className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                   onPress={() =>
                     router.push({
@@ -324,6 +326,7 @@ export default function BookingStatusScreen() {
             {/* Active: manage the in-progress rental */}
             {booking.status === "ACTIVE" && (
               <Pressable
+                testID="btn-manage-active-rental"
                 className="bg-green-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                 onPress={() =>
                   router.push({
@@ -363,6 +366,7 @@ export default function BookingStatusScreen() {
             {/* Cancel (available while REQUESTED or ACCEPTED) */}
             {(booking.status === "REQUESTED" || booking.status === "ACCEPTED") && (
               <Pressable
+                testID="btn-cancel-booking"
                 className="py-3 items-center"
                 onPress={() => setCancelModalVisible(true)}
               >

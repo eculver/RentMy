@@ -36,7 +36,7 @@ export default function ConfirmationScreen() {
   const params = useLocalSearchParams<ConfirmationParams>();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-booking-confirmation" className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center px-8">
         {/* Success icon */}
         <View className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-6">
@@ -104,6 +104,7 @@ export default function ConfirmationScreen() {
         {/* CTAs */}
         <View className="w-full mt-8 gap-y-3">
           <Pressable
+            testID="btn-message-host"
             className="bg-sky-600 rounded-2xl py-4 items-center"
             onPress={() => {
               // Navigate to messages — Phase 3 will wire this to a specific thread
@@ -116,6 +117,7 @@ export default function ConfirmationScreen() {
           </Pressable>
 
           <Pressable
+            testID="btn-view-bookings"
             className="border border-gray-200 rounded-2xl py-4 items-center"
             onPress={() => router.replace("/(tabs)/(rentals)" as never)}
           >

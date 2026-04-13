@@ -73,6 +73,7 @@ function RentalRow({ booking, currentUserId, onPress, onRate }: RentalRowProps) 
 
   return (
     <Pressable
+      testID="rental-row"
       className="bg-white rounded-2xl mx-4 mb-3 overflow-hidden border border-gray-100 shadow-sm"
       onPress={onPress}
     >
@@ -254,12 +255,13 @@ export default function RentalsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView testID="screen-rentals" className="flex-1 bg-gray-50">
       <View className="px-4 pt-4 pb-3 border-b border-gray-100 bg-white">
         <Text className="text-xl font-bold text-gray-900">My rentals</Text>
       </View>
 
       <FlatList
+        testID="rentals-list"
         data={sorted}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

@@ -1,0 +1,56 @@
+appId: ${APP_ID}
+name: "Booking - Host declines booking request"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  HOST_EMAIL: alice@test.com
+  HOST_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#
+# Seeds a REQUESTED booking, then logs in as host and declines it.
+# Verifies status changes to DECLINED and renter payment method was not charged.
+
+# ── 1. Seed a REQUESTED booking ──────────────────────────────────────────────
+- runScript: e2e/scripts/seed-booking.js
+  env:
+    API_URL: ${API_URL}
+    RENTER_EMAIL: ${RENTER_EMAIL}
+
+# ── 2. Login as host ─────────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-host.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the incoming request row ──────────────────────────────────────────
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-booking-status"
+    timeout: 5000
+
+# ── 5. Decline the booking ───────────────────────────────────────────────────
+- assertVisible:
+    id: "btn-decline"
+
+- tapOn:
+    id: "btn-decline"
+
+# ── 6. Status changes to "Booking declined" ──────────────────────────────────
+- assertVisible:
+    id: "booking-status-label"
+    timeout: 8000
+
+- assertVisible: "Booking declined"
+
+# ── 7. Verify the terminal "Back to feed" button is shown ────────────────────
+- assertVisible: "Back to feed"

@@ -1560,7 +1560,7 @@
         {
           "id": "9.5",
           "name": "E2E: Booking request & status flows",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.1",

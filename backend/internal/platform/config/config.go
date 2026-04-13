@@ -130,6 +130,11 @@ type Config struct {
 	ExpoPushAccessToken    string `env:"EXPO_PUSH_ACCESS_TOKEN" envDefault:""`
 	PickupReminderMinutes  int    `env:"PICKUP_REMINDER_MINUTES" envDefault:"30"`
 	ReturnReminderMinutes  int    `env:"RETURN_REMINDER_MINUTES" envDefault:"30"`
+
+	// E2EMode enables test-only endpoints for Maestro E2E test flows.
+	// Must be false in production. Set E2E_MODE=true when running the backend
+	// against the iOS Simulator for E2E testing.
+	E2EMode bool `env:"E2E_MODE" envDefault:"false"`
 }
 
 // IsProd reports whether the application is running in a production environment.

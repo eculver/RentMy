@@ -143,7 +143,7 @@ function CheckoutContent({ id }: { id: string }) {
   const displayHold = holdEstimate?.holdAmount ?? holdAmount;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-checkout" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -206,6 +206,7 @@ function CheckoutContent({ id }: { id: string }) {
           </Text>
         )}
         <Pressable
+          testID="btn-confirm-booking"
           onPress={handleConfirm}
           disabled={!canConfirm}
           className={`rounded-2xl py-4 items-center ${

@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useStripe } from "@stripe/stripe-react-native";
 import { api } from "../../lib/api";
+
+const IS_E2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
 interface SetupResponse {
   customerId: string;
@@ -21,6 +23,13 @@ export default function PaymentMethodSelector({
 }: PaymentMethodSelectorProps) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isLoading, setIsLoading] = useState(false);
+
+  // E2E bypass: skip Stripe sheet and auto-select a test payment method.
+  useEffect(() => {
+    if (IS_E2E && !selectedPaymentMethodId) {
+      onPaymentMethodSelected("e2e_test_card");
+    }
+  }, [IS_E2E, selectedPaymentMethodId, onPaymentMethodSelected]);
 
   const openPaymentSheet = async () => {
     setIsLoading(true);
@@ -65,7 +74,7 @@ export default function PaymentMethodSelector({
 
   if (selectedPaymentMethodId) {
     return (
-      <View className="gap-y-3">
+      <View className="gap-y-3" testID="payment-method-selected">
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Payment method
         </Text>
@@ -73,14 +82,17 @@ export default function PaymentMethodSelector({
           <View className="flex-row items-center gap-x-3">
             <Ionicons name="card-outline" size={20} color="#374151" />
             <Text className="text-sm font-medium text-gray-800">
-              {selectedPaymentMethodId === "saved_method"
+              {selectedPaymentMethodId === "saved_method" ||
+              selectedPaymentMethodId === "e2e_test_card"
                 ? "Saved payment method"
                 : selectedPaymentMethodId}
             </Text>
           </View>
-          <Pressable onPress={openPaymentSheet}>
-            <Text className="text-sm text-sky-600 font-medium">Change</Text>
-          </Pressable>
+          {!IS_E2E && (
+            <Pressable onPress={openPaymentSheet}>
+              <Text className="text-sm text-sky-600 font-medium">Change</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     );
@@ -92,6 +104,7 @@ export default function PaymentMethodSelector({
         Payment method
       </Text>
       <Pressable
+        testID="btn-add-payment-method"
         onPress={openPaymentSheet}
         disabled={isLoading}
         className="flex-row items-center justify-between border border-dashed border-gray-300 rounded-xl px-4 py-4"

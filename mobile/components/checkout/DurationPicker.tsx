@@ -47,12 +47,14 @@ function StepControl({
   onChange,
   minDate,
   maxDate,
+  testIDPrefix,
 }: {
   label: string;
   date: Date | null;
   onChange: (d: Date) => void;
   minDate?: Date;
   maxDate?: Date;
+  testIDPrefix?: string;
 }) {
   const canDecrease = date != null && (!minDate || date.getTime() - 3600000 >= minDate.getTime());
   const canIncrease = date != null && (!maxDate || date.getTime() + 3600000 <= maxDate.getTime());
@@ -74,18 +76,24 @@ function StepControl({
       <Text className="text-xs text-gray-500 mb-1">{label}</Text>
       <View className="flex-row items-center border border-gray-200 rounded-xl overflow-hidden">
         <Pressable
+          testID={testIDPrefix ? `btn-${testIDPrefix}-decrease` : undefined}
           onPress={() => (date ? step(-1) : initIfNull())}
           disabled={!canDecrease}
           className={`px-3 py-3 ${!canDecrease ? "opacity-30" : ""}`}
         >
           <Ionicons name="remove" size={16} color="#374151" />
         </Pressable>
-        <Pressable onPress={initIfNull} className="flex-1 items-center py-3">
+        <Pressable
+          testID={testIDPrefix ? `lbl-${testIDPrefix}-date` : undefined}
+          onPress={initIfNull}
+          className="flex-1 items-center py-3"
+        >
           <Text className="text-sm font-medium text-gray-800 text-center">
             {formatDateLabel(date)}
           </Text>
         </Pressable>
         <Pressable
+          testID={testIDPrefix ? `btn-${testIDPrefix}-increase` : undefined}
           onPress={() => (date ? step(1) : initIfNull())}
           disabled={!canIncrease}
           className={`px-3 py-3 ${!canIncrease ? "opacity-30" : ""}`}
@@ -135,6 +143,7 @@ export default function DurationPicker({
           date={start}
           onChange={handleStartChange}
           minDate={now}
+          testIDPrefix="start"
         />
         <StepControl
           label="End"
@@ -142,6 +151,7 @@ export default function DurationPicker({
           onChange={handleEndChange}
           minDate={start ?? now}
           maxDate={maxEnd}
+          testIDPrefix="end"
         />
       </View>
       {duration && (

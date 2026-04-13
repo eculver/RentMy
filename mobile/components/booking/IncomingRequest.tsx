@@ -97,6 +97,7 @@ export default function IncomingRequest({
           New rental request
         </Text>
         <View
+          testID="incoming-request-timer"
           className={`flex-row items-center gap-x-1 px-2 py-0.5 rounded-full ${
             remaining > 0 ? "bg-amber-50" : "bg-gray-100"
           }`}
@@ -147,6 +148,7 @@ export default function IncomingRequest({
       {/* Action buttons */}
       <View className="flex-row gap-x-3">
         <Pressable
+          testID="btn-decline"
           onPress={handleDecline}
           disabled={busy}
           className="flex-1 border border-gray-200 rounded-xl py-3 items-center"
@@ -158,6 +160,7 @@ export default function IncomingRequest({
           )}
         </Pressable>
         <Pressable
+          testID="btn-accept"
           onPress={handleAccept}
           disabled={busy}
           className={`flex-1 rounded-xl py-3 items-center ${busy ? "bg-gray-200" : "bg-sky-600"}`}

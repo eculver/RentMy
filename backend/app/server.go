@@ -51,6 +51,7 @@ import (
 	"github.com/giits/rentmy/backend/internal/proximity"
 	"github.com/giits/rentmy/backend/internal/rating"
 	"github.com/giits/rentmy/backend/internal/reputation"
+	"github.com/giits/rentmy/backend/internal/testonly"
 	"github.com/giits/rentmy/backend/internal/user"
 )
 
@@ -459,6 +460,15 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	fraudHandler.Mount(apiV1, authMW)
 	opsHandler.Mount(apiV1, authMW)
 	referralHandler.Mount(apiV1, authMW)
+
+	// Test-only routes: only mounted when E2E_MODE=true.
+	// These endpoints bypass payment processing for Maestro E2E test flows.
+	// They MUST NOT be available in production.
+	if cfg.E2EMode {
+		testOnlyHandler := testonly.New(pool)
+		testOnlyHandler.Mount(apiV1)
+	}
+
 	r.Mount("/api/v1", apiV1)
 
 	// Debug routes (non-production utilities).

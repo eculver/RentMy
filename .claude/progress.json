@@ -1475,7 +1475,7 @@
         {
           "id": "9.0",
           "name": "Maestro setup & test infrastructure",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-90",
@@ -1485,7 +1485,8 @@
             "make test-mobile-e2e-auth"
           ],
           "prdRefs": [],
-          "recommendedModel": "opus"
+          "recommendedModel": "opus",
+          "commitSha": "2fff99c"
         },
         {
           "id": "9.1",

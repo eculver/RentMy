@@ -59,6 +59,10 @@ func (r *stubRepo) GetParties(_ context.Context, transactionID string) (messagin
 	return p, nil
 }
 
+func (r *stubRepo) GetConversations(_ context.Context, _ string) ([]messaging.Conversation, error) {
+	return []messaging.Conversation{}, nil
+}
+
 // stubPusher records Trigger calls.
 type stubPusher struct {
 	triggered []struct{ channel, event string }

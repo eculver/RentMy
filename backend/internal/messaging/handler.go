@@ -3,6 +3,7 @@ package messaging
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -10,9 +11,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// pusherAuthenticator can sign Pusher private channel subscription requests.
+// Implemented by platform/pusher.Client; may be nil when Pusher is unconfigured.
+type pusherAuthenticator interface {
+	AuthenticatePrivateChannel(params []byte) ([]byte, error)
+}
+
 // Handler wires HTTP routes for the messaging domain.
 type Handler struct {
-	svc *Service
+	svc    *Service
+	pusher pusherAuthenticator // nil when Pusher is not configured
 }
 
 // NewHandler creates a Handler backed by svc.
@@ -20,15 +28,39 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// WithPusher attaches a pusherAuthenticator so the /pusher/auth endpoint works.
+func (h *Handler) WithPusher(p pusherAuthenticator) *Handler {
+	h.pusher = p
+	return h
+}
+
 // Mount registers messaging routes on the provided router under the given
-// auth middleware. Routes are nested under /bookings/:id/messages so they
-// sit alongside the booking handler's routes.
+// auth middleware.
 func (h *Handler) Mount(r chi.Router, authMW func(http.Handler) http.Handler) {
 	r.Group(func(r chi.Router) {
 		r.Use(authMW)
+		r.Get("/users/me/conversations", h.getConversations)
 		r.Post("/bookings/{id}/messages", h.sendMessage)
 		r.Get("/bookings/{id}/messages", h.getMessages)
+		r.Post("/pusher/auth", h.pusherAuth)
 	})
+}
+
+// getConversations handles GET /api/v1/users/me/conversations.
+func (h *Handler) getConversations(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	convs, err := h.svc.GetConversations(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not retrieve conversations")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"conversations": convs})
 }
 
 // sendMessage handles POST /api/v1/bookings/:id/messages.
@@ -70,7 +102,8 @@ func (h *Handler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, msg)
+	// Wrap in envelope so the mobile client can destructure { message }.
+	writeJSON(w, http.StatusCreated, map[string]any{"message": msg})
 }
 
 // getMessages handles GET /api/v1/bookings/:id/messages?cursor=<ulid>&limit=50.
@@ -111,6 +144,38 @@ func (h *Handler) getMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// pusherAuth handles POST /api/v1/pusher/auth.
+// The Pusher JS client sends socket_id and channel_name as a form-encoded body;
+// the SDK signs the response with the app secret.
+func (h *Handler) pusherAuth(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	if h.pusher == nil {
+		writeError(w, http.StatusServiceUnavailable, "real-time not configured")
+		return
+	}
+
+	params, err := io.ReadAll(r.Body)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	authResponse, err := h.pusher.AuthenticatePrivateChannel(params)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "channel authentication failed")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(authResponse)
 }
 
 // writeJSON encodes v as JSON and writes it with the given status code.

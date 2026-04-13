@@ -15,6 +15,7 @@ type repo interface {
 	Insert(ctx context.Context, m Message) (Message, error)
 	FindByTransactionID(ctx context.Context, transactionID, cursor string, limit int) ([]Message, string, error)
 	GetParties(ctx context.Context, transactionID string) (Parties, error)
+	GetConversations(ctx context.Context, userID string) ([]Conversation, error)
 }
 
 // pusherClient is the interface the messaging service uses to publish
@@ -108,6 +109,12 @@ func (s *Service) SendMessage(ctx context.Context, in SendMessageInput) (Message
 	}
 
 	return msg, nil
+}
+
+// GetConversations returns all active booking threads for the given user,
+// most-recently-active first. Each entry includes last message and unread count.
+func (s *Service) GetConversations(ctx context.Context, userID string) ([]Conversation, error) {
+	return s.repo.GetConversations(ctx, userID)
 }
 
 // GetMessages returns paginated messages for a transaction in chronological order.

@@ -58,3 +58,10 @@ func (c *Client) TriggerBatch(events []pushersdk.Event) error {
 	}
 	return nil
 }
+
+// AuthenticatePrivateChannel signs a private channel subscription request.
+// params is the raw application/x-www-form-urlencoded request body containing
+// socket_id and channel_name as sent by the Pusher JS client.
+func (c *Client) AuthenticatePrivateChannel(params []byte) ([]byte, error) {
+	return c.client.AuthenticatePrivateChannel(params)
+}

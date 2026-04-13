@@ -19,6 +19,19 @@ type Message struct {
 	CreatedAt     time.Time `json:"createdAt"`
 }
 
+// Conversation is a chat thread between two parties on a booking.
+// It summarises the last message and unread count for the inbox view.
+type Conversation struct {
+	TransactionID  string     `json:"transactionId"`
+	OtherPartyID   string     `json:"otherPartyId"`
+	OtherPartyName string     `json:"otherPartyName"`
+	ListingTitle   string     `json:"listingTitle"`
+	LastMessage    *string    `json:"lastMessage,omitempty"`
+	LastMessageAt  *time.Time `json:"lastMessageAt,omitempty"`
+	UnreadCount    int        `json:"unreadCount"`
+	BookingStatus  string     `json:"bookingStatus"`
+}
+
 // SendMessageInput is the validated input for sending a new message.
 type SendMessageInput struct {
 	TransactionID string

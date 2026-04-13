@@ -58,6 +58,7 @@ import (
 // real-time event delivery. A nil value disables real-time events.
 type PusherClient interface {
 	Trigger(channel, event string, data interface{}) error
+	AuthenticatePrivateChannel(params []byte) ([]byte, error)
 }
 
 // Deps holds all infrastructure clients needed to build the application.
@@ -353,6 +354,9 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	messagingRepo := messaging.NewRepository(pool)
 	messagingSvc := messaging.NewService(messagingRepo, deps.Pusher, notificationSvc)
 	messagingHandler := messaging.NewHandler(messagingSvc)
+	if deps.Pusher != nil {
+		messagingHandler = messagingHandler.WithPusher(deps.Pusher)
+	}
 
 	verificationSvc := verification.NewService(
 		verificationRepo, verificationStripeAdapter, modelRouter, decisionSvc, userSvc, riverClient,

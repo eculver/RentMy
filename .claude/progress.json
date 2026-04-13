@@ -1525,7 +1525,7 @@
         {
           "id": "9.3",
           "name": "E2E: Listing detail & creation",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.0"
@@ -1537,7 +1537,8 @@
           "prdRefs": [
             "rentmy-prd-v8.md#section-5"
           ],
-          "recommendedModel": "opus"
+          "recommendedModel": "opus",
+          "commitSha": "b329ed7"
         },
         {
           "id": "9.4",

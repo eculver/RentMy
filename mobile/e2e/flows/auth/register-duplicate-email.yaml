@@ -6,17 +6,38 @@ env:
   RENTER_EMAIL: bob@test.com
 ---
 - clearState
+- clearKeychain
 
 - launchApp
 
-- assertVisible:
-    id: "screen-login"
+# Expo Dev Client: tap the dev server to load the JS bundle
+- tapOn:
+    text: "http://localhost:8081"
+    retryTapIfNoChange: false
+
+# Dismiss Expo Dev Client welcome overlay
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 15000
+- tapOn: "Continue"
+
+# Close the Expo dev tools panel (tap × button)
+- tapOn:
+    point: "88%, 37%"
+
+# Wait for the login screen to appear
+- extendedWaitUntil:
+    visible:
+      id: "screen-login"
+    timeout: 20000
 
 - tapOn:
     id: "btn-create-account"
 
-- assertVisible:
-    id: "screen-register"
+- extendedWaitUntil:
+    visible:
+      id: "screen-register"
+    timeout: 8000
 
 # Attempt to register with an already-registered email
 - tapOn:
@@ -27,17 +48,23 @@ env:
     id: "input-email"
 - inputText: ${RENTER_EMAIL}
 
+# Password field: eraseText first to clear iOS Strong Password autofill,
+# then type the password. Dismiss keyboard by tapping subtitle text.
 - tapOn:
     id: "input-password"
+- eraseText: 30
 - inputText: "Password123"
+
+- tapOn: "Join RentMy to start renting"
 
 - tapOn:
     id: "btn-register"
 
 # Backend returns 409 → register.tsx sets apiError → error-message appears
-- assertVisible:
-    id: "error-message"
-    timeout: 6000
+- extendedWaitUntil:
+    visible:
+      id: "error-message"
+    timeout: 10000
 
 # Still on register screen (no redirect)
 - assertVisible:

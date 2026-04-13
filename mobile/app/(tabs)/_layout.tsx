@@ -30,6 +30,7 @@ export default function TabLayout() {
         name="(feed)"
         options={{
           title: "Feed",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="home-outline" color={color} size={size} />,
         }}
       />
@@ -37,6 +38,7 @@ export default function TabLayout() {
         name="(search)"
         options={{
           title: "Search",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="search-outline" color={color} size={size} />,
         }}
       />
@@ -44,6 +46,7 @@ export default function TabLayout() {
         name="(map)"
         options={{
           title: "Map",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="map-outline" color={color} size={size} />,
         }}
       />
@@ -51,6 +54,7 @@ export default function TabLayout() {
         name="(rentals)"
         options={{
           title: "Rentals",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="receipt-outline" color={color} size={size} />,
         }}
       />
@@ -58,6 +62,7 @@ export default function TabLayout() {
         name="(messages)"
         options={{
           title: "Messages",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="chatbubble-outline" color={color} size={size} />,
           tabBarBadge: unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : undefined,
         }}
@@ -66,6 +71,7 @@ export default function TabLayout() {
         name="(profile)"
         options={{
           title: "Profile",
+
           tabBarIcon: ({ color, size }) => <TabIcon name="person-outline" color={color} size={size} />,
         }}
       />

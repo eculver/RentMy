@@ -92,7 +92,7 @@ export default function ReturnConfirmationScreen() {
   const hasHoldData = holdAllocation.authorizedCents > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-return-confirmation" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -126,7 +126,7 @@ export default function ReturnConfirmationScreen() {
               color={isCompleted ? "#16a34a" : "#ca8a04"}
             />
           </View>
-          <Text className="text-xl font-bold text-gray-900 text-center">
+          <Text testID="return-status-label" className="text-xl font-bold text-gray-900 text-center">
             {isCompleted ? "Return complete" : "Processing return"}
           </Text>
           <Text className="text-sm text-gray-500 text-center mt-1 px-4 leading-relaxed">
@@ -228,6 +228,7 @@ export default function ReturnConfirmationScreen() {
           {!hasOpenDispute && isCompleted && (
             <>
               <Pressable
+                testID="btn-rate-rental"
                 className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                 onPress={() =>
                   router.push({
@@ -243,6 +244,7 @@ export default function ReturnConfirmationScreen() {
               </Pressable>
 
               <Pressable
+                testID="btn-file-dispute"
                 className="border border-red-200 rounded-2xl py-3 items-center flex-row justify-center gap-x-2"
                 onPress={() =>
                   router.push({
@@ -260,6 +262,7 @@ export default function ReturnConfirmationScreen() {
           )}
 
           <Pressable
+            testID="btn-back-to-rentals"
             className="border border-gray-200 rounded-2xl py-4 items-center"
             onPress={() => router.replace("/(tabs)/(rentals)" as never)}
           >

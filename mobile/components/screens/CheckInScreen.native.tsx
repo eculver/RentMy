@@ -95,7 +95,7 @@ export default function CheckInScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-check-in" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -215,6 +215,7 @@ export default function CheckInScreen() {
           />
 
           <Pressable
+            testID="btn-open-camera"
             className="border border-gray-200 rounded-2xl py-3 items-center flex-row justify-center gap-x-2"
             onPress={() => setShowCamera(true)}
           >
@@ -231,6 +232,7 @@ export default function CheckInScreen() {
       {/* Footer CTA */}
       <View className="px-4 py-4 border-t border-gray-100">
         <Pressable
+          testID="btn-complete-checkin"
           onPress={handleComplete}
           disabled={!proximity.canComplete || completing}
           className={`rounded-2xl py-4 items-center flex-row justify-center gap-x-2 ${

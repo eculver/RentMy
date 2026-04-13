@@ -1580,7 +1580,7 @@
         {
           "id": "9.6",
           "name": "E2E: Handoff flows (check-in, active, check-out)",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.5"

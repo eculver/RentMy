@@ -15,6 +15,10 @@ type Config struct {
 	GPSThresholdMeters float64
 	// PINValidityDuration is how long a generated PIN remains valid.
 	PINValidityDuration time.Duration
+	// E2EMode skips the GPS distance check so any coordinates pass verification.
+	// Must be false in production. Set only when running the backend with E2E_MODE=true
+	// for Maestro E2E test flows.
+	E2EMode bool
 }
 
 // SMSSender is satisfied by TwilioClient and any test stub that can deliver an SMS.
@@ -71,13 +75,22 @@ func (s *Service) VerifyGPS(ctx context.Context, in VerifyGPSInput) (bool, error
 		return false, err
 	}
 
-	lat, lng, err := s.repo.GetListingLocation(ctx, listingID)
-	if err != nil {
-		return false, err
+	var dist float64
+	var withinThreshold bool
+	if s.cfg.E2EMode {
+		// In E2E mode, skip the distance check so any location passes.
+		// The proof record is still created and the PIN is still copied from
+		// the host's record so subsequent PIN verification works correctly.
+		dist = 0
+		withinThreshold = true
+	} else {
+		lat, lng, err := s.repo.GetListingLocation(ctx, listingID)
+		if err != nil {
+			return false, err
+		}
+		dist = Haversine(in.Lat, in.Lng, lat, lng)
+		withinThreshold = IsWithinThreshold(dist, s.cfg.GPSThresholdMeters)
 	}
-
-	dist := Haversine(in.Lat, in.Lng, lat, lng)
-	withinThreshold := IsWithinThreshold(dist, s.cfg.GPSThresholdMeters)
 
 	// Ensure a proof record exists for this (transaction, type, user) triple.
 	proof, err := s.repo.FindByTransactionAndType(ctx, in.TransactionID, in.ProofType, in.UserID)

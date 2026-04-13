@@ -35,14 +35,32 @@ func (h *Handler) Mount(r chi.Router) {
 type createTestBookingRequest struct {
 	// RenterEmail is the email of the renter account. Defaults to bob@test.com.
 	RenterEmail string `json:"renterEmail"`
+	// Status is the desired initial status of the booking.
+	// Accepted values: "REQUESTED" (default), "ACCEPTED", "ACTIVE", "COMPLETED".
+	// For "ACCEPTED": the host's CHECK_IN proximity proof is pre-inserted with
+	// PIN="1234" and verified=true so the renter can immediately enter the PIN.
+	// For "ACTIVE": all CHECK_IN proximity proofs are pre-verified; the host's
+	// CHECK_OUT proof is also pre-verified so only the renter needs to complete
+	// GPS verify during check-out.
+	// For "COMPLETED": all four proximity proofs (CHECK_IN + CHECK_OUT for both
+	// parties) are pre-inserted as verified.
+	Status string `json:"status"`
 }
+
+// E2ECheckInPIN is the hardcoded PIN used for ACCEPTED-state test bookings.
+// The renter inputs this PIN in the Maestro check-in flow.
+const E2ECheckInPIN = "1234"
 
 // createTestBookingResponse is the response body for POST /api/v1/test/booking.
 type createTestBookingResponse struct {
-	TransactionID string `json:"transactionId"`
+	TransactionID string  `json:"transactionId"`
+	// PIN is only populated when Status is "ACCEPTED".
+	PIN           string  `json:"pin,omitempty"`
+	ListingLat    float64 `json:"listingLat"`
+	ListingLng    float64 `json:"listingLng"`
 }
 
-// createTestBooking creates a booking in REQUESTED state, bypassing payment
+// createTestBooking creates a booking in the requested state, bypassing payment
 // processing. Used by Maestro seed flows to set up test fixtures.
 func (h *Handler) createTestBooking(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -54,6 +72,16 @@ func (h *Handler) createTestBooking(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.RenterEmail == "" {
 		req.RenterEmail = "bob@test.com"
+	}
+	if req.Status == "" {
+		req.Status = "REQUESTED"
+	}
+
+	switch req.Status {
+	case "REQUESTED", "ACCEPTED", "ACTIVE", "COMPLETED":
+	default:
+		http.Error(w, "status must be REQUESTED, ACCEPTED, ACTIVE, or COMPLETED", http.StatusBadRequest)
+		return
 	}
 
 	renterID, err := h.getUserIDByEmail(ctx, req.RenterEmail)
@@ -68,6 +96,13 @@ func (h *Handler) createTestBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	listingLat, listingLng, err := h.getListingLocation(ctx, listingID)
+	if err != nil {
+		// Non-fatal: listing location may not be set in all test environments.
+		listingLat = 0
+		listingLng = 0
+	}
+
 	// Schedule the booking for tomorrow noon → +4 hours.
 	now := time.Now().UTC()
 	start := time.Date(now.Year(), now.Month(), now.Day()+1, 12, 0, 0, 0, time.UTC)
@@ -75,6 +110,88 @@ func (h *Handler) createTestBooking(w http.ResponseWriter, r *http.Request) {
 
 	txID := ulid.New()
 
+	switch req.Status {
+	case "REQUESTED":
+		if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "REQUESTED", nil, nil); err != nil {
+			http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+	case "ACCEPTED":
+		if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "ACCEPTED", nil, nil); err != nil {
+			http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Pre-insert host's CHECK_IN proof with a known PIN and verified=true
+		// so the renter can enter the PIN during the E2E check-in flow.
+		if err := h.insertProximityProof(ctx, txID, hostID, "CHECK_IN", E2ECheckInPIN, true); err != nil {
+			http.Error(w, "insert host check-in proof: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+	case "ACTIVE":
+		actualStart := now
+		if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "ACTIVE", &actualStart, nil); err != nil {
+			http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Pre-insert verified CHECK_IN proofs for both parties (handoff already done).
+		if err := h.insertProximityProof(ctx, txID, hostID, "CHECK_IN", "", true); err != nil {
+			http.Error(w, "insert host check-in proof: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := h.insertProximityProof(ctx, txID, renterID, "CHECK_IN", "", true); err != nil {
+			http.Error(w, "insert renter check-in proof: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Pre-insert verified host CHECK_OUT proof so only the renter needs to
+		// complete GPS verify during the E2E check-out flow.
+		if err := h.insertProximityProof(ctx, txID, hostID, "CHECK_OUT", "", true); err != nil {
+			http.Error(w, "insert host check-out proof: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+	case "COMPLETED":
+		actualStart := now.Add(-4 * time.Hour)
+		actualEnd := now.Add(-1 * time.Hour)
+		if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "COMPLETED", &actualStart, &actualEnd); err != nil {
+			http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Pre-insert all four verified proximity proofs (check-in and check-out
+		// for both host and renter).
+		for _, userID := range []string{hostID, renterID} {
+			for _, proofType := range []string{"CHECK_IN", "CHECK_OUT"} {
+				if err := h.insertProximityProof(ctx, txID, userID, proofType, "", true); err != nil {
+					http.Error(w, "insert proximity proof: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
+		}
+	}
+
+	resp := createTestBookingResponse{
+		TransactionID: txID,
+		ListingLat:    listingLat,
+		ListingLng:    listingLng,
+	}
+	if req.Status == "ACCEPTED" {
+		resp.PIN = E2ECheckInPIN
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// insertTransaction inserts a transaction row with the given parameters.
+func (h *Handler) insertTransaction(
+	ctx context.Context,
+	txID, renterID, hostID, listingID string,
+	start, end time.Time,
+	status string,
+	actualStart, actualEnd *time.Time,
+) error {
 	const q = `
 		INSERT INTO transactions (
 			id, renter_id, host_id, listing_id,
@@ -82,26 +199,48 @@ func (h *Handler) createTestBooking(w http.ResponseWriter, r *http.Request) {
 			platform_fee, host_payout, guarantee_contribution,
 			escrow_status, hold_status, hold_allocation,
 			stripe_payment_intent_id, stripe_charge_id,
-			scheduled_start, scheduled_end, status
+			scheduled_start, scheduled_end, status,
+			actual_start, actual_end
 		) VALUES (
 			$1, $2, $3, $4,
 			10.00, 50.00, 100.00, 0.00,
 			2.00, 8.00, 0.20,
 			'HELD', 'HELD', '{}',
 			'pi_e2e_test', '',
-			$5, $6, 'REQUESTED'
+			$5, $6, $7,
+			$8, $9
 		)`
+	_, err := h.pool.Exec(ctx, q,
+		txID, renterID, hostID, listingID, start, end, status,
+		actualStart, actualEnd,
+	)
+	return err
+}
 
-	if _, err := h.pool.Exec(ctx, q,
-		txID, renterID, hostID, listingID, start, end,
-	); err != nil {
-		http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(createTestBookingResponse{TransactionID: txID})
+// insertProximityProof inserts a proximity_proofs row for the given user.
+// When verified=true the record is pre-marked as GPS-verified (dist=0).
+// For ACCEPTED-state bookings, pin is the E2E test PIN ("1234"); otherwise empty.
+func (h *Handler) insertProximityProof(
+	ctx context.Context,
+	transactionID, userID, proofType, pin string,
+	verified bool,
+) error {
+	proofID := ulid.New()
+	expiresAt := time.Now().Add(30 * time.Minute)
+	const q = `
+		INSERT INTO proximity_proofs
+		    (id, transaction_id, user_id, proof_type,
+		     gps_distance, pin, pin_expires_at,
+		     verified, method, device_id, created_at)
+		VALUES ($1, $2, $3, $4,
+		        $5, $6, $7,
+		        $8, 'GPS', '', $9)`
+	_, err := h.pool.Exec(ctx, q,
+		proofID, transactionID, userID, proofType,
+		0.0, pin, expiresAt,
+		verified, time.Now(),
+	)
+	return err
 }
 
 func (h *Handler) getUserIDByEmail(ctx context.Context, email string) (string, error) {
@@ -120,4 +259,14 @@ func (h *Handler) getTestListing(ctx context.Context) (listingID, hostID string,
 		LIMIT 1
 	`).Scan(&listingID, &hostID)
 	return listingID, hostID, err
+}
+
+// getListingLocation returns the lat/lng of a listing, extracted from PostGIS.
+func (h *Handler) getListingLocation(ctx context.Context, listingID string) (lat, lng float64, err error) {
+	err = h.pool.QueryRow(ctx, `
+		SELECT ST_Y(location::geometry), ST_X(location::geometry)
+		FROM listings
+		WHERE id = $1 AND location IS NOT NULL
+	`, listingID).Scan(&lat, &lng)
+	return lat, lng, err
 }

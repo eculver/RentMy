@@ -71,6 +71,7 @@ export default function GPSStatus({
       {/* Verify button */}
       {!verified && (
         <Pressable
+          testID="btn-verify-location"
           onPress={onVerify}
           disabled={verifying || !hasLocation}
           className={`rounded-xl py-3 items-center ${

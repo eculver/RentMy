@@ -1,0 +1,22 @@
+appId: ${APP_ID}
+name: "Helper - Seed an ACCEPTED booking via API"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+---
+# Creates a booking in ACCEPTED state via the test-only backend endpoint.
+# The host's CHECK_IN proximity proof is pre-inserted with PIN="1234" and
+# verified=true so the renter can immediately enter the PIN during check-in.
+#
+# Requires: backend running with E2E_MODE=true
+#
+# After this helper runs:
+#   ${TRANSACTION_ID} — booking ID
+#   ${PIN}            — "1234" (hardcoded E2E check-in PIN)
+
+- runScript: e2e/scripts/seed-booking.js
+  env:
+    API_URL: ${API_URL}
+    RENTER_EMAIL: ${RENTER_EMAIL}
+    STATUS: ACCEPTED

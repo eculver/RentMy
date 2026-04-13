@@ -329,6 +329,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	proximitySvc := proximity.NewService(proximityRepo, smsSender, proximity.Config{
 		GPSThresholdMeters:  cfg.GPSThresholdMeters,
 		PINValidityDuration: time.Duration(cfg.PINValidityMinutes) * time.Minute,
+		E2EMode:             cfg.E2EMode,
 	})
 	proximityHandler := proximity.NewHandler(proximitySvc)
 

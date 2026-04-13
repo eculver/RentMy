@@ -3,6 +3,10 @@
  *
  * Auto-advances focus to the next digit on input and auto-submits when all
  * four digits are filled.
+ *
+ * In E2E mode (EXPO_PUBLIC_E2E_MODE=true) a single text input is rendered
+ * with testID="input-pin-e2e" so Maestro can type the PIN without needing
+ * to interact with four separate digit boxes.
  */
 import { useRef, useState } from "react";
 import {
@@ -13,6 +17,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
+const IS_E2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
 
 interface PINEntryProps {
   verified: boolean;
@@ -31,6 +37,36 @@ export default function PINEntry({
 }: PINEntryProps) {
   const [digits, setDigits] = useState<string[]>(Array(PIN_LENGTH).fill(""));
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  // E2E mode: render a single text input so Maestro can type the full PIN
+  // without interacting with four individual digit boxes.
+  if (IS_E2E) {
+    return (
+      <View className="bg-gray-50 rounded-2xl px-4 py-4 gap-y-3">
+        {verified ? (
+          <Text testID="pin-verified-label" className="text-green-700 font-semibold text-sm text-center">
+            PIN verified
+          </Text>
+        ) : (
+          <TextInput
+            testID="input-pin-e2e"
+            className="border border-gray-300 rounded-xl px-3 py-3 text-center text-xl font-bold text-gray-900 bg-white"
+            keyboardType="number-pad"
+            maxLength={PIN_LENGTH}
+            placeholder="Enter PIN"
+            placeholderTextColor="#9ca3af"
+            editable={!verifying && !verified}
+            onChangeText={(v) => {
+              if (v.length === PIN_LENGTH) onSubmit(v);
+            }}
+          />
+        )}
+        {error && !verified && (
+          <Text className="text-xs text-red-700 text-center">{error}</Text>
+        )}
+      </View>
+    );
+  }
 
   const handleChange = (index: number, value: string) => {
     // Only accept a single digit

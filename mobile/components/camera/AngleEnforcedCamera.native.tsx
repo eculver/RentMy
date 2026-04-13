@@ -48,6 +48,9 @@ export default function AngleEnforcedCamera({
   const [isCapturing, setIsCapturing] = useState(false);
 
   // E2E bypass: skip native camera, provide fixture captures via button press.
+  // "Use Fixture Photo" remains visible until maxPhotos is reached so tests
+  // that require multiple photos (e.g. check-in MIN_PHOTOS=3) can add them all
+  // in a single camera-open session before tapping Continue.
   if (IS_E2E) {
     const fixtureOrientation: Orientation = { roll: 0, pitch: 0, yaw: 0 };
     return (
@@ -55,7 +58,10 @@ export default function AngleEnforcedCamera({
         <Text className="text-white text-base font-medium mb-6 text-center">
           E2E Mode — Camera bypassed
         </Text>
-        {captures.length === 0 && (
+        <Text className="text-white text-sm mb-6 text-center opacity-60">
+          {captures.length}/{maxPhotos} photo{maxPhotos !== 1 ? "s" : ""}
+        </Text>
+        {captures.length < maxPhotos && (
           <Pressable
             testID="btn-e2e-use-fixture"
             onPress={() => onCapture({ path: E2E_FIXTURE_PATH, orientation: fixtureOrientation })}

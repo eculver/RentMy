@@ -5,11 +5,22 @@
  * capture state.
  *
  * ProofType "CHECK_IN" is used at check-in; "CHECK_OUT" is used at check-out.
+ *
+ * In E2E mode (EXPO_PUBLIC_E2E_MODE=true) the hook pre-populates coordinates
+ * with hardcoded test values so the "Verify my location" button is immediately
+ * enabled without waiting for the simulator to acquire GPS.  The real GPS
+ * verify API is still called — the backend E2E bypass accepts any coordinates.
  */
 import { useState, useCallback, useEffect } from "react";
 import * as Location from "expo-location";
 import { api } from "../api";
 import type { CapturedPhoto } from "../../components/camera/AngleEnforcedCamera";
+
+const IS_E2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
+// Hardcoded coordinates used for E2E GPS verify calls.  The backend E2E bypass
+// accepts any coordinates, so the exact values here do not matter.
+const E2E_LAT = 34.0522;
+const E2E_LNG = -118.2437;
 
 export type ProofType = "CHECK_IN" | "CHECK_OUT";
 
@@ -49,8 +60,8 @@ export function useProximity(
   const [gpsVerified, setGpsVerified] = useState(false);
   const [gpsVerifying, setGpsVerifying] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
-  const [currentLat, setCurrentLat] = useState<number | null>(null);
-  const [currentLng, setCurrentLng] = useState<number | null>(null);
+  const [currentLat, setCurrentLat] = useState<number | null>(IS_E2E ? E2E_LAT : null);
+  const [currentLng, setCurrentLng] = useState<number | null>(IS_E2E ? E2E_LNG : null);
 
   const [pinVerified, setPinVerified] = useState(false);
   const [pinVerifying, setPinVerifying] = useState(false);
@@ -59,7 +70,10 @@ export function useProximity(
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
 
   // Continuously track location so the GPS status stays fresh.
+  // In E2E mode, skip real location acquisition — coordinates are hardcoded above.
   useEffect(() => {
+    if (IS_E2E) return;
+
     let sub: Location.LocationSubscription | null = null;
 
     (async () => {

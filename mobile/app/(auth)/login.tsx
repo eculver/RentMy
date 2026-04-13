@@ -94,7 +94,7 @@ export default function LoginScreen() {
             />
 
             {apiError && (
-              <Text className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
+              <Text testID="error-message" className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
             )}
 
             <Button
@@ -109,6 +109,7 @@ export default function LoginScreen() {
             <Button
               title="Create an account"
               variant="ghost"
+              testID="btn-create-account"
               onPress={() => router.push("/register")}
             />
           </View>

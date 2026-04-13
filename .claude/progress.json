@@ -1617,7 +1617,7 @@
         {
           "id": "9.8",
           "name": "E2E: Dispute & rating flows",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.5"
@@ -1630,7 +1630,8 @@
           "prdRefs": [
             "rentmy-prd-v8.md#section-11",
             "rentmy-prd-v8.md#section-13"
-          ]
+          ],
+          "commitSha": "ea0ac4a"
         },
         {
           "id": "9.9",

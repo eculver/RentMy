@@ -15,7 +15,7 @@ export default function MessagesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-messages" className="flex-1 bg-white">
       <ConversationList
         conversations={conversations}
         isLoading={isLoading}

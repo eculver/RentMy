@@ -24,6 +24,7 @@ function ConversationRow({ conversation }: ConversationRowProps) {
 
   return (
     <Pressable
+      testID="conversation-row"
       className="flex-row items-center px-4 py-4 bg-white border-b border-gray-50 active:bg-gray-50"
       onPress={() =>
         router.push({
@@ -130,6 +131,7 @@ export default function ConversationList({
 
   return (
     <FlatList
+      testID="conversation-list"
       data={conversations}
       keyExtractor={(item) => item.transactionId}
       renderItem={({ item }) => <ConversationRow conversation={item} />}

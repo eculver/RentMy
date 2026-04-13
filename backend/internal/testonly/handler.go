@@ -29,6 +29,7 @@ func New(pool *pgxpool.Pool) *Handler {
 // Only call this when E2E_MODE=true.
 func (h *Handler) Mount(r chi.Router) {
 	r.Post("/test/booking", h.createTestBooking)
+	r.Post("/test/conversation", h.createTestConversation)
 }
 
 // createTestBookingRequest is the request body for POST /api/v1/test/booking.
@@ -259,6 +260,110 @@ func (h *Handler) getTestListing(ctx context.Context) (listingID, hostID string,
 		LIMIT 1
 	`).Scan(&listingID, &hostID)
 	return listingID, hostID, err
+}
+
+// createTestConversationRequest is the request body for POST /api/v1/test/conversation.
+type createTestConversationRequest struct {
+	// RenterEmail is the email of the renter. Defaults to bob@test.com.
+	RenterEmail string `json:"renterEmail"`
+}
+
+// createTestConversationResponse is the response for POST /api/v1/test/conversation.
+type createTestConversationResponse struct {
+	TransactionID  string `json:"transactionId"`
+	OtherPartyName string `json:"otherPartyName"`
+	ListingTitle   string `json:"listingTitle"`
+}
+
+// createTestConversation seeds a REQUESTED booking between alice and bob and
+// inserts two pre-seeded messages (one from each party) so that the messaging
+// E2E flows have an existing conversation to view and interact with.
+func (h *Handler) createTestConversation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req createTestConversationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	if req.RenterEmail == "" {
+		req.RenterEmail = "bob@test.com"
+	}
+
+	renterID, err := h.getUserIDByEmail(ctx, req.RenterEmail)
+	if err != nil {
+		http.Error(w, "renter not found: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	listingID, hostID, err := h.getTestListing(ctx)
+	if err != nil {
+		http.Error(w, "no active test listing: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	listingTitle, err := h.getListingTitle(ctx, listingID)
+	if err != nil {
+		listingTitle = "Test Listing"
+	}
+
+	hostName, err := h.getUserName(ctx, hostID)
+	if err != nil {
+		hostName = "Alice"
+	}
+
+	now := time.Now().UTC()
+	start := time.Date(now.Year(), now.Month(), now.Day()+1, 12, 0, 0, 0, time.UTC)
+	end := start.Add(4 * time.Hour)
+	txID := ulid.New()
+
+	if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "REQUESTED", nil, nil); err != nil {
+		http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Seed one message from the host and one from the renter so the conversation
+	// list shows a preview and the thread has visible bubbles from both parties.
+	if err := h.insertMessage(ctx, txID, hostID, "Hi! Let me know if you have any questions about the listing."); err != nil {
+		http.Error(w, "insert host message: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := h.insertMessage(ctx, txID, renterID, "Thanks! Is it available this weekend?"); err != nil {
+		http.Error(w, "insert renter message: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp := createTestConversationResponse{
+		TransactionID:  txID,
+		OtherPartyName: hostName,
+		ListingTitle:   listingTitle,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// insertMessage inserts a single message row for the given transaction.
+func (h *Handler) insertMessage(ctx context.Context, transactionID, senderID, content string) error {
+	msgID := ulid.New()
+	const q = `INSERT INTO messages (id, transaction_id, sender_id, content) VALUES ($1, $2, $3, $4)`
+	_, err := h.pool.Exec(ctx, q, msgID, transactionID, senderID, content)
+	return err
+}
+
+// getListingTitle returns the title of a listing.
+func (h *Handler) getListingTitle(ctx context.Context, listingID string) (string, error) {
+	var title string
+	err := h.pool.QueryRow(ctx, `SELECT title FROM listings WHERE id = $1`, listingID).Scan(&title)
+	return title, err
+}
+
+// getUserName returns the display name of a user.
+func (h *Handler) getUserName(ctx context.Context, userID string) (string, error) {
+	var name string
+	err := h.pool.QueryRow(ctx, `SELECT name FROM users WHERE id = $1`, userID).Scan(&name)
+	return name, err
 }
 
 // getListingLocation returns the lat/lng of a listing, extracted from PostGIS.

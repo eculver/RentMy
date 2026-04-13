@@ -1599,7 +1599,7 @@
         {
           "id": "9.7",
           "name": "E2E: Messaging flows",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.1"

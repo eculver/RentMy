@@ -105,7 +105,7 @@ export default function ConversationScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-conversation" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -130,6 +130,7 @@ export default function ConversationScreen() {
 
         {/* Message list */}
         <FlatList
+          testID="message-list"
           ref={listRef}
           data={messages}
           keyExtractor={(item) => item.id}

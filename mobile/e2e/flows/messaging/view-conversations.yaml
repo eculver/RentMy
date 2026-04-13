@@ -1,0 +1,54 @@
+appId: ${APP_ID}
+name: "Messaging - View conversations list (happy path)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#
+# Flow: seed a conversation via API → login as renter → navigate to Messages tab
+#       → conversation list renders → tap the seeded conversation → thread opens.
+
+# ── 1. Seed a conversation with pre-existing messages ────────────────────────
+- runFlow: e2e/helpers/seed-conversation.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Messages tab ──────────────────────────────────────────────
+- tapOn: "Messages"
+
+- assertVisible:
+    id: "screen-messages"
+    timeout: 5000
+
+# ── 4. Conversation list renders with at least one row ───────────────────────
+- assertVisible:
+    id: "conversation-list"
+    timeout: 5000
+
+- assertVisible:
+    id: "conversation-row"
+    timeout: 5000
+
+# ── 5. Tap the first conversation row → thread opens ─────────────────────────
+- tapOn:
+    id: "conversation-row"
+
+- assertVisible:
+    id: "screen-conversation"
+    timeout: 5000
+
+# ── 6. Message list renders with pre-seeded messages ─────────────────────────
+- assertVisible:
+    id: "message-list"
+    timeout: 5000
+
+# At least one received message bubble (from the host) should be visible.
+- assertVisible:
+    id: "message-bubble-received"
+    timeout: 5000

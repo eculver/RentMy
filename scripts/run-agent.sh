@@ -161,7 +161,7 @@ sys.exit(1)
 "
 }
 
-# Resolve model for a task: CLI override > task.model > phase.model > default
+# Resolve model for a task: CLI override > task.requiredModel > task.model > phase.model > default
 resolve_model() {
   if [[ -n "$MODEL_OVERRIDE" ]]; then
     echo "$MODEL_OVERRIDE"
@@ -188,8 +188,8 @@ for phase in data['phases']:
                         if t['id'] == dep and t['status'] != 'completed':
                             all_deps_met = False
             if all_deps_met or task['status'] == 'in_progress':
-                # Task-level model takes priority over phase-level
-                model = task.get('model', '') or phase_model
+                # requiredModel takes highest priority, then model, then phase
+                model = task.get('requiredModel', '') or task.get('model', '') or phase_model
                 print(model)
                 sys.exit(0)
 

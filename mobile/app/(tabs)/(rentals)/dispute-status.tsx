@@ -224,6 +224,7 @@ function DisputeDetail({ dispute }: { dispute: Dispute }) {
 
       {/* Back button */}
       <Pressable
+        testID="btn-back-to-rentals-dispute"
         className="border border-gray-200 rounded-2xl py-4 items-center"
         onPress={() => router.replace("/(tabs)/(rentals)" as never)}
       >
@@ -264,7 +265,7 @@ export default function DisputeStatusScreen() {
     null;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-dispute-status" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>

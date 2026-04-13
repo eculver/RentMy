@@ -1617,7 +1617,7 @@
         {
           "id": "9.8",
           "name": "E2E: Dispute & rating flows",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [
             "9.5"

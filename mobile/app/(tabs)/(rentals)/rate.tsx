@@ -99,7 +99,7 @@ export default function RateScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-rate" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -129,7 +129,7 @@ export default function RateScreen() {
         </View>
 
         {/* Bubble grid */}
-        <View className="bg-gray-50 rounded-2xl p-4">
+        <View testID="rating-bubbles-container" className="bg-gray-50 rounded-2xl p-4">
           <RatingBubbles
             availableBubbles={availableBubbles}
             selected={selected}
@@ -155,7 +155,7 @@ export default function RateScreen() {
         )}
 
         {isSuccess && (
-          <View className="bg-green-50 rounded-2xl px-4 py-3 flex-row items-center gap-x-2">
+          <View testID="rating-success-message" className="bg-green-50 rounded-2xl px-4 py-3 flex-row items-center gap-x-2">
             <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
             <Text className="text-sm text-green-700 font-medium">
               Rating submitted!
@@ -165,6 +165,7 @@ export default function RateScreen() {
 
         {/* Submit */}
         <Pressable
+          testID="btn-submit-rating"
           className={[
             "rounded-2xl py-4 items-center flex-row justify-center gap-x-2",
             selected.length > 0 && !isPending ? "bg-sky-600" : "bg-sky-300",
@@ -185,6 +186,7 @@ export default function RateScreen() {
         </Pressable>
 
         <Pressable
+          testID="btn-skip-rating"
           className="py-3 items-center"
           onPress={() => router.replace("/(tabs)/(rentals)" as never)}
         >

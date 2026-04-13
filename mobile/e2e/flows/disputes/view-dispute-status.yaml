@@ -1,0 +1,61 @@
+appId: ${APP_ID}
+name: "Disputes - View dispute status for a pre-seeded disputed booking"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running with E2E_MODE=true
+#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#
+# Flow: seed DISPUTED booking → login → Rentals tab → tap DISPUTED row →
+#       dispute-status screen renders → timeline visible → back navigates
+#       to rentals list.
+
+# ── 1. Seed a DISPUTED booking (COMPLETED transaction + PENDING dispute) ──────
+- runFlow: e2e/helpers/seed-dispute.yaml
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: e2e/helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ────────────────────────────────────────────────
+- tapOn: "Rentals"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. DISPUTED booking should appear in the list ─────────────────────────────
+- assertVisible:
+    id: "rental-row"
+    timeout: 5000
+
+- assertVisible: "Disputed"
+
+# ── 5. Tap the DISPUTED rental row → dispute-status screen ───────────────────
+- tapOn:
+    id: "rental-row"
+
+- assertVisible:
+    id: "screen-dispute-status"
+    timeout: 6000
+
+# ── 6. Timeline is visible and at the "Filed" step ───────────────────────────
+- assertVisible:
+    id: "dispute-timeline"
+    timeout: 5000
+
+- assertVisible: "Filed"
+
+# ── 7. Dispute details section is present ────────────────────────────────────
+- assertVisible: "Dispute details"
+
+# ── 8. Navigate back to rentals list ─────────────────────────────────────────
+- tapOn:
+    id: "btn-back-to-rentals-dispute"
+
+- assertVisible:
+    id: "screen-rentals"
+    timeout: 5000

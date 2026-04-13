@@ -29,6 +29,7 @@ export default function RatingBubbles({
         return (
           <Pressable
             key={bubble}
+            testID={`rating-bubble-${bubble}`}
             onPress={readOnly ? undefined : () => onToggle(bubble)}
             disabled={readOnly}
             className={[

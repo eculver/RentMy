@@ -65,7 +65,7 @@ export default function DisputeTimeline({ currentStatus }: DisputeTimelineProps)
   const currentIdx = stepIndex(currentStatus);
 
   return (
-    <View className="bg-gray-50 rounded-2xl overflow-hidden">
+    <View testID="dispute-timeline" className="bg-gray-50 rounded-2xl overflow-hidden">
       <View className="px-4 py-3 border-b border-gray-200">
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Dispute status

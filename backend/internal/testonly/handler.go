@@ -30,6 +30,7 @@ func New(pool *pgxpool.Pool) *Handler {
 func (h *Handler) Mount(r chi.Router) {
 	r.Post("/test/booking", h.createTestBooking)
 	r.Post("/test/conversation", h.createTestConversation)
+	r.Post("/test/dispute", h.createTestDispute)
 }
 
 // createTestBookingRequest is the request body for POST /api/v1/test/booking.
@@ -364,6 +365,89 @@ func (h *Handler) getUserName(ctx context.Context, userID string) (string, error
 	var name string
 	err := h.pool.QueryRow(ctx, `SELECT name FROM users WHERE id = $1`, userID).Scan(&name)
 	return name, err
+}
+
+// createTestDisputeRequest is the request body for POST /api/v1/test/dispute.
+type createTestDisputeRequest struct {
+	// RenterEmail is the email of the renter account. Defaults to bob@test.com.
+	RenterEmail string `json:"renterEmail"`
+}
+
+// createTestDisputeResponse is the response for POST /api/v1/test/dispute.
+type createTestDisputeResponse struct {
+	TransactionID string `json:"transactionId"`
+	DisputeID     string `json:"disputeId"`
+}
+
+// createTestDispute seeds a DISPUTED booking with a PENDING dispute for E2E testing.
+// It creates an ACTIVE-state transaction (actual_start set), inserts a dispute record,
+// then updates the transaction status to DISPUTED so it appears in the Rentals list
+// under the "Disputed" section.
+func (h *Handler) createTestDispute(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req createTestDisputeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	if req.RenterEmail == "" {
+		req.RenterEmail = "bob@test.com"
+	}
+
+	renterID, err := h.getUserIDByEmail(ctx, req.RenterEmail)
+	if err != nil {
+		http.Error(w, "renter not found: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	listingID, hostID, err := h.getTestListing(ctx)
+	if err != nil {
+		http.Error(w, "no active test listing: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	now := time.Now().UTC()
+	start := time.Date(now.Year(), now.Month(), now.Day()-1, 12, 0, 0, 0, time.UTC)
+	end := start.Add(4 * time.Hour)
+	actualStart := start
+	actualEnd := end
+
+	txID := ulid.New()
+
+	// Insert a COMPLETED transaction (rental already happened).
+	if err := h.insertTransaction(ctx, txID, renterID, hostID, listingID, start, end, "COMPLETED", &actualStart, &actualEnd); err != nil {
+		http.Error(w, "insert transaction: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Insert the dispute record.
+	disputeID := ulid.New()
+	const dq = `
+		INSERT INTO disputes (id, transaction_id, reporter_id, reason, description, status)
+		VALUES ($1, $2, $3, $4, $5, 'PENDING')`
+	if _, err := h.pool.Exec(ctx, dq,
+		disputeID, txID, renterID, "DAMAGE",
+		"E2E test dispute: item returned with visible damage to the frame.",
+	); err != nil {
+		http.Error(w, "insert dispute: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Transition the transaction to DISPUTED.
+	const tq = `UPDATE transactions SET status = 'DISPUTED' WHERE id = $1`
+	if _, err := h.pool.Exec(ctx, tq, txID); err != nil {
+		http.Error(w, "update transaction status: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp := createTestDisputeResponse{
+		TransactionID: txID,
+		DisputeID:     disputeID,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 // getListingLocation returns the lat/lng of a listing, extracted from PostGIS.

@@ -77,7 +77,7 @@ export default function DisputeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-dispute" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -113,6 +113,7 @@ export default function DisputeScreen() {
               return (
                 <Pressable
                   key={opt.value}
+                  testID={`dispute-reason-${opt.value}`}
                   className={[
                     "flex-row items-center gap-x-3 p-4 rounded-2xl border",
                     isSelected
@@ -158,6 +159,7 @@ export default function DisputeScreen() {
             Describe the issue
           </Text>
           <TextInput
+            testID="input-dispute-description"
             className="bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-900 border border-gray-200 min-h-[100px]"
             placeholder="Provide details about what happened (minimum 10 characters)…"
             placeholderTextColor="#9ca3af"
@@ -183,6 +185,7 @@ export default function DisputeScreen() {
 
         {/* Submit */}
         <Pressable
+          testID="btn-submit-dispute"
           className={[
             "rounded-2xl py-4 items-center flex-row justify-center gap-x-2",
             canSubmit ? "bg-red-600" : "bg-red-300",

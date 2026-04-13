@@ -16,6 +16,7 @@ RentMy is a mobile-only, hyperlocal P2P rental marketplace. Small AI-native team
 | `/scripts` | Helper/utility scripts (bash or Go) |
 | `/ops` | Internal ops dashboard (Vite + React, Phase 7) |
 | `/migrations` | Database migrations (goose SQL files) |
+| `/docs` | Project documentation (PRD, roadmap, cross-cutting concerns) |
 
 **Current state:** Phases 0-8 complete. Phase 9 (Mobile E2E Test Suite) is next. See `.claude/progress.json` for exact task status.
 
@@ -61,10 +62,10 @@ terraform -chdir=terraform/environments/dev apply plans/dev.tfplan
 
 | Document | Purpose |
 |----------|---------|
-| `rentmy-prd-v8.md` | Complete PRD — data models, business logic, agent specs |
-| `00-index.md` | Roadmap — 7 phases, milestone checkpoints |
+| `docs/rentmy-prd-v8.md` | Complete PRD — data models, business logic, agent specs |
+| `docs/roadmap.md` | Roadmap — 7 phases, milestone checkpoints |
 | `phase-{0-6}-*.md` | Phase-level task breakdowns with exit criteria |
-| `cross-cutting.md` | Testing, observability, error handling, rate limiting |
+| `docs/cross-cutting.md` | Testing, observability, error handling, rate limiting |
 | `.claude/plan/phase-{N}-*.md` | Detailed implementation plans (Phase 0 is the template) |
 | `.claude/plan/cross-cutting-integration.md` | Cross-cutting concerns mapped per phase |
 | `.claude/progress.json` | **Source of truth** for task status |

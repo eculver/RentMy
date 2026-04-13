@@ -24,6 +24,9 @@ export interface RankedListing {
 interface FeedResponse {
   listings: RankedListing[];
   count: number;
+  // B5 fix: server returns the minimum ULID (last in DB order) so that the
+  // cursor aligns with the keyset ORDER BY id DESC, not the re-ranked display order.
+  nextCursor?: string;
 }
 
 export interface SearchFilters {
@@ -61,7 +64,9 @@ export function useFeed(lat: number | null, lng: number | null) {
     initialPageParam: "",
     getNextPageParam: (lastPage) => {
       if (!lastPage.listings || lastPage.listings.length === 0) return undefined;
-      return lastPage.listings[lastPage.listings.length - 1].id;
+      // Use server-provided cursor (min ULID = last in DB order) to avoid gaps
+      // from re-ranking. Fall back to last item ID for older server versions.
+      return lastPage.nextCursor ?? lastPage.listings[lastPage.listings.length - 1].id;
     },
     enabled: lat !== null && lng !== null,
   });
@@ -99,7 +104,7 @@ export function useSearch(
     initialPageParam: "",
     getNextPageParam: (lastPage) => {
       if (!lastPage.listings || lastPage.listings.length === 0) return undefined;
-      return lastPage.listings[lastPage.listings.length - 1].id;
+      return lastPage.nextCursor ?? lastPage.listings[lastPage.listings.length - 1].id;
     },
     enabled: query.length > 0 && lat !== null && lng !== null,
   });

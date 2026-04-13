@@ -1,6 +1,6 @@
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, Pressable } from "react-native";
 import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocation } from "../../lib/hooks/useLocation";
 import { useMapListings, RankedListing, MapBounds } from "../../lib/hooks/useDiscovery";
@@ -20,9 +20,22 @@ function regionToBounds(region: Region): MapBounds {
 }
 
 export default function MapScreen() {
-  const { lat, lng, loading: locationLoading, error: locationError } = useLocation();
+  const { lat, lng, loading: locationLoading, error: locationError, retry } = useLocation();
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [selectedListing, setSelectedListing] = useState<RankedListing | null>(null);
+
+  // B1 fix: initialize bounds from location on mount so the first map load shows markers.
+  // react-native-maps does not fire onRegionChangeComplete for the initial render.
+  useEffect(() => {
+    if (lat !== null && lng !== null && bounds === null) {
+      setBounds(regionToBounds({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: INITIAL_DELTA,
+        longitudeDelta: INITIAL_DELTA,
+      }));
+    }
+  }, [lat, lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data } = useMapListings(bounds);
   const listings: RankedListing[] = data?.listings ?? [];
@@ -58,6 +71,12 @@ export default function MapScreen() {
         <Text className="text-sm text-gray-500 text-center mt-2">
           {locationError ?? "Enable location access to browse the map."}
         </Text>
+        <Pressable
+          onPress={retry}
+          className="mt-6 px-6 py-3 bg-sky-600 rounded-2xl"
+        >
+          <Text className="text-white font-semibold text-sm">Retry</Text>
+        </Pressable>
       </View>
     );
   }

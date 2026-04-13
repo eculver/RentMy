@@ -25,7 +25,10 @@ export default function Referrals() {
 
   const { data: referrals } = useQuery({
     queryKey: ['referrals', 'list'],
-    queryFn: () => api.get('ops/referrals', { searchParams: { limit: '50' } }).json<Referral[]>(),
+    queryFn: () =>
+      api.get('ops/referrals', { searchParams: { limit: '50' } })
+        .json<{ referrals: Referral[] }>()
+        .then(r => r.referrals),
   })
 
   return (

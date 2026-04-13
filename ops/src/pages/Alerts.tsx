@@ -23,14 +23,14 @@ export default function Alerts() {
           ...(severityFilter && { severity: severityFilter }),
           limit: '50',
         },
-      }).json<Alert[]>(),
+      }).json<{ alerts: Alert[] }>().then(r => r.alerts),
     enabled: tab === 'alerts',
     refetchInterval: 30_000,
   })
 
   const { data: rules } = useQuery({
     queryKey: ['alert-rules'],
-    queryFn: () => api.get('ops/alerts/rules').json<AlertRule[]>(),
+    queryFn: () => api.get('ops/alerts/rules').json<{ rules: AlertRule[] }>().then(r => r.rules),
     enabled: tab === 'rules',
   })
 

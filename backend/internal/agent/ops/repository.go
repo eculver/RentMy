@@ -68,7 +68,7 @@ func (r *Repository) GetSnapshotHistory(ctx context.Context, since time.Duration
 	}
 	defer rows.Close()
 
-	var snaps []HealthSnapshot
+	snaps := make([]HealthSnapshot, 0)
 	for rows.Next() {
 		var data []byte
 		if err := rows.Scan(&data); err != nil {
@@ -95,7 +95,7 @@ func (r *Repository) ListAlertRules(ctx context.Context) ([]AlertRule, error) {
 	}
 	defer rows.Close()
 
-	var rules []AlertRule
+	rules := make([]AlertRule, 0)
 	for rows.Next() {
 		var ru AlertRule
 		if err := rows.Scan(
@@ -205,7 +205,7 @@ func (r *Repository) ListAlerts(ctx context.Context, f AlertFilters) ([]Alert, e
 	}
 	defer rows.Close()
 
-	var alerts []Alert
+	alerts := make([]Alert, 0)
 	for rows.Next() {
 		var a Alert
 		if err := rows.Scan(
@@ -232,6 +232,90 @@ func (r *Repository) AcknowledgeAlert(ctx context.Context, alertID, userID strin
 		return ErrAlertNotFound
 	}
 	return nil
+}
+
+// GetAgentMetrics returns 90-day performance statistics per agent type, excluding
+// HUMAN_OVERRIDE and OPS pseudo-agents.
+func (r *Repository) GetAgentMetrics(ctx context.Context) ([]AgentMetrics, error) {
+	const q = `
+		SELECT
+			agent_type,
+			COUNT(*)                                               AS total,
+			COUNT(*) FILTER (WHERE outcome_correct = true)        AS correct,
+			COUNT(*) FILTER (WHERE override_of IS NOT NULL)       AS overrides
+		FROM agent_decisions
+		WHERE created_at >= NOW() - INTERVAL '90 days'
+		  AND agent_type NOT IN ('HUMAN_OVERRIDE', 'OPS')
+		GROUP BY agent_type
+		ORDER BY agent_type`
+
+	rows, err := r.pool.Query(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("ops: get agent metrics: %w", err)
+	}
+	defer rows.Close()
+
+	results := make([]AgentMetrics, 0)
+	for rows.Next() {
+		var agentType string
+		var total, correct, overrides int
+		if err := rows.Scan(&agentType, &total, &correct, &overrides); err != nil {
+			return nil, fmt.Errorf("ops: scan agent metrics: %w", err)
+		}
+
+		var correctnessRate, overrideRate float64
+		if total > 0 {
+			correctnessRate = float64(correct) / float64(total)
+			overrideRate = float64(overrides) / float64(total)
+		}
+
+		spec, ok := agentSpecs[agentType]
+		if !ok {
+			spec = agentMetricSpec{
+				primary: "Correctness Rate", primaryThreshold: 0.85,
+				secondary: "Override Rate", secondaryThreshold: 0.15,
+			}
+		}
+
+		m := AgentMetrics{
+			AgentType:          agentType,
+			CorrectnessRate:    correctnessRate,
+			OverrideRate:       overrideRate,
+			TotalDecisions:     total,
+			PrimaryMetric:      spec.primary,
+			PrimaryValue:       correctnessRate,
+			PrimaryThreshold:   spec.primaryThreshold,
+			PrimaryStatus:      metricStatus(correctnessRate, spec.primaryThreshold, true),
+			SecondaryMetric:    spec.secondary,
+			SecondaryValue:     overrideRate,
+			SecondaryThreshold: spec.secondaryThreshold,
+			SecondaryStatus:    metricStatus(overrideRate, spec.secondaryThreshold, false),
+		}
+		results = append(results, m)
+	}
+	return results, rows.Err()
+}
+
+// metricStatus computes OK/WARNING/CRITICAL for a metric value.
+// higherIsBetter=true means a value >= threshold is OK (e.g. correctness rate).
+// higherIsBetter=false means a value <= threshold is OK (e.g. override rate).
+func metricStatus(value, threshold float64, higherIsBetter bool) string {
+	if higherIsBetter {
+		if value >= threshold {
+			return "OK"
+		}
+		if value >= threshold*0.85 {
+			return "WARNING"
+		}
+		return "CRITICAL"
+	}
+	if value <= threshold {
+		return "OK"
+	}
+	if value <= threshold*1.5 {
+		return "WARNING"
+	}
+	return "CRITICAL"
 }
 
 // GetSnapshotHistoryRaw returns raw JSONB snapshots for rolling average computation.

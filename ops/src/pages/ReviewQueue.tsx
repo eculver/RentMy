@@ -27,7 +27,7 @@ export default function ReviewQueue() {
           ...(action && { action }),
           limit: '50',
         },
-      }).json<FraudFlag[]>(),
+      }).json<{ flags: FraudFlag[] }>().then(r => r.flags),
   })
 
   return (

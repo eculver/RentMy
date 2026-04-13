@@ -17,11 +17,11 @@ interface Props {
 
 export default function CalibrationChart({ buckets, agentType }: Props) {
   const data = buckets.map((b) => ({
-    label: `${(b.bucketMin * 100).toFixed(0)}-${(b.bucketMax * 100).toFixed(0)}%`,
+    label: `${(b.bucketLow * 100).toFixed(0)}-${(b.bucketHigh * 100).toFixed(0)}%`,
     expected: b.expectedAccuracy * 100,
     actual: b.actualAccuracy * 100,
-    count: b.decisionCount,
-    correct: b.correctCount,
+    count: b.totalDecisions,
+    correct: b.correctDecisions,
   }))
 
   return (

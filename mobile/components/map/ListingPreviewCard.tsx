@@ -31,7 +31,7 @@ export default function ListingPreviewCard({
   const drive = driveLabel(listing.driveTimeMin);
 
   return (
-    <View className="absolute bottom-6 left-4 right-4 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex-row">
+    <View testID="map-callout" className="absolute bottom-6 left-4 right-4 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex-row">
       {/* Dismiss button — rendered above the main pressable */}
       <Pressable
         onPress={onDismiss}

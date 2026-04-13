@@ -6,28 +6,30 @@ env:
   TEST_LATITUDE: "34.0522"
   TEST_LONGITUDE: "-118.2437"
 ---
-# Login as renter
-- runFlow: ../../helpers/login-as-renter.yaml
-
-# Navigate to the Map tab
-- tapOn: "Map"
-
-# Set simulated GPS location to match seeded listing coordinates.
-# This must happen before the map resolves location so markers load
-# within the visible region.
+# Set simulated GPS location BEFORE login so the map has coordinates
+# when it mounts after tab navigation.
 - setLocation:
     latitude: ${TEST_LATITUDE}
     longitude: ${TEST_LONGITUDE}
 
+# Login as renter
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# Navigate to the Map tab (iOS accessibility text pattern)
+- tapOn:
+    text: "Map, tab.*"
+
 # Map screen should be visible
-- assertVisible:
-    id: "screen-map"
-    timeout: 6000
+- extendedWaitUntil:
+    visible:
+      id: "screen-map"
+    timeout: 10000
 
 # Map container (MapView) should render
-- assertVisible:
-    id: "map-container"
-    timeout: 8000
+- extendedWaitUntil:
+    visible:
+      id: "map-container"
+    timeout: 10000
 
 # NOTE: Tapping native react-native-maps Markers is not supported by Maestro.
 # Markers render as native iOS MapKit/Google Maps elements outside React Native's

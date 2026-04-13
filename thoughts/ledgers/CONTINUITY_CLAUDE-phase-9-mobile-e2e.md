@@ -52,13 +52,33 @@ Infrastructure additions:
 - testIDs in `checkout.tsx`, `confirmation.tsx`, `booking-status.tsx`,
   `rentals/index.tsx`, `IncomingRequest.tsx`, `DurationPicker.tsx`
 
+### 9.6 — E2E: Handoff Flows
+**Commit:** fb0468c  
+Four flows covering the physical handoff lifecycle:
+
+| Flow | Key action |
+|------|-----------|
+| `check-in.yaml` | GPS verify (backend bypass) + PIN "1234" + 3 photos → ACTIVE |
+| `active-rental.yaml` | Assert countdown + Navigate + Start check-out buttons |
+| `check-out.yaml` | GPS verify + 3 photos → COMPLETED → return-confirmation |
+| `return-confirmation.yaml` | Assert Return complete + rate/dispute/back buttons |
+
+Infrastructure additions:
+- `POST /api/v1/test/booking` now accepts `status` field (REQUESTED/ACCEPTED/ACTIVE/COMPLETED)
+- Proximity proofs are pre-inserted for each state to bypass multi-party requirements
+- Backend E2E GPS bypass: `proximity.Config.E2EMode=true` skips Haversine distance check
+- `PINEntry.tsx`: E2E mode shows single `TextInput testID="input-pin-e2e"` 
+- `useProximity.ts`: E2E mode pre-populates GPS coords + skips `watchPositionAsync`
+- `AngleEnforcedCamera.native.tsx`: E2E fix — "Use Fixture Photo" stays visible for all photos up to `maxPhotos`
+- Rentals list: COMPLETED bookings now navigate to `return-confirmation`
+- Seed helpers: `seed-booking-{accepted,active,completed}.yaml`
+
 ---
 
 ## In-progress / Pending tasks
 
 | Task | Status | Deps |
 |------|--------|------|
-| 9.6 — Handoff flows | pending | 9.5 |
 | 9.7 — Messaging flows | pending | 9.1 |
 | 9.8 — Dispute & rating | pending | 9.5 |
 | 9.9 — Full regression | pending | 9.1–9.8 |

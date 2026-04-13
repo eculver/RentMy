@@ -1599,7 +1599,7 @@
         {
           "id": "9.7",
           "name": "E2E: Messaging flows",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "mobile",
           "dependencies": [
             "9.1"
@@ -1611,7 +1611,8 @@
           "prdRefs": [
             "rentmy-prd-v8.md#section-12"
           ],
-          "recommendedModel": "opus"
+          "recommendedModel": "opus",
+          "commitSha": "d8b0ffc"
         },
         {
           "id": "9.8",

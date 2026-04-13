@@ -89,7 +89,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View testID="screen-feed" className="flex-1 bg-gray-50">
       {isLoading ? (
         <View className="pt-4">
           {[1, 2, 3].map((i) => (
@@ -98,10 +98,11 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
+          testID="feed-list"
           data={listings}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View>
+            <View testID="listing-card">
               <ListingFeedCard
                 listing={item}
                 onPress={() =>
@@ -119,6 +120,7 @@ export default function FeedScreen() {
               />
               {/* Rent Now shortcut — takes user directly to the booking request screen */}
               <Pressable
+                testID="btn-rent-now"
                 className="mx-4 -mt-2 mb-3 bg-sky-600 rounded-xl py-2.5 flex-row items-center justify-center gap-x-1.5"
                 onPress={() =>
                   router.push({

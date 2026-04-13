@@ -1468,12 +1468,14 @@
       "id": 9,
       "name": "Mobile E2E Test Suite",
       "status": "pending",
-      "blockedBy": [8],
+      "blockedBy": [
+        8
+      ],
       "tasks": [
         {
           "id": "9.0",
           "name": "Maestro setup & test infrastructure",
-          "status": "pending",
+          "status": "in_progress",
           "domain": "mobile",
           "dependencies": [],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-90",
@@ -1490,36 +1492,48 @@
           "name": "E2E: Authentication flows",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.0"],
+          "dependencies": [
+            "9.0"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-91",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/auth/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-4"]
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-4"
+          ]
         },
         {
           "id": "9.2",
           "name": "E2E: Discovery flows (feed, search, map)",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.0"],
+          "dependencies": [
+            "9.0"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-92",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/discovery/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-6"]
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-6"
+          ]
         },
         {
           "id": "9.3",
           "name": "E2E: Listing detail & creation",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.0"],
+          "dependencies": [
+            "9.0"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-93",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/listing/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-5"],
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-5"
+          ],
           "recommendedModel": "opus"
         },
         {
@@ -1527,24 +1541,34 @@
           "name": "E2E: Profile & referral flows",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.0"],
+          "dependencies": [
+            "9.0"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-94",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/profile/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-15"]
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-15"
+          ]
         },
         {
           "id": "9.5",
           "name": "E2E: Booking request & status flows",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.1", "9.3"],
+          "dependencies": [
+            "9.1",
+            "9.3"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-95",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/booking/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-7", "rentmy-prd-v8.md#section-8"],
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-7",
+            "rentmy-prd-v8.md#section-8"
+          ],
           "recommendedModel": "opus"
         },
         {
@@ -1552,12 +1576,17 @@
           "name": "E2E: Handoff flows (check-in, active, check-out)",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.5"],
+          "dependencies": [
+            "9.5"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-96",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/handoff/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-9", "rentmy-prd-v8.md#section-10"],
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-9",
+            "rentmy-prd-v8.md#section-10"
+          ],
           "recommendedModel": "opus"
         },
         {
@@ -1565,12 +1594,16 @@
           "name": "E2E: Messaging flows",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.1"],
+          "dependencies": [
+            "9.1"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-97",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/messaging/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-12"],
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-12"
+          ],
           "recommendedModel": "opus"
         },
         {
@@ -1578,20 +1611,34 @@
           "name": "E2E: Dispute & rating flows",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.5"],
+          "dependencies": [
+            "9.5"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-98",
           "verificationCommands": [
             "cd mobile && maestro test e2e/flows/disputes/",
             "cd mobile && maestro test e2e/flows/ratings/"
           ],
-          "prdRefs": ["rentmy-prd-v8.md#section-11", "rentmy-prd-v8.md#section-13"]
+          "prdRefs": [
+            "rentmy-prd-v8.md#section-11",
+            "rentmy-prd-v8.md#section-13"
+          ]
         },
         {
           "id": "9.9",
           "name": "Full regression suite & reliability",
           "status": "pending",
           "domain": "mobile",
-          "dependencies": ["9.1", "9.2", "9.3", "9.4", "9.5", "9.6", "9.7", "9.8"],
+          "dependencies": [
+            "9.1",
+            "9.2",
+            "9.3",
+            "9.4",
+            "9.5",
+            "9.6",
+            "9.7",
+            "9.8"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-99",
           "verificationCommands": [
             "make test-mobile-e2e",
@@ -1605,7 +1652,9 @@
           "name": "CI integration (Maestro Cloud + GitHub Actions)",
           "status": "pending",
           "domain": "infra",
-          "dependencies": ["9.9"],
+          "dependencies": [
+            "9.9"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-910",
           "verificationCommands": [
             "make test-mobile-e2e-cloud"
@@ -1618,7 +1667,9 @@
           "name": "Documentation & handoff",
           "status": "pending",
           "domain": "docs",
-          "dependencies": ["9.10"],
+          "dependencies": [
+            "9.10"
+          ],
           "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-911",
           "verificationCommands": [
             "test -f mobile/e2e/README.md"

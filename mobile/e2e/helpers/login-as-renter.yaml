@@ -1,0 +1,31 @@
+appId: ${APP_ID}
+name: "Helper - Login as renter (bob@test.com)"
+env:
+  APP_ID: com.rentmy.app
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Reusable helper: logs in as the seeded renter account.
+# Call with runFlow before flows that require an authenticated renter.
+
+- clearState
+
+- launchApp
+
+- assertVisible:
+    id: "screen-login"
+
+- tapOn:
+    id: "input-email"
+- inputText: ${RENTER_EMAIL}
+
+- tapOn:
+    id: "input-password"
+- inputText: ${RENTER_PASSWORD}
+
+- tapOn:
+    id: "btn-sign-in"
+
+- assertVisible:
+    id: "screen-feed"
+    timeout: 8000

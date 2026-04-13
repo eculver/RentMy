@@ -51,7 +51,7 @@ export default function LoginScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 items-center justify-center bg-white px-6 py-12">
+        <View testID="screen-login" className="flex-1 items-center justify-center bg-white px-6 py-12">
           <Text className="text-3xl font-bold mb-2">RentMy</Text>
           <Text className="text-gray-500 mb-8">Rent anything nearby, fast</Text>
 
@@ -70,6 +70,7 @@ export default function LoginScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.email?.message}
+                  testID="input-email"
                 />
               )}
             />
@@ -87,18 +88,20 @@ export default function LoginScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.password?.message}
+                  testID="input-password"
                 />
               )}
             />
 
             {apiError && (
-              <Text className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
+              <Text testID="error-message" className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
             )}
 
             <Button
               title="Sign In"
               onPress={handleSubmit(onSubmit)}
               loading={isSubmitting}
+              testID="btn-sign-in"
             />
           </View>
 
@@ -107,6 +110,7 @@ export default function LoginScreen() {
               title="Create an account"
               variant="ghost"
               onPress={() => router.push("/register")}
+              testID="btn-create-account"
             />
           </View>
         </View>

@@ -6,6 +6,7 @@ interface ButtonProps {
   variant?: "primary" | "secondary" | "ghost";
   disabled?: boolean;
   loading?: boolean;
+  testID?: string;
 }
 
 const variantStyles = {
@@ -26,7 +27,7 @@ const variantStyles = {
   },
 };
 
-export default function Button({ title, onPress, variant = "primary", disabled = false, loading = false }: ButtonProps) {
+export default function Button({ title, onPress, variant = "primary", disabled = false, loading = false, testID }: ButtonProps) {
   const styles = variantStyles[variant];
   const isDisabled = disabled || loading;
 
@@ -35,6 +36,7 @@ export default function Button({ title, onPress, variant = "primary", disabled =
       className={isDisabled ? styles.containerDisabled : styles.container}
       onPress={onPress}
       disabled={isDisabled}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator color={variant === "primary" ? "#fff" : "#0284c7"} />

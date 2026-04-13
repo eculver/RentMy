@@ -61,7 +61,7 @@ export default function RegisterScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-1 items-center justify-center bg-white px-6 py-12">
+        <View testID="screen-register" className="flex-1 items-center justify-center bg-white px-6 py-12">
           <Text className="text-2xl font-bold mb-2">Create Account</Text>
           <Text className="text-gray-500 mb-8">Join RentMy to start renting</Text>
 
@@ -79,6 +79,7 @@ export default function RegisterScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.name?.message}
+                  testID="input-name"
                 />
               )}
             />
@@ -97,6 +98,7 @@ export default function RegisterScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.email?.message}
+                  testID="input-email"
                 />
               )}
             />
@@ -114,6 +116,7 @@ export default function RegisterScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.password?.message}
+                  testID="input-password"
                 />
               )}
             />
@@ -130,18 +133,20 @@ export default function RegisterScreen() {
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.referralCode?.message}
+                  testID="input-referral-code"
                 />
               )}
             />
 
             {apiError && (
-              <Text className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
+              <Text testID="error-message" className="text-red-500 text-sm mb-3 text-center">{apiError}</Text>
             )}
 
             <Button
               title="Create Account"
               onPress={handleSubmit(onSubmit)}
               loading={isSubmitting}
+              testID="btn-register"
             />
           </View>
 
@@ -150,6 +155,7 @@ export default function RegisterScreen() {
               title="Already have an account? Sign in"
               variant="ghost"
               onPress={() => router.replace("/(auth)/login")}
+              testID="btn-sign-in"
             />
           </View>
         </View>

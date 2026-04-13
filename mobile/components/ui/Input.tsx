@@ -4,6 +4,7 @@ import { View, Text, TextInput, TextInputProps } from "react-native";
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
+  testID?: string;
 }
 
 export default function Input({ label, error, onFocus, onBlur, ...props }: InputProps) {

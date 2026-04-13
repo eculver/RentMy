@@ -58,7 +58,7 @@ export default function ListingDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white" testID="screen-listing-detail">
         <ActivityIndicator size="large" color="#0284c7" />
       </View>
     );
@@ -66,7 +66,7 @@ export default function ListingDetailScreen() {
 
   if (isError || !listing) {
     return (
-      <View className="flex-1 items-center justify-center bg-white px-8">
+      <View className="flex-1 items-center justify-center bg-white px-8" testID="screen-listing-detail">
         <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
         <Text className="text-lg font-semibold text-gray-800 text-center mt-4">
           Listing not found
@@ -84,18 +84,8 @@ export default function ListingDetailScreen() {
   const price = priceLabel(listing.pricePerHour, listing.pricePerDay);
 
   return (
+    <View className="flex-1 bg-white" testID="screen-listing-detail">
     <SafeAreaView className="flex-1 bg-white">
-      {/* Back button overlaid on the photo */}
-      <View className="absolute top-12 left-4 z-10">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-9 h-9 bg-black/40 rounded-full items-center justify-center"
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={20} color="white" />
-        </Pressable>
-      </View>
-
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -196,5 +186,6 @@ export default function ListingDetailScreen() {
         )}
       </View>
     </SafeAreaView>
+    </View>
   );
 }

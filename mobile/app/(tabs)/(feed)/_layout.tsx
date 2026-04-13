@@ -6,6 +6,15 @@ export default function FeedLayout() {
       screenOptions={{
         headerShown: false,
       }}
-    />
+    >
+      <Stack.Screen
+        name="listing/[id]"
+        options={{
+          headerShown: true,
+          headerTitle: "Listing",
+          headerBackTitle: "Back",
+        }}
+      />
+    </Stack>
   );
 }

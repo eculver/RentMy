@@ -30,6 +30,7 @@ export default function ListingFeedCard({ listing, onPress }: ListingFeedCardPro
 
   return (
     <Pressable
+      testID="listing-card"
       className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm mb-3 mx-4"
       onPress={onPress}
     >

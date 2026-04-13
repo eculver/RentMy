@@ -149,7 +149,7 @@ export default function RegisterScreen() {
             <Button
               title="Already have an account? Sign in"
               variant="ghost"
-              onPress={() => router.back()}
+              onPress={() => router.replace("/(auth)/login")}
             />
           </View>
         </View>

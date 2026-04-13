@@ -1,6 +1,7 @@
 import "../global.css";
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+import { Redirect, Stack } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import StripeProviderWrapper from "../components/providers/StripeProviderWrapper";
@@ -17,7 +18,11 @@ export default function RootLayout() {
   }, [loadToken]);
 
   if (isLoading) {
-    return null;
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (
@@ -25,12 +30,10 @@ export default function RootLayout() {
       <StripeProviderWrapper>
         <QueryClientProvider client={queryClient}>
           <Stack screenOptions={{ headerShown: false }}>
-            {isAuthenticated ? (
-              <Stack.Screen name="(tabs)" />
-            ) : (
-              <Stack.Screen name="(auth)" />
-            )}
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
           </Stack>
+          {!isAuthenticated && <Redirect href="/(auth)/login" />}
         </QueryClientProvider>
       </StripeProviderWrapper>
     </GestureHandlerRootView>

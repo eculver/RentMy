@@ -201,6 +201,34 @@ func TestRegister_ValidationRejectsInvalidEmail(t *testing.T) {
 	assert.Contains(t, err.Error(), "validation")
 }
 
+func TestRegister_ValidationRejectsPasswordWithoutUppercase(t *testing.T) {
+	issuer := makeIssuer()
+	redis := newFakeRedis()
+	svc := user.NewServiceWithInterfaces(nil, issuer, redis)
+
+	_, err := svc.Register(context.Background(), user.RegisterInput{
+		Email:    "test@example.com",
+		Password: "lowercase1",
+		Name:     "Test User",
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "validation")
+}
+
+func TestRegister_ValidationRejectsPasswordWithoutNumber(t *testing.T) {
+	issuer := makeIssuer()
+	redis := newFakeRedis()
+	svc := user.NewServiceWithInterfaces(nil, issuer, redis)
+
+	_, err := svc.Register(context.Background(), user.RegisterInput{
+		Email:    "test@example.com",
+		Password: "NoNumbers!",
+		Name:     "Test User",
+	})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "validation")
+}
+
 func TestLogin_BadCredentials(t *testing.T) {
 	issuer := makeIssuer()
 	redis := newFakeRedis()

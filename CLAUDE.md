@@ -17,7 +17,7 @@ RentMy is a mobile-only, hyperlocal P2P rental marketplace. Small AI-native team
 | `/ops` | Internal ops dashboard (Vite + React, Phase 7) |
 | `/migrations` | Database migrations (goose SQL files) |
 
-**Current state:** Phases 0-4 complete. Phase 5 (Test Infrastructure) runs next, then Phases 6-7. See `.claude/progress.json` for exact task status.
+**Current state:** Phases 0-8 complete. Phase 9 (Mobile E2E Test Suite) is next. See `.claude/progress.json` for exact task status.
 
 ---
 
@@ -36,6 +36,8 @@ cd backend && make build        # Build binary to bin/server
 cd mobile && npm ci             # Install dependencies
 cd mobile && npx expo start     # Start Expo dev server
 cd mobile && npx tsc --noEmit   # TypeScript check
+make test-mobile-e2e            # Run full Maestro E2E suite (requires simulator + backend)
+make test-mobile-e2e-auth       # Run auth E2E flows only
 ```
 
 ### Infrastructure
@@ -70,6 +72,7 @@ terraform -chdir=terraform/environments/dev apply plans/dev.tfplan
 | `thoughts/handoffs/phase-{N}-*/task-*.md` | Per-task completion handoff documents |
 | `thoughts/ledgers/CONTINUITY_CLAUDE-phase-{N}-*.md` | Phase-level progress summaries |
 | `thoughts/commits/*/reasoning.md` | Commit reasoning documents |
+| `mobile/e2e/` | Maestro E2E test flows (YAML), helpers, and fixtures |
 
 ---
 
@@ -287,6 +290,7 @@ A task is complete when:
 5. **New integration tests pass** for API endpoints (backend tasks)
 6. **New component/screen tests pass** (mobile tasks)
 7. **All existing tests still pass** (`go test ./...`, `npx jest`)
+8. **E2E regression suite passes** for any mobile or backend change (`make test-mobile-e2e`) — this is the definitive check that existing user flows still work. If the E2E suite is set up (Phase 9+), this is a BLOCKING requirement.
 
 ---
 

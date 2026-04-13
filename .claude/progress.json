@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-11",
+  "lastUpdated": "2026-04-12",
   "lastSession": {
-    "task": "8.0",
-    "status": "in_progress",
-    "branch": "phase-8-visual-qa"
+    "task": "9.0",
+    "status": "pending",
+    "branch": "task-9.0-maestro-setup"
   },
   "phases": [
     {
@@ -21,7 +21,8 @@
           "dependencies": [],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-01-go-scaffold.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.2",
@@ -33,7 +34,8 @@
           ],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-02-docker-postgres.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.3",
@@ -45,7 +47,8 @@
           ],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-03-05-06-redis-s3-pusher.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.4",
@@ -57,7 +60,8 @@
           ],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-04-river.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.5",
@@ -69,7 +73,8 @@
           ],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-03-05-06-redis-s3-pusher.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.6",
@@ -81,7 +86,8 @@
           ],
           "commitSha": "b950834",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-03-05-06-redis-s3-pusher.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.7",
@@ -91,7 +97,8 @@
           "dependencies": [],
           "commitSha": "7a9dc12",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-07-rn-scaffold.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         },
         {
           "id": "0.8",
@@ -104,7 +111,8 @@
           ],
           "commitSha": "8be57fd",
           "handoff": "thoughts/handoffs/phase-0-foundation/task-08-ci.md",
-          "verificationPassed": true
+          "verificationPassed": true,
+          "prdRefs": []
         }
       ]
     },
@@ -122,7 +130,7 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-1-supply.md#step-11",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a75-6 (system architecture, data models)"
+            "docs/rentmy-prd-v8.md \u00a75-6 (system architecture, data models)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -144,8 +152,8 @@
           ],
           "planRef": ".claude/plan/phase-1-supply.md#step-12",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a76 (media table)",
-            "rentmy-prd-v8.md \u00a711 (photo requirements)"
+            "docs/rentmy-prd-v8.md \u00a76 (media table)",
+            "docs/rentmy-prd-v8.md \u00a711 (photo requirements)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -167,8 +175,8 @@
           ],
           "planRef": ".claude/plan/phase-1-supply.md#step-13",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a76 (listings table)",
-            "rentmy-prd-v8.md \u00a77 (7-day ceiling)"
+            "docs/rentmy-prd-v8.md \u00a76 (listings table)",
+            "docs/rentmy-prd-v8.md \u00a77 (7-day ceiling)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -207,7 +215,7 @@
           ],
           "planRef": ".claude/plan/phase-1-supply.md#step-15",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a711 (angle enforcement, gyroscope)"
+            "docs/rentmy-prd-v8.md \u00a711 (angle enforcement, gyroscope)"
           ],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
@@ -251,8 +259,8 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-2-demand.md#step-21",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a713 (ranking algorithm)",
-            "rentmy-prd-v8.md \u00a76 (listings table, PostGIS)"
+            "docs/rentmy-prd-v8.md \u00a713 (ranking algorithm)",
+            "docs/rentmy-prd-v8.md \u00a76 (listings table, PostGIS)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -271,7 +279,7 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-2-demand.md#step-22",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a77 (tiered holds, guarantee fund, hold allocation)"
+            "docs/rentmy-prd-v8.md \u00a77 (tiered holds, guarantee fund, hold allocation)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -362,7 +370,7 @@
           ],
           "planRef": ".claude/plan/phase-2-demand.md#step-27",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a77 (hold amount display)"
+            "docs/rentmy-prd-v8.md \u00a77 (hold amount display)"
           ],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
@@ -389,9 +397,9 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-3-transaction.md#step-31",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a717 (state machine)",
-            "rentmy-prd-v8.md \u00a718 (cancellation)",
-            "rentmy-prd-v8.md \u00a79 (fraud velocity)"
+            "docs/rentmy-prd-v8.md \u00a717 (state machine)",
+            "docs/rentmy-prd-v8.md \u00a718 (cancellation)",
+            "docs/rentmy-prd-v8.md \u00a79 (fraud velocity)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -412,7 +420,7 @@
           ],
           "planRef": ".claude/plan/phase-3-transaction.md#step-32",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a712 (proximity handoff)"
+            "docs/rentmy-prd-v8.md \u00a712 (proximity handoff)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -431,7 +439,7 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-3-transaction.md#step-33",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a716 (notification types)"
+            "docs/rentmy-prd-v8.md \u00a716 (notification types)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -450,7 +458,7 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-3-transaction.md#step-34",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a76 (messages table)"
+            "docs/rentmy-prd-v8.md \u00a76 (messages table)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -489,7 +497,7 @@
           ],
           "planRef": ".claude/plan/phase-3-transaction.md#step-36",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a711 (angle enforcement at check-in/check-out)"
+            "docs/rentmy-prd-v8.md \u00a711 (angle enforcement at check-in/check-out)"
           ],
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit"
@@ -533,8 +541,8 @@
           "dependencies": [],
           "planRef": ".claude/plan/phase-4-intelligence.md#step-41",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a75 (model router)",
-            "rentmy-prd-v8.md \u00a731 (agent learning)"
+            "docs/rentmy-prd-v8.md \u00a75 (model router)",
+            "docs/rentmy-prd-v8.md \u00a731 (agent learning)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -555,7 +563,7 @@
           ],
           "planRef": ".claude/plan/phase-4-intelligence.md#step-42",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a76 (identity_status)"
+            "docs/rentmy-prd-v8.md \u00a76 (identity_status)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -576,7 +584,7 @@
           ],
           "planRef": ".claude/plan/phase-4-intelligence.md#step-43",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a76 (AI listing fields)"
+            "docs/rentmy-prd-v8.md \u00a76 (AI listing fields)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -597,7 +605,7 @@
           ],
           "planRef": ".claude/plan/phase-4-intelligence.md#step-44",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a78 (dual-score system)"
+            "docs/rentmy-prd-v8.md \u00a78 (dual-score system)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -618,7 +626,7 @@
           ],
           "planRef": ".claude/plan/phase-4-intelligence.md#step-45",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a714 (agreement system)"
+            "docs/rentmy-prd-v8.md \u00a714 (agreement system)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -810,7 +818,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-61",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a711 (photo diff pipeline, two-stage)"
+            "docs/rentmy-prd-v8.md \u00a711 (photo diff pipeline, two-stage)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -833,8 +841,8 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-62",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a720 (escalation gate)",
-            "rentmy-prd-v8.md \u00a77 (hold allocation)"
+            "docs/rentmy-prd-v8.md \u00a720 (escalation gate)",
+            "docs/rentmy-prd-v8.md \u00a77 (hold allocation)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -856,7 +864,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-63",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a719 (late return escalation)"
+            "docs/rentmy-prd-v8.md \u00a719 (late return escalation)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -880,7 +888,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-64",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a715 (rating bubbles)"
+            "docs/rentmy-prd-v8.md \u00a715 (rating bubbles)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -904,7 +912,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-65",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a78 (reputation scoring)"
+            "docs/rentmy-prd-v8.md \u00a78 (reputation scoring)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -925,7 +933,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-66",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
+            "docs/rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -950,7 +958,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-67",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a731 (agent learning framework)"
+            "docs/rentmy-prd-v8.md \u00a731 (agent learning framework)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -992,7 +1000,7 @@
           ],
           "planRef": ".claude/plan/phase-6-returns-disputes-trust.md#step-69",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
+            "docs/rentmy-prd-v8.md \u00a77 (guarantee fund, reserve ratio)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -1047,7 +1055,7 @@
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-71",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a725 (ops metrics, alerts)"
+            "docs/rentmy-prd-v8.md \u00a725 (ops metrics, alerts)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -1069,7 +1077,7 @@
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-72",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a79 (fraud signals, WiFi compound-only)"
+            "docs/rentmy-prd-v8.md \u00a79 (fraud signals, WiFi compound-only)"
           ],
           "verificationCommands": [
             "cd backend && go vet ./...",
@@ -1091,8 +1099,8 @@
           ],
           "planRef": ".claude/plan/phase-7-operations.md#step-73",
           "prdRefs": [
-            "rentmy-prd-v8.md \u00a725 (dashboard metrics)",
-            "rentmy-prd-v8.md \u00a731 (agent learning dashboard)"
+            "docs/rentmy-prd-v8.md \u00a725 (dashboard metrics)",
+            "docs/rentmy-prd-v8.md \u00a731 (agent learning dashboard)"
           ],
           "verificationCommands": [
             "cd ops && npx tsc --noEmit",
@@ -1127,218 +1135,288 @@
     {
       "id": 8,
       "name": "Visual QA, Bug Fixing & v0 Stabilization",
-      "status": "pending",
-      "blockedBy": [7],
+      "status": "completed",
+      "blockedBy": [
+        7
+      ],
       "tasks": [
         {
           "id": "8.0",
           "name": "Bootstrap: Full Stack + iOS Simulator + Seed Data",
-          "status": "in_progress",
+          "status": "completed",
           "domain": "fullstack",
           "dependencies": [],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-80",
           "verificationCommands": [
             "curl -sf http://localhost:8080/health",
             "xcrun simctl io booted screenshot /tmp/rentmy-bootstrap.png"
-          ]
+          ],
+          "commitSha": "2ff5b07",
+          "prdRefs": []
         },
         {
           "id": "8.1",
           "name": "Audit: Auth Flow (Login + Register)",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-81",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "prdRefs": []
         },
         {
           "id": "8.2",
           "name": "Fix: Auth Flow Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.1"],
+          "dependencies": [
+            "8.1"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-82",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "a0a5626",
+          "prdRefs": []
         },
         {
           "id": "8.3",
           "name": "Audit: Feed + Listing Detail + Checkout",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-83",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "prdRefs": []
         },
         {
           "id": "8.4",
           "name": "Fix: Feed + Listing Detail + Checkout Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.3"],
+          "dependencies": [
+            "8.3"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-84",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "9be90b4",
+          "prdRefs": []
         },
         {
           "id": "8.5",
           "name": "Audit: Search + Map",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-85",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "pending",
+          "prdRefs": []
         },
         {
           "id": "8.6",
           "name": "Fix: Search + Map Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.5"],
+          "dependencies": [
+            "8.5"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-86",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "5cbb9a8",
+          "prdRefs": []
         },
         {
           "id": "8.7",
           "name": "Audit: Booking + Handoff",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-87",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "3bd3319",
+          "prdRefs": []
         },
         {
           "id": "8.8",
           "name": "Fix: Booking + Handoff Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.7"],
+          "dependencies": [
+            "8.7"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-88",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "c33a4ec",
+          "prdRefs": []
         },
         {
           "id": "8.9",
           "name": "Audit: Messaging",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-89",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "a0a94fc",
+          "prdRefs": []
         },
         {
           "id": "8.10",
           "name": "Fix: Messaging Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.9"],
+          "dependencies": [
+            "8.9"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-810",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "6c07d37",
+          "prdRefs": []
         },
         {
           "id": "8.11",
           "name": "Audit: Rentals + Disputes + Ratings",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-811",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "e347591",
+          "prdRefs": []
         },
         {
           "id": "8.12",
           "name": "Fix: Rentals + Disputes + Ratings Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.11"],
+          "dependencies": [
+            "8.11"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-812",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "5c3b4eb",
+          "prdRefs": []
         },
         {
           "id": "8.13",
           "name": "Audit: Profile + Referrals + KYC",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-813",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "32bd8fb",
+          "prdRefs": []
         },
         {
           "id": "8.14",
           "name": "Fix: Profile + Referrals + KYC Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "mobile",
-          "dependencies": ["8.13"],
+          "dependencies": [
+            "8.13"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-814",
           "verificationCommands": [
             "cd mobile && npx tsc --noEmit",
             "cd mobile && npx jest",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "8924686",
+          "prdRefs": []
         },
         {
           "id": "8.15",
           "name": "Audit: Ops Dashboard + Backend Ops Tools",
-          "status": "pending",
+          "status": "completed",
           "domain": "fullstack",
-          "dependencies": ["8.0"],
+          "dependencies": [
+            "8.0"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-815",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "commitSha": "f85b033",
+          "prdRefs": []
         },
         {
           "id": "8.16",
           "name": "Fix: Ops Dashboard + Backend Ops Tools Bugs",
-          "status": "pending",
+          "status": "completed",
           "domain": "fullstack",
-          "dependencies": ["8.15"],
+          "dependencies": [
+            "8.15"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-816",
           "verificationCommands": [
             "cd ops && npx tsc --noEmit",
             "cd ops && npx vite build",
             "cd backend && go vet ./...",
             "cd backend && go build -o /dev/null ./cmd/server"
-          ]
+          ],
+          "commitSha": "2d4491d",
+          "prdRefs": []
         },
         {
           "id": "8.17",
           "name": "Documentation Cleanup & Consolidation",
-          "status": "pending",
+          "status": "completed",
           "domain": "docs",
           "dependencies": [],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-817",
-          "verificationCommands": []
+          "verificationCommands": [],
+          "prdRefs": [],
+          "commitSha": "36b5a9e",
+          "handoff": "thoughts/handoffs/phase-8-visual-qa/task-8.17-doc-consolidation.md",
+          "verificationPassed": true
         },
         {
           "id": "8.18",
           "name": "Compilation & Test Suite Health Check",
-          "status": "pending",
+          "status": "completed",
           "domain": "fullstack",
           "dependencies": [],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-818",
@@ -1351,14 +1429,27 @@
             "cd mobile && npx jest --ci",
             "cd ops && npx tsc --noEmit",
             "cd ops && npx vite build"
-          ]
+          ],
+          "prdRefs": [],
+          "commitSha": "6f3d7dc3a09e2cf17c3b1c20f04bbefb49fa42df"
         },
         {
           "id": "8.19",
           "name": "Final Verification Pass",
-          "status": "pending",
+          "status": "completed",
           "domain": "fullstack",
-          "dependencies": ["8.2", "8.4", "8.6", "8.8", "8.10", "8.12", "8.14", "8.16", "8.17", "8.18"],
+          "dependencies": [
+            "8.2",
+            "8.4",
+            "8.6",
+            "8.8",
+            "8.10",
+            "8.12",
+            "8.14",
+            "8.16",
+            "8.17",
+            "8.18"
+          ],
           "planRef": ".claude/plan/phase-8-visual-qa.md#step-819",
           "verificationCommands": [
             "cd backend && go build -o /dev/null ./cmd/server",
@@ -1368,7 +1459,171 @@
             "cd mobile && npx jest --ci",
             "cd ops && npx tsc --noEmit",
             "cd ops && npx vite build"
-          ]
+          ],
+          "prdRefs": []
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Mobile E2E Test Suite",
+      "status": "pending",
+      "blockedBy": [8],
+      "tasks": [
+        {
+          "id": "9.0",
+          "name": "Maestro setup & test infrastructure",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": [],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-90",
+          "verificationCommands": [
+            "maestro --version",
+            "cd mobile && maestro test e2e/flows/auth/login.yaml",
+            "make test-mobile-e2e-auth"
+          ],
+          "prdRefs": [],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.1",
+          "name": "E2E: Authentication flows",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.0"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-91",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/auth/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-4"]
+        },
+        {
+          "id": "9.2",
+          "name": "E2E: Discovery flows (feed, search, map)",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.0"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-92",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/discovery/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-6"]
+        },
+        {
+          "id": "9.3",
+          "name": "E2E: Listing detail & creation",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.0"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-93",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/listing/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-5"],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.4",
+          "name": "E2E: Profile & referral flows",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.0"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-94",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/profile/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-15"]
+        },
+        {
+          "id": "9.5",
+          "name": "E2E: Booking request & status flows",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.1", "9.3"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-95",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/booking/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-7", "rentmy-prd-v8.md#section-8"],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.6",
+          "name": "E2E: Handoff flows (check-in, active, check-out)",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.5"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-96",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/handoff/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-9", "rentmy-prd-v8.md#section-10"],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.7",
+          "name": "E2E: Messaging flows",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.1"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-97",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/messaging/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-12"],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.8",
+          "name": "E2E: Dispute & rating flows",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.5"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-98",
+          "verificationCommands": [
+            "cd mobile && maestro test e2e/flows/disputes/",
+            "cd mobile && maestro test e2e/flows/ratings/"
+          ],
+          "prdRefs": ["rentmy-prd-v8.md#section-11", "rentmy-prd-v8.md#section-13"]
+        },
+        {
+          "id": "9.9",
+          "name": "Full regression suite & reliability",
+          "status": "pending",
+          "domain": "mobile",
+          "dependencies": ["9.1", "9.2", "9.3", "9.4", "9.5", "9.6", "9.7", "9.8"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-99",
+          "verificationCommands": [
+            "make test-mobile-e2e",
+            "make test-mobile-e2e",
+            "make test-mobile-e2e"
+          ],
+          "prdRefs": []
+        },
+        {
+          "id": "9.10",
+          "name": "CI integration (Maestro Cloud + GitHub Actions)",
+          "status": "pending",
+          "domain": "infra",
+          "dependencies": ["9.9"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-910",
+          "verificationCommands": [
+            "make test-mobile-e2e-cloud"
+          ],
+          "prdRefs": [],
+          "recommendedModel": "opus"
+        },
+        {
+          "id": "9.11",
+          "name": "Documentation & handoff",
+          "status": "pending",
+          "domain": "docs",
+          "dependencies": ["9.10"],
+          "planRef": ".claude/plan/phase-9-mobile-e2e.md#step-911",
+          "verificationCommands": [
+            "test -f mobile/e2e/README.md"
+          ],
+          "prdRefs": []
         }
       ]
     }

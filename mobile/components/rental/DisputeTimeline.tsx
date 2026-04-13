@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { DisputeStatus } from "../../lib/hooks/useDispute";
 
 interface TimelineStep {
-  status: DisputeStatus;
+  key: string;
   label: string;
   description: string;
   icon: string;
@@ -11,41 +11,46 @@ interface TimelineStep {
 
 const TIMELINE_STEPS: TimelineStep[] = [
   {
-    status: "PENDING",
+    key: "filed",
     label: "Filed",
     description: "Dispute submitted",
     icon: "flag-outline",
   },
   {
-    status: "EVIDENCE_GATHERING",
+    key: "evidence",
     label: "Evidence gathered",
     description: "Photos and transaction data collected",
     icon: "images-outline",
   },
   {
-    status: "UNDER_REVIEW",
+    key: "review",
     label: "Under review",
     description: "Agent or human reviewer assessing",
     icon: "eye-outline",
   },
   {
-    status: "RESOLVED",
+    key: "resolved",
     label: "Resolved",
     description: "Decision issued",
     icon: "checkmark-circle-outline",
   },
 ];
 
-const STATUS_ORDER: DisputeStatus[] = [
-  "PENDING",
-  "EVIDENCE_GATHERING",
-  "UNDER_REVIEW",
-  "RESOLVED",
-];
+// Maps each backend status to a timeline step index (0–3).
+// Multiple backend statuses may map to the same visual step.
+const STATUS_STEP: Record<DisputeStatus, number> = {
+  PENDING: 0,
+  GATHERING: 1,
+  ANALYZING: 1,
+  HUMAN_REVIEW: 2,
+  INCONCLUSIVE: 2,  // Waiting for user re-upload — still in "review" stage
+  RESOLVED: 3,
+  AUTO_RESOLVED: 3,
+  AUDIT_QUEUED: 3,  // Agent resolved; async human audit queued — decision is made
+};
 
 function stepIndex(status: DisputeStatus): number {
-  const idx = STATUS_ORDER.indexOf(status);
-  return idx === -1 ? STATUS_ORDER.length - 1 : idx;
+  return STATUS_STEP[status] ?? TIMELINE_STEPS.length - 1;
 }
 
 interface DisputeTimelineProps {
@@ -54,6 +59,7 @@ interface DisputeTimelineProps {
 
 /**
  * Vertical timeline showing dispute progression from filing to resolution.
+ * Maps the 8 backend status values onto 4 visual steps.
  */
 export default function DisputeTimeline({ currentStatus }: DisputeTimelineProps) {
   const currentIdx = stepIndex(currentStatus);
@@ -80,7 +86,7 @@ export default function DisputeTimeline({ currentStatus }: DisputeTimelineProps)
           const labelColor = isFuture ? "#9ca3af" : "#111827";
 
           return (
-            <View key={step.status} className="flex-row gap-x-3">
+            <View key={step.key} className="flex-row gap-x-3">
               {/* Dot + connector column */}
               <View className="items-center" style={{ width: 20 }}>
                 <View

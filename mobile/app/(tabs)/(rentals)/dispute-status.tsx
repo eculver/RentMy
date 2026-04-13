@@ -12,7 +12,6 @@ import {
   Pressable,
   ActivityIndicator,
   SafeAreaView,
-  Alert,
   RefreshControl,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -20,9 +19,13 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   useTransactionDisputes,
   useDispute,
+  CLOSED_STATUSES,
   type Dispute,
 } from "../../../lib/hooks/useDispute";
 import DisputeTimeline from "../../../components/rental/DisputeTimeline";
+import PhotoDiffResult, {
+  type DamageClassification,
+} from "../../../components/rental/PhotoDiffResult";
 
 type Params = {
   transactionId: string;
@@ -59,17 +62,37 @@ const ESCALATION_LABELS: Record<string, string> = {
 function DisputeDetail({ dispute }: { dispute: Dispute }) {
   const router = useRouter();
 
-  const isInconclusive = dispute.agentDecision === "INCONCLUSIVE";
-  const isResolved =
-    dispute.status === "RESOLVED" || dispute.status === "CLOSED";
+  const isInconclusive = dispute.status === "INCONCLUSIVE";
+  const isResolved = CLOSED_STATUSES.includes(dispute.status);
 
   const handleReprompt = () => {
-    Alert.alert(
-      "Upload additional photos",
-      "Please take new photos of the item and submit them to support the dispute review.",
-      [{ text: "OK" }],
-    );
+    // Navigate to check-out screen so the user can take new photos.
+    // The check-out camera is the best available re-upload surface until
+    // a dedicated evidence re-upload flow is built.
+    router.push({
+      pathname: "/(tabs)/(feed)/check-out" as never,
+      params: { transactionId: dispute.transactionId },
+    });
   };
+
+  // Build photo diff props from the evidence package if available.
+  const photoDiffClassification =
+    dispute.evidence?.photoDiffResult as DamageClassification | undefined;
+  const photoDiffConfidence = dispute.evidence?.photoDiffConfidence ?? 0;
+  const checkInMedia = dispute.evidence?.checkInMedia ?? [];
+  const checkOutMedia = dispute.evidence?.checkOutMedia ?? [];
+  const photoPairs = checkInMedia
+    .map((checkIn, i) => {
+      const checkOut = checkOutMedia[i];
+      if (!checkOut) return null;
+      return {
+        checkInUrl: checkIn.url,
+        checkOutUrl: checkOut.url,
+        classification: photoDiffClassification ?? ("INCONCLUSIVE" as DamageClassification),
+        confidence: photoDiffConfidence,
+      };
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
 
   return (
     <View className="gap-y-4">
@@ -86,7 +109,7 @@ function DisputeDetail({ dispute }: { dispute: Dispute }) {
                 Additional photos requested
               </Text>
               <Text className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                The photo comparison was inconclusive. Please upload new photos
+                The photo comparison was inconclusive. Please take new photos
                 of the item to help resolve the dispute.
                 {dispute.slaDeadline && (
                   <Text className="font-semibold">
@@ -105,6 +128,15 @@ function DisputeDetail({ dispute }: { dispute: Dispute }) {
             </Text>
           </Pressable>
         </View>
+      )}
+
+      {/* Photo comparison (shown when evidence is available) */}
+      {photoDiffClassification && (
+        <PhotoDiffResult
+          pairs={photoPairs}
+          overallClassification={photoDiffClassification}
+          overallConfidence={photoDiffConfidence}
+        />
       )}
 
       {/* Dispute details */}
@@ -161,14 +193,6 @@ function DisputeDetail({ dispute }: { dispute: Dispute }) {
               <Text className="text-sm text-gray-600">Reviewed by</Text>
               <Text className="text-sm font-medium text-gray-900">
                 {ESCALATION_LABELS[dispute.escalationRoute] ?? dispute.escalationRoute}
-              </Text>
-            </View>
-          )}
-          {dispute.agentDecision && (
-            <View className="px-4 py-3 border-b border-gray-100">
-              <Text className="text-sm text-gray-600 mb-0.5">Outcome</Text>
-              <Text className="text-sm font-medium text-gray-900">
-                {dispute.agentDecision}
               </Text>
             </View>
           )}
@@ -234,7 +258,7 @@ export default function DisputeStatusScreen() {
   const dispute: Dispute | null =
     singleDispute ??
     (allDisputes ?? []).find(
-      (d) => d.status !== "RESOLVED" && d.status !== "CLOSED",
+      (d) => !CLOSED_STATUSES.includes(d.status),
     ) ??
     (allDisputes ?? [])[0] ??
     null;

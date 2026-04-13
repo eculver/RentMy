@@ -42,22 +42,22 @@ const (
 
 // Dispute is the domain representation of a rental dispute.
 type Dispute struct {
-	ID              string          `json:"id"`
-	TransactionID   string          `json:"transactionId"`
-	ReporterID      string          `json:"reporterId"`
-	Reason          string          `json:"reason"`
-	Description     string          `json:"description"`
-	Status          Status          `json:"status"`
-	Route           EscalationRoute `json:"route,omitempty"`
-	ChargeAmount    int64           `json:"chargeAmount,omitempty"` // cents
-	Confidence      float64         `json:"confidence,omitempty"`
-	AgentDecisionID *string         `json:"agentDecisionId,omitempty"`
-	ReviewerID      *string         `json:"reviewerId,omitempty"`
-	ReviewerNotes   *string         `json:"reviewerNotes,omitempty"`
-	SLADeadline     *time.Time      `json:"slaDeadline,omitempty"`
-	Evidence        json.RawMessage `json:"evidence,omitempty"`
-	CreatedAt       time.Time       `json:"createdAt"`
-	UpdatedAt       time.Time       `json:"updatedAt"`
+	ID               string          `json:"id"`
+	TransactionID    string          `json:"transactionId"`
+	ReporterID       string          `json:"reporterId"`
+	Reason           string          `json:"reason"`
+	Description      string          `json:"description"`
+	Status           Status          `json:"status"`
+	Route            EscalationRoute `json:"escalationRoute,omitempty"`
+	ChargeAmount     int64           `json:"damageChargeCents,omitempty"` // cents
+	Confidence       float64         `json:"agentConfidence,omitempty"`
+	AgentDecisionID  *string         `json:"agentDecisionId,omitempty"`
+	ReviewerID       *string         `json:"resolvedBy,omitempty"`
+	ReviewerNotes    *string         `json:"reviewerNotes,omitempty"`
+	SLADeadline      *time.Time      `json:"slaDeadline,omitempty"`
+	Evidence         json.RawMessage `json:"evidence,omitempty"`
+	CreatedAt        time.Time       `json:"createdAt"`
+	UpdatedAt        time.Time       `json:"updatedAt"`
 }
 
 // FileDisputeInput is the input for creating a new dispute.

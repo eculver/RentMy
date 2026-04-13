@@ -109,8 +109,8 @@ describe('PhotoDiffResult', () => {
 describe('DisputeTimeline', () => {
   const statuses: DisputeStatus[] = [
     'PENDING',
-    'EVIDENCE_GATHERING',
-    'UNDER_REVIEW',
+    'GATHERING',
+    'HUMAN_REVIEW',
     'RESOLVED',
   ];
 
@@ -129,7 +129,7 @@ describe('DisputeTimeline', () => {
   });
 
   it('marks the current status as active', () => {
-    render(<DisputeTimeline currentStatus="UNDER_REVIEW" />);
+    render(<DisputeTimeline currentStatus="HUMAN_REVIEW" />);
     expect(screen.getByText(/← current/)).toBeTruthy();
   });
 });

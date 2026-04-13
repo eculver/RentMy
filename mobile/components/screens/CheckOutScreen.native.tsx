@@ -53,7 +53,7 @@ export default function CheckOutScreen() {
         json: { mediaIds: [] }, // photo upload via MediaService in a future task
       });
       router.replace({
-        pathname: "/(tabs)/(feed)/booking-status" as never,
+        pathname: "/(tabs)/(rentals)/return-confirmation" as never,
         params: { transactionId },
       });
     } catch {

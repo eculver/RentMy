@@ -1,12 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 
+// Matches backend dispute.Status constants exactly.
 export type DisputeStatus =
   | "PENDING"
-  | "EVIDENCE_GATHERING"
-  | "UNDER_REVIEW"
+  | "GATHERING"
+  | "ANALYZING"
+  | "AUTO_RESOLVED"
+  | "AUDIT_QUEUED"
+  | "HUMAN_REVIEW"
   | "RESOLVED"
-  | "CLOSED";
+  | "INCONCLUSIVE";
+
+// Terminal statuses — no further agent/human processing will happen automatically.
+export const TERMINAL_STATUSES: DisputeStatus[] = [
+  "RESOLVED",
+  "AUTO_RESOLVED",
+  "AUDIT_QUEUED",
+  "INCONCLUSIVE",
+];
+
+// Statuses where the dispute is effectively closed (decision made).
+export const CLOSED_STATUSES: DisputeStatus[] = [
+  "RESOLVED",
+  "AUTO_RESOLVED",
+  "AUDIT_QUEUED",
+];
 
 export type EscalationRoute =
   | "AUTO_RESOLVE"
@@ -18,20 +37,31 @@ export type DisputeReason =
   | "MISSING_ITEM"
   | "OTHER";
 
+// Matches the EvidencePackage shape returned by the backend.
+export interface DisputeEvidence {
+  photoDiffResult?: "NO_DAMAGE" | "MINOR_DAMAGE" | "MAJOR_DAMAGE" | "INCONCLUSIVE";
+  photoDiffConfidence?: number;
+  checkInMedia?: Array<{ id: string; url: string }>;
+  checkOutMedia?: Array<{ id: string; url: string }>;
+  [key: string]: unknown;
+}
+
 export interface Dispute {
   id: string;
   transactionId: string;
   reporterId: string;
   reason: DisputeReason;
   description: string;
-  evidenceRefs: string[];
   status: DisputeStatus;
+  // Backend JSON tags after BUG-3 fix:
   escalationRoute: EscalationRoute | null;
-  agentDecision: string | null;
+  agentDecisionId: string | null;
   agentConfidence: number | null;
   damageChargeCents: number | null;
   resolvedBy: string | null;
+  reviewerNotes: string | null;
   slaDeadline: string | null;
+  evidence: DisputeEvidence | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,7 +85,7 @@ export function useTransactionDisputes(transactionId: string | null) {
       const disputes = query.state.data;
       if (!disputes) return false;
       const hasOpenDispute = disputes.some(
-        (d) => d.status !== "RESOLVED" && d.status !== "CLOSED",
+        (d) => !TERMINAL_STATUSES.includes(d.status),
       );
       return hasOpenDispute ? 15_000 : false;
     },
@@ -72,9 +102,7 @@ export function useDispute(disputeId: string | null) {
     refetchInterval: (query) => {
       const dispute = query.state.data;
       if (!dispute) return false;
-      return dispute.status !== "RESOLVED" && dispute.status !== "CLOSED"
-        ? 15_000
-        : false;
+      return TERMINAL_STATUSES.includes(dispute.status) ? false : 15_000;
     },
   });
 }

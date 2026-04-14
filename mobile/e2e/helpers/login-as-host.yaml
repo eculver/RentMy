@@ -8,24 +8,56 @@ env:
 # Reusable helper: logs in as the seeded host account.
 # Call with runFlow before flows that require an authenticated host.
 
+# Clear ALL app state + keychain (auth tokens stored via expo-secure-store).
 - clearState
+- clearKeychain
 
 - launchApp
 
-- assertVisible:
-    id: "screen-login"
+# Expo Dev Client: tap the dev server to load the JS bundle
+- tapOn:
+    text: "http://localhost:8081"
+    retryTapIfNoChange: false
+
+# Dismiss Expo Dev Client welcome overlay
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 15000
+- tapOn: "Continue"
+
+# Close the Expo dev tools panel (tap × button)
+- tapOn:
+    point: "88%, 37%"
+
+# Wait for the login screen
+- extendedWaitUntil:
+    visible:
+      id: "screen-login"
+    timeout: 20000
 
 - tapOn:
     id: "input-email"
 - inputText: ${HOST_EMAIL}
 
+- hideKeyboard
+
 - tapOn:
     id: "input-password"
 - inputText: ${HOST_PASSWORD}
 
+- hideKeyboard
+
 - tapOn:
     id: "btn-sign-in"
 
-- assertVisible:
-    id: "screen-feed"
-    timeout: 8000
+# Dismiss iOS "Save Password?" prompt if it appears
+- extendedWaitUntil:
+    visible: "Not Now"
+    timeout: 10000
+- tapOn: "Not Now"
+
+# Wait for the feed screen
+- extendedWaitUntil:
+    visible:
+      id: "screen-feed"
+    timeout: 10000

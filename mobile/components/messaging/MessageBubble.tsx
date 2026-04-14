@@ -16,7 +16,7 @@ function formatTime(iso: string): string {
 
 export default function MessageBubble({ message, isOwn, senderName }: MessageBubbleProps) {
   return (
-    <View className={`mb-3 max-w-[78%] ${isOwn ? "self-end items-end" : "self-start items-start"}`}>
+    <View testID={isOwn ? "message-bubble-own" : "message-bubble-received"} className={`mb-3 max-w-[78%] ${isOwn ? "self-end items-end" : "self-start items-start"}`}>
       {!isOwn && (
         <Text className="text-xs text-gray-400 mb-1 ml-1">{senderName}</Text>
       )}

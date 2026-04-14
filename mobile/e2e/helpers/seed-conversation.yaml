@@ -1,22 +1,8 @@
 appId: ${APP_ID}
-name: "Helper - Seed a conversation with pre-existing messages via API"
+name: "Helper - Seed conversation (no-op: data from setup.sh)"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
-  RENTER_EMAIL: bob@test.com
 ---
-# Calls the test-only backend endpoint (POST /api/v1/test/conversation) to create
-# a REQUESTED booking between alice (host) and bob (renter) and insert two seed
-# messages so the conversation list and thread have visible content.
-#
-# Requires: backend running with E2E_MODE=true
-#
-# After this helper runs, the following variables are available in the calling flow:
-#   ${TRANSACTION_ID}  — The seeded booking's transaction ID
-#   ${OTHER_PARTY_NAME} — Host's display name (e.g. "Alice")
-#   ${LISTING_TITLE}   — Title of the listing
-
-- runScript: e2e/scripts/seed-conversation.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
+# Conversation data is seeded by setup.sh (SQL-based) before the E2E suite runs.
+# This helper exists for compatibility but performs no action.
+# The messaging flows navigate to the Messages tab and find pre-seeded data.

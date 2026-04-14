@@ -90,3 +90,17 @@
   - React Query invalidation added to both CheckInScreen and CheckOutScreen `handleComplete` before navigation
 - **Maestro quirk:** `maestro test <dir>` does NOT execute flows alphabetically by filename — it uses its own ordering (03, 04, 02, 01 in our case). This matters when flows mutate DB state.
 - **Verification:** `maestro test mobile/e2e/flows/handoff/` — 4/4 Flows Passed in 2m 49s. TypeScript clean. Metro bundler clean.
+
+## Task 9.7: E2E Messaging Flows
+- **Status:** Completed
+- **Branch:** `task-9.7-e2e-messaging-flows` (Graphite mode)
+- **Bugs fixed:** 7 (missing conversations endpoint, sendMessage response mismatch, missing testIDs, SafeAreaView testID propagation, non-existent seed endpoint, YAML syntax issues, conversation ordering)
+- **Key decisions:**
+  - Created `GET /api/v1/users/me/conversations` backend endpoint (handler, service, repository) with `LEFT JOIN LATERAL` for last message
+  - Fixed `useSendMessage` hook — backend returns raw `Message`, not `{ message: Message }`
+  - Used `View` instead of `SafeAreaView` for testID containers (iOS accessibility tree issue)
+  - Moved conversation seeding from JS API calls to SQL in `setup.sh` — Maestro `http.post()` only supports 2 args, can't set auth headers
+  - Seed messages use `NOW() + INTERVAL` timestamps to ensure they sort above all booking creation times in conversations list
+  - Tab navigation uses `tapOn: text: "Messages, tab.*"` regex pattern for iOS accessibility
+  - `assertVisible` replaced with `extendedWaitUntil: visible:` for timeout support
+- **Verification:** `maestro test mobile/e2e/flows/messaging/` — 2/2 Flows Passed in 1m 14s. TypeScript clean. go vet clean.

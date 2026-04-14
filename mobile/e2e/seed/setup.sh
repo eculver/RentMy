@@ -377,6 +377,51 @@ seed_handoff_bookings() {
 
 seed_handoff_bookings
 
+seed_conversations() {
+  echo "=== Seeding E2E conversation data (messages) ==="
+  # Insert pre-existing messages on bob's first REQUESTED booking so the
+  # messaging E2E flows find a conversation with visible content.
+
+  local alice_id bob_id
+  alice_id=$(run_sql "SELECT id FROM users WHERE email = 'alice@test.com';" 2>/dev/null | tr -d ' ')
+  bob_id=$(run_sql "SELECT id FROM users WHERE email = 'bob@test.com';" 2>/dev/null | tr -d ' ')
+
+  if [ -z "$alice_id" ] || [ -z "$bob_id" ]; then
+    echo "  ERROR: could not find alice or bob user IDs" >&2
+    return
+  fi
+
+  # Pick the first REQUESTED booking between bob and alice
+  local txn_id
+  txn_id=$(run_sql "SELECT id FROM transactions WHERE renter_id = '${bob_id}' AND host_id = '${alice_id}' AND status = 'REQUESTED' ORDER BY created_at LIMIT 1;" 2>/dev/null | tr -d ' ')
+
+  if [ -z "$txn_id" ]; then
+    echo "  WARNING: no REQUESTED booking found for messaging seed (non-fatal)"
+    return
+  fi
+
+  # Clear any existing messages on this booking (idempotent re-run)
+  run_sql "DELETE FROM messages WHERE transaction_id = '${txn_id}';" \
+    || echo "  WARNING: could not clear existing messages"
+
+  gen_ulid() {
+    python3 -c "import time,random; t=int(time.time()*1000); chars='0123456789ABCDEFGHJKMNPQRSTVWXYZ'; enc=''.join(chars[(t>>(45-5*i))&31] for i in range(10)); rand=''.join(random.choices(chars,k=16)); print(enc+rand)"
+  }
+
+  local msg1_id msg2_id
+  msg1_id=$(gen_ulid)
+  msg2_id=$(gen_ulid)
+
+  run_sql "INSERT INTO messages (id, transaction_id, sender_id, content, created_at) VALUES
+    ('${msg1_id}', '${txn_id}', '${bob_id}', 'Hi! Is the item ready for pickup?', NOW() + INTERVAL '1 second'),
+    ('${msg2_id}', '${txn_id}', '${alice_id}', 'Yes, come by anytime after 10am!', NOW() + INTERVAL '2 seconds')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Seeded 2 messages on booking ${txn_id}" \
+    || echo "  WARNING: could not seed messages"
+}
+
+seed_conversations
+
 echo "=== Verifying seed data ==="
 ACTIVE_COUNT=$(run_sql "SELECT count(*) FROM listings WHERE host_id = (SELECT id FROM users WHERE email = 'alice@test.com') AND status = 'ACTIVE';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  Active listings for alice: ${ACTIVE_COUNT}"

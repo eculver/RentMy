@@ -2,59 +2,56 @@ appId: ${APP_ID}
 name: "Messaging - Send a message (happy path)"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
   RENTER_EMAIL: bob@test.com
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - Backend running
+#   - App built with dev client: npx expo run:ios
+#   - setup.sh run (test accounts + bookings + messages exist)
 #
-# Flow: seed a conversation → login as renter → Messages tab → open thread
-#       → type a message → tap send → message bubble appears.
+# Flow: login as renter → Messages tab → open thread → type message → send
+#       → message bubble appears.
 
-# ── 1. Seed a conversation with pre-existing messages ────────────────────────
-- runFlow: e2e/helpers/seed-conversation.yaml
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
 
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
+# ── 2. Navigate to Messages tab ──────────────────────────────────────────────
+- tapOn:
+    text: "Messages, tab.*"
 
-# ── 3. Navigate to Messages tab ──────────────────────────────────────────────
-- tapOn: "Messages"
-
-- assertVisible:
-    id: "screen-messages"
+- extendedWaitUntil:
+    visible:
+      id: "screen-messages"
     timeout: 5000
 
-# ── 4. Open the seeded conversation ──────────────────────────────────────────
-- assertVisible:
-    id: "conversation-row"
+# ── 3. Open the seeded conversation ──────────────────────────────────────────
+- extendedWaitUntil:
+    visible:
+      id: "conversation-row"
     timeout: 5000
 
 - tapOn:
     id: "conversation-row"
 
-- assertVisible:
-    id: "screen-conversation"
+- extendedWaitUntil:
+    visible:
+      id: "screen-conversation"
     timeout: 5000
 
-# ── 5. Type a message in the input field ─────────────────────────────────────
+# ── 4. Type a message in the input field ─────────────────────────────────────
 - tapOn:
     id: "input-message"
 
 - inputText: "Hi, is this still available?"
 
-# ── 6. Tap the send button ───────────────────────────────────────────────────
+# ── 5. Tap the send button ───────────────────────────────────────────────────
 - tapOn:
     id: "btn-send-message"
 
-# ── 7. Sent message bubble appears in the thread ─────────────────────────────
+# ── 6. Sent message bubble appears in the thread ─────────────────────────────
 # The renter's outgoing message should appear as an "own" bubble.
-- assertVisible:
-    id: "message-bubble-own"
+- extendedWaitUntil:
+    visible:
+      id: "message-bubble-own"
     timeout: 8000
-
-# ── 8. Input field is cleared after successful send ──────────────────────────
-- assertNotVisible:
-    text: "Hi, is this still available?"
-    timeout: 3000

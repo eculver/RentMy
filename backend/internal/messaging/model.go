@@ -33,6 +33,19 @@ type Parties struct {
 	HostID   string
 }
 
+// Conversation represents a message thread for a single booking, viewed from
+// the perspective of one party (the other party's info is included).
+type Conversation struct {
+	TransactionID string  `json:"transactionId"`
+	OtherPartyID  string  `json:"otherPartyId"`
+	OtherPartyName string `json:"otherPartyName"`
+	ListingTitle  string  `json:"listingTitle"`
+	LastMessage   *string `json:"lastMessage"`
+	LastMessageAt *string `json:"lastMessageAt"`
+	UnreadCount   int     `json:"unreadCount"`
+	BookingStatus string  `json:"bookingStatus"`
+}
+
 // Sentinel errors for the messaging domain.
 var (
 	ErrMessageNotFound     = errors.New("message not found")

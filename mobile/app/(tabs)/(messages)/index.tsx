@@ -1,4 +1,4 @@
-import { SafeAreaView } from "react-native";
+import { View, SafeAreaView } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConversations } from "../../../lib/hooks/useConversations";
 import ConversationList from "../../../components/messaging/ConversationList";
@@ -15,7 +15,7 @@ export default function MessagesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View testID="screen-messages" className="flex-1 bg-white">
       <ConversationList
         conversations={conversations}
         isLoading={isLoading}
@@ -23,6 +23,6 @@ export default function MessagesScreen() {
         onRefresh={handleRefresh}
         isRefreshing={isRefetching}
       />
-    </SafeAreaView>
+    </View>
   );
 }

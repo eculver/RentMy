@@ -15,6 +15,7 @@ type repo interface {
 	Insert(ctx context.Context, m Message) (Message, error)
 	FindByTransactionID(ctx context.Context, transactionID, cursor string, limit int) ([]Message, string, error)
 	GetParties(ctx context.Context, transactionID string) (Parties, error)
+	ListConversations(ctx context.Context, userID string) ([]Conversation, error)
 }
 
 // pusherClient is the interface the messaging service uses to publish
@@ -108,6 +109,11 @@ func (s *Service) SendMessage(ctx context.Context, in SendMessageInput) (Message
 	}
 
 	return msg, nil
+}
+
+// ListConversations returns all message threads for the given user.
+func (s *Service) ListConversations(ctx context.Context, userID string) ([]Conversation, error) {
+	return s.repo.ListConversations(ctx, userID)
 }
 
 // GetMessages returns paginated messages for a transaction in chronological order.

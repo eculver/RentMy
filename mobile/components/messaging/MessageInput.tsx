@@ -25,6 +25,7 @@ export default function MessageInput({ onSend, isSending, disabled = false }: Me
   return (
     <View className="flex-row items-end px-4 py-3 bg-white border-t border-gray-100 gap-x-3">
       <TextInput
+        testID="input-message"
         className="flex-1 min-h-[40px] max-h-[120px] bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-gray-900"
         placeholder="Message…"
         placeholderTextColor="#9ca3af"
@@ -37,6 +38,7 @@ export default function MessageInput({ onSend, isSending, disabled = false }: Me
         blurOnSubmit={false}
       />
       <Pressable
+        testID="btn-send-message"
         className={`w-10 h-10 rounded-full items-center justify-center ${canSend ? "bg-sky-600" : "bg-gray-200"}`}
         onPress={handleSend}
         disabled={!canSend}

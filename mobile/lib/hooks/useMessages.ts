@@ -70,8 +70,8 @@ export function useSendMessage(transactionId: string) {
     mutationFn: (content: string) =>
       api
         .post(`api/v1/bookings/${transactionId}/messages`, { json: { content } })
-        .json<{ message: Message }>(),
-    onSuccess: ({ message }) => {
+        .json<Message>(),
+    onSuccess: (message) => {
       queryClient.setQueryData<{ pages: MessagesPage[]; pageParams: unknown[] }>(
         ["messages", transactionId],
         (old) => {

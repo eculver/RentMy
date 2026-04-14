@@ -26,9 +26,31 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) Mount(r chi.Router, authMW func(http.Handler) http.Handler) {
 	r.Group(func(r chi.Router) {
 		r.Use(authMW)
+		r.Get("/users/me/conversations", h.listConversations)
 		r.Post("/bookings/{id}/messages", h.sendMessage)
 		r.Get("/bookings/{id}/messages", h.getMessages)
 	})
+}
+
+// listConversations handles GET /api/v1/users/me/conversations.
+func (h *Handler) listConversations(w http.ResponseWriter, r *http.Request) {
+	userID := auth.UserIDFromContext(r.Context())
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	convs, err := h.svc.ListConversations(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not list conversations")
+		return
+	}
+
+	if convs == nil {
+		convs = []Conversation{}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"conversations": convs})
 }
 
 // sendMessage handles POST /api/v1/bookings/:id/messages.

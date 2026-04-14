@@ -1,21 +1,8 @@
 appId: ${APP_ID}
-name: "Helper - Seed a COMPLETED booking via API"
+name: "Helper - Seed a COMPLETED booking (no-op)"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
-  RENTER_EMAIL: bob@test.com
 ---
-# Creates a booking in COMPLETED state via the test-only backend endpoint.
-# All four proximity proofs (CHECK_IN + CHECK_OUT for both host and renter)
-# are pre-inserted as verified and actual_start/actual_end are set.
-#
-# Requires: backend running with E2E_MODE=true
-#
-# After this helper runs:
-#   ${TRANSACTION_ID} — booking ID
-
-- runScript: e2e/scripts/seed-booking.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
-    STATUS: COMPLETED
+# NO-OP: COMPLETED bookings are now seeded by setup.sh (SQL-based seeding).
+# The backend test endpoint this helper originally called does not exist.
+# Kept as a no-op so existing runFlow references don't break.

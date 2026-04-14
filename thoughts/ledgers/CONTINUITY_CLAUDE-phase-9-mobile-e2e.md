@@ -104,3 +104,17 @@
   - Tab navigation uses `tapOn: text: "Messages, tab.*"` regex pattern for iOS accessibility
   - `assertVisible` replaced with `extendedWaitUntil: visible:` for timeout support
 - **Verification:** `maestro test mobile/e2e/flows/messaging/` — 2/2 Flows Passed in 1m 14s. TypeScript clean. go vet clean.
+
+## Task 9.8: E2E Dispute & Rating Flows
+- **Status:** Completed
+- **Branch:** `task-9.8-dispute-rating-flows` (Graphite mode)
+- **Bugs fixed:** 7 (non-existent seed endpoints, missing testIDs on 5 screens/components, SafeAreaView testID propagation on 3 screens, FlatList row tap propagation on iOS, placeholder handleReportIssue, missing DISPUTED case in handleBookingPress, keyboard covering submit button)
+- **Key decisions:**
+  - Extended `setup.sh` with `seed_dispute_rating_bookings()` — creates ACTIVE (for dispute filing), DISPUTED + PENDING dispute (for viewing), COMPLETED with no ratings (for rating). All with proximity proofs.
+  - Converted 3 seed helper YAMLs to no-ops (data comes from SQL seeding)
+  - DISPUTED badge in rentals list converted from View to Pressable with own `testID="btn-view-dispute"` and `onPress` — avoids iOS accessibility tree tap propagation issue where Text taps inside FlatList rows don't reach parent Pressables
+  - `handleReportIssue` in active-rental.tsx changed from placeholder Alert to `router.push()` to dispute screen
+  - Added `keyboardDismissMode="on-drag"` to dispute screen ScrollView; E2E flow taps "What happened?" text to dismiss keyboard before scrolling to submit
+  - `SafeAreaView` → `View` on dispute.tsx, dispute-status.tsx, rate.tsx (iOS testID propagation fix)
+  - Added testIDs: `screen-dispute`, `dispute-reason-*`, `input-dispute-description`, `btn-submit-dispute`, `btn-cancel-dispute`, `screen-dispute-status`, `dispute-timeline`, `btn-back-to-rentals-dispute`, `screen-rate`, `rating-bubbles-container`, `btn-submit-rating`, `rating-success-message`, `rating-bubble-*`, `btn-view-dispute`
+- **Verification:** `maestro test mobile/e2e/flows/disputes/` — 2/2 Flows Passed in 1m 23s. `maestro test mobile/e2e/flows/ratings/` — 1/1 Flow Passed in 40s. TypeScript clean. Metro bundler clean. go vet clean.

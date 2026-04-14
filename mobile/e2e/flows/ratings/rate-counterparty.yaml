@@ -2,54 +2,59 @@ appId: ${APP_ID}
 name: "Ratings - Rate a counterparty after a completed rental (happy path)"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
   RENTER_EMAIL: bob@test.com
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - Backend running
+#   - App built with dev client: npx expo run:ios
+#   - setup.sh run (COMPLETED booking for rating seeded, no existing ratings)
 #
-# Flow: seed COMPLETED booking → login → Rentals → tap COMPLETED row →
+# Flow: login as renter → Rentals tab → tap COMPLETED row →
 #       return-confirmation screen → tap "Rate this rental" → rate screen →
 #       select a rating bubble → submit → success message shown.
 
-# ── 1. Seed a COMPLETED booking ──────────────────────────────────────────────
-- runFlow: e2e/helpers/seed-booking-completed.yaml
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
 
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
+# ── 2. Navigate to Rentals tab ────────────────────────────────────────────────
+- tapOn:
+    text: "Rentals, tab.*"
 
-# ── 3. Navigate to Rentals tab ────────────────────────────────────────────────
-- tapOn: "Rentals"
-
-- assertVisible:
-    id: "screen-rentals"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
     timeout: 5000
+
+# ── 3. Scroll to a COMPLETED rental row ──────────────────────────────────────
+# COMPLETED rows sort after DISPUTED (order 4). Scroll down to find one.
+- scrollUntilVisible:
+    element:
+      id: "status-completed"
+    direction: DOWN
 
 # ── 4. Tap the COMPLETED rental row → return-confirmation screen ──────────────
-- assertVisible:
-    id: "rental-row"
-    timeout: 5000
-
 - tapOn:
-    id: "rental-row"
+    id: "status-completed"
 
-- assertVisible:
-    id: "screen-return-confirmation"
+- extendedWaitUntil:
+    visible:
+      id: "screen-return-confirmation"
     timeout: 6000
 
 # ── 5. Tap "Rate this rental" button → rate screen ───────────────────────────
 - tapOn:
     id: "btn-rate-rental"
 
-- assertVisible:
-    id: "screen-rate"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rate"
     timeout: 5000
 
 # ── 6. Rating bubble grid is visible ─────────────────────────────────────────
-- assertVisible:
-    id: "rating-bubbles-container"
+- extendedWaitUntil:
+    visible:
+      id: "rating-bubbles-container"
     timeout: 5000
 
 # ── 7. Select a renter bubble (e.g. "Good communication") ────────────────────
@@ -61,8 +66,11 @@ env:
     id: "btn-submit-rating"
 
 # ── 9. Success message appears ───────────────────────────────────────────────
-- assertVisible:
-    id: "rating-success-message"
+- extendedWaitUntil:
+    visible:
+      id: "rating-success-message"
     timeout: 8000
 
-- assertVisible: "Rating submitted!"
+- extendedWaitUntil:
+    visible: "Rating submitted!"
+    timeout: 3000

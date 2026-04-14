@@ -1,20 +1,8 @@
 appId: ${APP_ID}
-name: "Helper - Seed a DISPUTED booking via API"
+name: "Helper - Seed a DISPUTED booking (no-op)"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
-  RENTER_EMAIL: bob@test.com
 ---
-# Creates a COMPLETED booking with a PENDING dispute, then sets the
-# transaction status to DISPUTED so it appears in the Rentals list.
-#
-# Requires: backend running with E2E_MODE=true
-#
-# After this helper runs:
-#   ${TRANSACTION_ID} — booking ID (status: DISPUTED)
-#   ${DISPUTE_ID}     — dispute record ID (status: PENDING)
-
-- runScript: e2e/scripts/seed-dispute.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
+# NO-OP: DISPUTED bookings are now seeded by setup.sh (SQL-based seeding).
+# The backend test endpoint this helper originally called does not exist.
+# Kept as a no-op so existing runFlow references don't break.

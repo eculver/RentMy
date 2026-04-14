@@ -13,7 +13,6 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
-  SafeAreaView,
   Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -77,7 +76,7 @@ export default function DisputeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View testID="screen-dispute" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -92,6 +91,7 @@ export default function DisputeScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingVertical: 24, paddingHorizontal: 16, gap: 16 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* Intro */}
         <View className="bg-amber-50 rounded-2xl px-4 py-3 flex-row items-start gap-x-3">
@@ -113,6 +113,7 @@ export default function DisputeScreen() {
               return (
                 <Pressable
                   key={opt.value}
+                  testID={`dispute-reason-${opt.value}`}
                   className={[
                     "flex-row items-center gap-x-3 p-4 rounded-2xl border",
                     isSelected
@@ -158,6 +159,7 @@ export default function DisputeScreen() {
             Describe the issue
           </Text>
           <TextInput
+            testID="input-dispute-description"
             className="bg-gray-50 rounded-2xl px-4 py-3 text-sm text-gray-900 border border-gray-200 min-h-[100px]"
             placeholder="Provide details about what happened (minimum 10 characters)…"
             placeholderTextColor="#9ca3af"
@@ -183,6 +185,7 @@ export default function DisputeScreen() {
 
         {/* Submit */}
         <Pressable
+          testID="btn-submit-dispute"
           className={[
             "rounded-2xl py-4 items-center flex-row justify-center gap-x-2",
             canSubmit ? "bg-red-600" : "bg-red-300",
@@ -203,12 +206,13 @@ export default function DisputeScreen() {
         </Pressable>
 
         <Pressable
+          testID="btn-cancel-dispute"
           className="py-3 items-center"
           onPress={() => router.back()}
         >
           <Text className="text-sm text-gray-500">Cancel</Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -129,10 +129,17 @@ function RentalRow({ booking, currentUserId, onPress, onRate }: RentalRowProps) 
           )}
 
           {booking.status === "DISPUTED" && (
-            <View className="flex-row items-center gap-x-1 px-3 py-2 bg-red-50 rounded-xl">
+            <Pressable
+              testID="btn-view-dispute"
+              className="flex-row items-center gap-x-1 px-3 py-2 bg-red-50 rounded-xl"
+              onPress={(e) => {
+                e.stopPropagation();
+                onPress();
+              }}
+            >
               <Ionicons name="warning-outline" size={13} color="#dc2626" />
               <Text className="text-red-700 text-xs font-semibold">Dispute open</Text>
-            </View>
+            </Pressable>
           )}
         </View>
       </View>
@@ -236,6 +243,11 @@ export default function RentalsScreen() {
     } else if (booking.status === "COMPLETED") {
       router.push({
         pathname: "/(tabs)/(rentals)/return-confirmation" as never,
+        params: { transactionId: booking.id },
+      });
+    } else if (booking.status === "DISPUTED") {
+      router.push({
+        pathname: "/(tabs)/(rentals)/dispute-status" as never,
         params: { transactionId: booking.id },
       });
     } else {

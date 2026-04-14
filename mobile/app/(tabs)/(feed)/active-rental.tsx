@@ -105,11 +105,10 @@ export default function ActiveRentalScreen() {
   };
 
   const handleReportIssue = () => {
-    Alert.alert(
-      "Report an issue",
-      "Issue reporting and dispute flow will be available in a future update.",
-      [{ text: "OK" }],
-    );
+    router.push({
+      pathname: "/(tabs)/(rentals)/dispute" as never,
+      params: { transactionId: booking.id },
+    });
   };
 
   return (

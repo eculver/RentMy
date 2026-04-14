@@ -2,60 +2,79 @@ appId: ${APP_ID}
 name: "Disputes - View dispute status for a pre-seeded disputed booking"
 env:
   APP_ID: com.rentmy.app
-  API_URL: http://localhost:8080
   RENTER_EMAIL: bob@test.com
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - Backend running
+#   - App built with dev client: npx expo run:ios
+#   - setup.sh run (DISPUTED booking with PENDING dispute seeded)
 #
-# Flow: seed DISPUTED booking → login → Rentals tab → tap DISPUTED row →
+# Flow: login as renter → Rentals tab → tap DISPUTED row →
 #       dispute-status screen renders → timeline visible → back navigates
 #       to rentals list.
 
-# ── 1. Seed a DISPUTED booking (COMPLETED transaction + PENDING dispute) ──────
-- runFlow: e2e/helpers/seed-dispute.yaml
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
 
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
-
-# ── 3. Navigate to Rentals tab ────────────────────────────────────────────────
-- tapOn: "Rentals"
-
-- assertVisible:
-    id: "screen-rentals"
-    timeout: 5000
-
-# ── 4. DISPUTED booking should appear in the list ─────────────────────────────
-- assertVisible:
-    id: "rental-row"
-    timeout: 5000
-
-- assertVisible: "Disputed"
-
-# ── 5. Tap the DISPUTED rental row → dispute-status screen ───────────────────
+# ── 2. Navigate to Rentals tab ────────────────────────────────────────────────
 - tapOn:
-    id: "rental-row"
+    text: "Rentals, tab.*"
 
-- assertVisible:
-    id: "screen-dispute-status"
-    timeout: 6000
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 5000
+
+# ── 3. DISPUTED booking should appear in the list ─────────────────────────────
+- extendedWaitUntil:
+    visible:
+      id: "status-disputed"
+    timeout: 5000
+
+# ── 4. Tap the "Dispute open" button on the DISPUTED row ──────────────────────
+# Tap the dedicated Pressable badge instead of the row text. This avoids the
+# iOS accessibility tree issue where text taps don't propagate to parent
+# Pressables inside FlatList rows.
+- scrollUntilVisible:
+    element:
+      id: "btn-view-dispute"
+    direction: DOWN
+
+- tapOn:
+    id: "btn-view-dispute"
+
+# ── 5. Dispute-status screen renders ─────────────────────────────────────────
+- extendedWaitUntil:
+    visible:
+      id: "screen-dispute-status"
+    timeout: 10000
 
 # ── 6. Timeline is visible and at the "Filed" step ───────────────────────────
-- assertVisible:
-    id: "dispute-timeline"
+- extendedWaitUntil:
+    visible:
+      id: "dispute-timeline"
     timeout: 5000
 
-- assertVisible: "Filed"
+- extendedWaitUntil:
+    visible: "Filed"
+    timeout: 3000
 
 # ── 7. Dispute details section is present ────────────────────────────────────
-- assertVisible: "Dispute details"
+- extendedWaitUntil:
+    visible: "Dispute details"
+    timeout: 3000
 
 # ── 8. Navigate back to rentals list ─────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      id: "btn-back-to-rentals-dispute"
+    direction: DOWN
+
 - tapOn:
     id: "btn-back-to-rentals-dispute"
 
-- assertVisible:
-    id: "screen-rentals"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
     timeout: 5000

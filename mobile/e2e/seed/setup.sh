@@ -422,6 +422,140 @@ seed_conversations() {
 
 seed_conversations
 
+seed_dispute_rating_bookings() {
+  echo "=== Seeding E2E dispute & rating booking data ==="
+  # Create bookings in ACTIVE (for dispute filing), COMPLETED (for rating),
+  # and DISPUTED (for viewing dispute status) states.
+  # These are used by the dispute and rating E2E flows.
+
+  local alice_id bob_id
+  alice_id=$(run_sql "SELECT id FROM users WHERE email = 'alice@test.com';" 2>/dev/null | tr -d ' ')
+  bob_id=$(run_sql "SELECT id FROM users WHERE email = 'bob@test.com';" 2>/dev/null | tr -d ' ')
+
+  if [ -z "$alice_id" ] || [ -z "$bob_id" ]; then
+    echo "  ERROR: could not find alice or bob user IDs" >&2
+    return
+  fi
+
+  # Get alice's active listing IDs
+  local listing_ids
+  listing_ids=$(run_sql "SELECT id FROM listings WHERE host_id = '${alice_id}' AND status = 'ACTIVE' ORDER BY created_at;" 2>/dev/null | tr -d ' ')
+
+  local listings=()
+  while IFS= read -r lid; do
+    [ -z "$lid" ] && continue
+    listings+=("$lid")
+  done <<< "$listing_ids"
+
+  if [ "${#listings[@]}" -lt 3 ]; then
+    echo "  WARNING: need at least 3 listings, found ${#listings[@]}" >&2
+    return
+  fi
+
+  # Reuse listings 1 and 2 (0-indexed) since REQUESTED bookings on them were
+  # already created above and won't conflict with different-status bookings.
+  local dispute_active_listing="${listings[0]}"
+  local dispute_status_listing="${listings[1]}"
+  local rating_listing="${listings[2]}"
+
+  gen_ulid() {
+    python3 -c "import time,random; t=int(time.time()*1000); chars='0123456789ABCDEFGHJKMNPQRSTVWXYZ'; enc=''.join(chars[(t>>(45-5*i))&31] for i in range(10)); rand=''.join(random.choices(chars,k=16)); print(enc+rand)"
+  }
+
+  # ── ACTIVE booking for file-dispute flow ──────────────────────────────────
+  # The dispute flow navigates: Rentals → tap ACTIVE row → active-rental →
+  # "Report an issue" → dispute screen. This booking must be ACTIVE.
+  # Use scheduled_start NOW so it sorts as a recent active rental.
+  local dispute_active_txn
+  dispute_active_txn=$(gen_ulid)
+  local dp_proof_hci dp_proof_rci dp_proof_hco
+  dp_proof_hci=$(gen_ulid)
+  dp_proof_rci=$(gen_ulid)
+  dp_proof_hco=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, actual_start, status, created_at)
+    VALUES ('${dispute_active_txn}', '${bob_id}', '${alice_id}', '${dispute_active_listing}', 4000, 8000, 16000, 0,
+      NOW() + INTERVAL '1 second', NOW() + INTERVAL '24 hours', NOW() + INTERVAL '1 second', 'ACTIVE', NOW() + INTERVAL '1 second')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created ACTIVE booking for dispute: ${dispute_active_txn}" \
+    || echo "  WARNING: could not create dispute ACTIVE booking"
+
+  # Host CHECK_IN + renter CHECK_IN + host CHECK_OUT proximity proofs (all verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, created_at) VALUES
+    ('${dp_proof_hci}', '${dispute_active_txn}', '${alice_id}', 'CHECK_IN', 10.0, true, 'GPS', NOW()),
+    ('${dp_proof_rci}', '${dispute_active_txn}', '${bob_id}', 'CHECK_IN', 12.0, true, 'GPS', NOW()),
+    ('${dp_proof_hco}', '${dispute_active_txn}', '${alice_id}', 'CHECK_OUT', 8.0, true, 'GPS', NOW())
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created dispute ACTIVE proofs" \
+    || echo "  WARNING: could not create dispute ACTIVE proofs"
+
+  # ── DISPUTED booking for view-dispute-status flow ─────────────────────────
+  # A COMPLETED transaction with a PENDING dispute, status set to DISPUTED.
+  local dispute_status_txn
+  dispute_status_txn=$(gen_ulid)
+  local ds_dispute_id
+  ds_dispute_id=$(gen_ulid)
+  local ds_proof_hci ds_proof_rci ds_proof_hco ds_proof_rco
+  ds_proof_hci=$(gen_ulid)
+  ds_proof_rci=$(gen_ulid)
+  ds_proof_hco=$(gen_ulid)
+  ds_proof_rco=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, actual_start, actual_end, status, created_at)
+    VALUES ('${dispute_status_txn}', '${bob_id}', '${alice_id}', '${dispute_status_listing}', 5000, 10000, 20000, 0,
+      NOW() - INTERVAL '48 hours', NOW() - INTERVAL '44 hours', NOW() - INTERVAL '48 hours', NOW() - INTERVAL '44 hours', 'DISPUTED', NOW() - INTERVAL '49 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created DISPUTED booking ${dispute_status_txn}" \
+    || echo "  WARNING: could not create DISPUTED booking"
+
+  # All 4 proximity proofs (verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, created_at) VALUES
+    ('${ds_proof_hci}', '${dispute_status_txn}', '${alice_id}', 'CHECK_IN', 5.0, true, 'GPS', NOW() - INTERVAL '48 hours'),
+    ('${ds_proof_rci}', '${dispute_status_txn}', '${bob_id}', 'CHECK_IN', 7.0, true, 'GPS', NOW() - INTERVAL '48 hours'),
+    ('${ds_proof_hco}', '${dispute_status_txn}', '${alice_id}', 'CHECK_OUT', 6.0, true, 'GPS', NOW() - INTERVAL '44 hours'),
+    ('${ds_proof_rco}', '${dispute_status_txn}', '${bob_id}', 'CHECK_OUT', 9.0, true, 'GPS', NOW() - INTERVAL '44 hours')
+    ON CONFLICT DO NOTHING;" \
+    || echo "  WARNING: could not create DISPUTED proofs"
+
+  # Insert PENDING dispute record
+  run_sql "INSERT INTO disputes (id, transaction_id, reporter_id, reason, description, status, created_at)
+    VALUES ('${ds_dispute_id}', '${dispute_status_txn}', '${bob_id}', 'DAMAGE', 'The item had a visible dent on the side panel when returned.', 'PENDING', NOW() - INTERVAL '1 hour')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created PENDING dispute ${ds_dispute_id}" \
+    || echo "  WARNING: could not create dispute record"
+
+  # ── COMPLETED booking for rating flow ─────────────────────────────────────
+  # A fully completed rental that bob can rate (no existing ratings).
+  local rating_txn
+  rating_txn=$(gen_ulid)
+  local rt_proof_hci rt_proof_rci rt_proof_hco rt_proof_rco
+  rt_proof_hci=$(gen_ulid)
+  rt_proof_rci=$(gen_ulid)
+  rt_proof_hco=$(gen_ulid)
+  rt_proof_rco=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, actual_start, actual_end, status, created_at)
+    VALUES ('${rating_txn}', '${bob_id}', '${alice_id}', '${rating_listing}', 3000, 6000, 12000, 0,
+      NOW() - INTERVAL '36 hours', NOW() - INTERVAL '32 hours', NOW() - INTERVAL '36 hours', NOW() - INTERVAL '32 hours', 'COMPLETED', NOW() - INTERVAL '37 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created COMPLETED booking for rating: ${rating_txn}" \
+    || echo "  WARNING: could not create rating COMPLETED booking"
+
+  # All 4 proximity proofs (verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, created_at) VALUES
+    ('${rt_proof_hci}', '${rating_txn}', '${alice_id}', 'CHECK_IN', 5.0, true, 'GPS', NOW() - INTERVAL '36 hours'),
+    ('${rt_proof_rci}', '${rating_txn}', '${bob_id}', 'CHECK_IN', 7.0, true, 'GPS', NOW() - INTERVAL '36 hours'),
+    ('${rt_proof_hco}', '${rating_txn}', '${alice_id}', 'CHECK_OUT', 6.0, true, 'GPS', NOW() - INTERVAL '32 hours'),
+    ('${rt_proof_rco}', '${rating_txn}', '${bob_id}', 'CHECK_OUT', 9.0, true, 'GPS', NOW() - INTERVAL '32 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created rating COMPLETED proofs" \
+    || echo "  WARNING: could not create rating proofs"
+
+  echo "  Dispute/rating bookings seeded: ACTIVE=${dispute_active_txn}, DISPUTED=${dispute_status_txn}, COMPLETED(rating)=${rating_txn}"
+}
+
+seed_dispute_rating_bookings
+
 echo "=== Verifying seed data ==="
 ACTIVE_COUNT=$(run_sql "SELECT count(*) FROM listings WHERE host_id = (SELECT id FROM users WHERE email = 'alice@test.com') AND status = 'ACTIVE';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  Active listings for alice: ${ACTIVE_COUNT}"
@@ -433,4 +567,10 @@ ACTIVE_BOOKING_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_i
 echo "  ACTIVE bookings for bob: ${ACTIVE_BOOKING_COUNT}"
 COMPLETED_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'COMPLETED';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  COMPLETED bookings for bob: ${COMPLETED_COUNT}"
+DISPUTED_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'DISPUTED';" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  DISPUTED bookings for bob: ${DISPUTED_COUNT}"
+DISPUTE_RECORD_COUNT=$(run_sql "SELECT count(*) FROM disputes d JOIN transactions t ON d.transaction_id = t.id WHERE t.renter_id = (SELECT id FROM users WHERE email = 'bob@test.com');" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  Dispute records for bob: ${DISPUTE_RECORD_COUNT}"
+RATING_COUNT=$(run_sql "SELECT count(*) FROM ratings WHERE from_user_id = (SELECT id FROM users WHERE email = 'bob@test.com');" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  Ratings from bob: ${RATING_COUNT}"
 echo "Done."

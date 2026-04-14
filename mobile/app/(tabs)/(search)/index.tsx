@@ -1,5 +1,6 @@
 import {
   FlatList,
+  Keyboard,
   View,
   Text,
   TextInput,
@@ -79,6 +80,7 @@ export default function SearchScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const openFilters = useCallback(() => {
+    Keyboard.dismiss();
     filterSheetRef.current?.expand();
   }, []);
 
@@ -98,13 +100,14 @@ export default function SearchScreen() {
   const filterCount = activeFilterCount(filters);
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50" testID="screen-search">
       {/* Search bar */}
       <View className="bg-white border-b border-gray-100 px-4 pt-14 pb-3">
         <View className="flex-row items-center gap-x-2">
           <View className="flex-1 flex-row items-center bg-gray-100 rounded-2xl px-3 py-2 gap-x-2">
             <Ionicons name="search-outline" size={18} color="#9ca3af" />
             <TextInput
+              testID="search-input"
               onChangeText={debouncedSetQuery}
               placeholder="Search listings…"
               placeholderTextColor="#9ca3af"
@@ -115,6 +118,7 @@ export default function SearchScreen() {
             />
           </View>
           <Pressable
+            testID="btn-filter"
             onPress={openFilters}
             className={`flex-row items-center gap-x-1 px-3 py-2 rounded-2xl border ${
               filterCount > 0
@@ -145,6 +149,7 @@ export default function SearchScreen() {
         </View>
       ) : (
         <FlatList
+          testID="search-results"
           data={listings}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (

@@ -1,5 +1,5 @@
 import { View, ActivityIndicator, Text } from "react-native";
-import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import { useState, useCallback } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useLocation } from "../../lib/hooks/useLocation";
@@ -70,9 +70,9 @@ export default function MapScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" testID="screen-map">
       <MapView
-        provider={PROVIDER_GOOGLE}
+        testID="map-container"
         style={{ flex: 1 }}
         initialRegion={initialRegion}
         onRegionChangeComplete={onRegionChangeComplete}

@@ -47,7 +47,6 @@
   - Keyboard dismiss for numeric fields: tap "Listing Details" heading (far from inputs) instead of nearby labels
   - Listing detail route refactored from `[id].tsx` to `[id]/index.tsx` directory for future checkout route
 - **Verification:** `maestro test mobile/e2e/flows/listing/` — 2/2 Flows Passed in 1m 55s. Auth regression: 6/6 Passed. Discovery regression: 3/3 Passed.
-
 ## Task 9.4: E2E Profile & Referral Flows
 - **Status:** Completed
 - **Branch:** `task-9.4-profile-referral-flows`

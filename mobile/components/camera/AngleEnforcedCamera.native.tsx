@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera";
 import { useGyroscope, angularDistance, type Orientation } from "../../lib/hooks/useGyroscope";
+import { File, Paths } from "expo-file-system";
 
 export interface CapturedPhoto {
   path: string;
@@ -22,6 +23,13 @@ interface AngleEnforcedCameraProps {
 }
 
 const MIN_ANGLE_DEG = 30;
+
+// Minimal valid 4x4 white JPEG — used by the __DEV__ camera bypass to create a
+// real image file that travels through the normal media-upload pipeline.
+const TINY_JPEG_BASE64 =
+  "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI" +
+  "CQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAAEAAQBAREA/8QAFAABAAAAAAAA" +
+  "AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==";
 
 /**
  * Camera component with gyroscope-based angle enforcement.
@@ -82,6 +90,67 @@ export default function AngleEnforcedCamera({
             Grant Permission
           </Text>
         </Pressable>
+      </View>
+    );
+  }
+
+  // __DEV__ camera bypass — shown in simulator (no camera device) so Maestro can
+  // drive the create-listing flow without hardware camera access. The generated
+  // test photo is a real JPEG file that goes through the normal upload pipeline.
+  if (__DEV__ && !device) {
+    const addTestPhoto = () => {
+      const file = new File(Paths.cache, `test-photo-${captures.length}.jpg`);
+      // Decode base64 → Uint8Array to avoid the native base64 write path
+      // which throws UnableToWriteBase64DataException in the iOS simulator.
+      const raw = globalThis.atob(TINY_JPEG_BASE64);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      file.write(bytes);
+      onCapture({
+        path: file.uri,
+        orientation: { roll: 0, pitch: 0, yaw: captures.length * 45 },
+      });
+    };
+
+    return (
+      <View
+        testID="camera-dev-bypass"
+        className="flex-1 bg-black items-center justify-center px-6"
+      >
+        <Text className="text-white text-lg font-semibold mb-2">
+          Dev Camera Bypass
+        </Text>
+        <Text className="text-gray-400 text-sm mb-8 text-center">
+          No camera in simulator — tap below to add a test photo
+        </Text>
+
+        <Text className="text-white text-sm mb-4">
+          {captures.length}/{maxPhotos} photos
+        </Text>
+
+        {!isFull && (
+          <Pressable
+            testID="btn-use-test-photo"
+            onPress={addTestPhoto}
+            className="bg-sky-600 px-8 py-4 rounded-xl mb-6"
+          >
+            <Text className="text-white font-semibold text-base">
+              Use test photo
+            </Text>
+          </Pressable>
+        )}
+
+        {onDone && captures.length > 0 && (
+          <Pressable
+            testID="btn-continue-photos"
+            onPress={onDone}
+            className="bg-green-600 px-8 py-4 rounded-xl"
+          >
+            <Text className="text-white font-semibold text-base">
+              Continue — {captures.length} photo{captures.length !== 1 ? "s" : ""}
+            </Text>
+          </Pressable>
+        )}
       </View>
     );
   }

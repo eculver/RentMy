@@ -33,6 +33,7 @@ export default function ProfileScreen() {
         </View>
 
         <Pressable
+          testID="btn-create-listing-nav"
           className="mt-5 w-full bg-sky-600 py-3 rounded-xl items-center"
           onPress={() => router.push("/(tabs)/(profile)/create-listing")}
         >

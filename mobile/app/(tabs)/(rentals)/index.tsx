@@ -233,6 +233,11 @@ export default function RentalsScreen() {
         pathname: "/(tabs)/(feed)/active-rental" as never,
         params: { transactionId: booking.id },
       });
+    } else if (booking.status === "COMPLETED") {
+      router.push({
+        pathname: "/(tabs)/(rentals)/return-confirmation" as never,
+        params: { transactionId: booking.id },
+      });
     } else {
       router.push({
         pathname: "/(tabs)/(rentals)/booking-status" as never,

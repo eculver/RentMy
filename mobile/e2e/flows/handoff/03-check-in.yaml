@@ -1,0 +1,136 @@
+appId: ${APP_ID}
+name: "Handoff - Check-in (GPS + PIN + photos → ACTIVE)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running, seed data loaded (setup.sh seeds ACCEPTED booking with PIN=1234)
+#   - App built with dev client
+#
+# Renter check-in flow:
+#   1. Navigate to ACCEPTED booking via Rentals tab
+#   2. Tap "Start check-in"
+#   3. Verify GPS (setLocation near listing → real backend verification)
+#   4. Enter PIN "1234" (from seeded host CHECK_IN proof)
+#   5. Take 3 photos via __DEV__ camera bypass
+#   6. Complete check-in → booking transitions to ACTIVE
+
+# ── 1. Set simulator GPS at listing location (matches seed script) ───────────
+- setLocation:
+    latitude: 34.0522
+    longitude: -118.2437
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn:
+    text: "Rentals, tab.*"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the ACCEPTED booking row ─────────────────────────────────────────
+- tapOn:
+    id: "status-accepted"
+
+# ── 5. Assert booking-status screen shows "Booking accepted" ────────────────
+- extendedWaitUntil:
+    visible:
+      id: "screen-booking-status"
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible:
+      id: "booking-status-label"
+    timeout: 8000
+
+- assertVisible: "Booking accepted"
+
+# ── 6. Tap "Start check-in" ─────────────────────────────────────────────────
+- tapOn:
+    id: "btn-start-checkin"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-check-in"
+    timeout: 5000
+
+# ── 7. Verify GPS (real backend call — simulator location matches listing) ───
+- extendedWaitUntil:
+    visible:
+      id: "btn-verify-location"
+    timeout: 8000
+
+- tapOn:
+    id: "btn-verify-location"
+
+- extendedWaitUntil:
+    visible: "Location verified"
+    timeout: 10000
+
+# ── 8. Enter PIN "1234" (digit by digit into real PINEntry inputs) ──────────
+- tapOn:
+    id: "input-pin-0"
+- inputText: "1"
+
+- tapOn:
+    id: "input-pin-1"
+- inputText: "2"
+
+- tapOn:
+    id: "input-pin-2"
+- inputText: "3"
+
+- tapOn:
+    id: "input-pin-3"
+- inputText: "4"
+
+# PIN auto-submits when all 4 digits entered
+- extendedWaitUntil:
+    visible: "PIN verified"
+    timeout: 8000
+
+# ── 9. Take 3 photos via __DEV__ camera bypass ──────────────────────────────
+- tapOn:
+    id: "btn-open-camera"
+
+- extendedWaitUntil:
+    visible:
+      id: "camera-dev-bypass"
+    timeout: 5000
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+# Return to check-in screen
+- tapOn:
+    id: "btn-continue-photos"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-check-in"
+    timeout: 5000
+
+# ── 10. Complete check-in ───────────────────────────────────────────────────
+- tapOn:
+    id: "btn-complete-checkin"
+
+# ── 11. Assert booking transitioned to ACTIVE ───────────────────────────────
+- extendedWaitUntil:
+    visible:
+      id: "booking-status-label"
+    timeout: 10000
+
+- assertVisible: "Rental in progress"

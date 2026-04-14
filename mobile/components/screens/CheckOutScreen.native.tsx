@@ -16,6 +16,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../lib/auth";
 import { useBooking } from "../../lib/hooks/useBooking";
@@ -31,6 +32,7 @@ const MIN_PHOTOS = 3;
 
 export default function CheckOutScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { transactionId } = useLocalSearchParams<Params>();
   const user = useAuthStore((s) => s.user);
 
@@ -50,6 +52,7 @@ export default function CheckOutScreen() {
       await api.post(`api/v1/bookings/${transactionId}/check-out`, {
         json: { mediaIds: [] }, // photo upload via MediaService in a future task
       });
+      await queryClient.invalidateQueries({ queryKey: ["bookings", transactionId] });
       router.replace({
         pathname: "/(tabs)/(feed)/booking-status" as never,
         params: { transactionId },
@@ -90,7 +93,7 @@ export default function CheckOutScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View testID="screen-check-out" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -185,6 +188,7 @@ export default function CheckOutScreen() {
           />
 
           <Pressable
+            testID="btn-open-camera"
             className="border border-gray-200 rounded-2xl py-3 items-center flex-row justify-center gap-x-2"
             onPress={() => setShowCamera(true)}
           >
@@ -201,6 +205,7 @@ export default function CheckOutScreen() {
       {/* Footer CTA */}
       <View className="px-4 py-4 border-t border-gray-100">
         <Pressable
+          testID="btn-complete-checkout"
           onPress={handleComplete}
           disabled={!proximity.canComplete || completing}
           className={`rounded-2xl py-4 items-center flex-row justify-center gap-x-2 ${
@@ -235,6 +240,6 @@ export default function CheckOutScreen() {
           </Text>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

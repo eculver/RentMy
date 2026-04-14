@@ -1,0 +1,65 @@
+appId: ${APP_ID}
+name: "Handoff - Return confirmation (COMPLETED booking summary)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running, seed data loaded (setup.sh seeds COMPLETED booking)
+#   - App built with dev client
+#
+# Verifies the return-confirmation screen for a COMPLETED booking:
+#   - Screen renders with "Return complete" status
+#   - "Rate this rental" and "File a dispute" action buttons visible
+#   - "Back to rentals" navigation works
+
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 2. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn:
+    text: "Rentals, tab.*"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 5000
+
+# ── 3. Tap the COMPLETED rental row → return-confirmation ───────────────────
+- tapOn:
+    id: "status-completed"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-return-confirmation"
+    timeout: 6000
+
+# ── 4. Assert return status renders ─────────────────────────────────────────
+- assertVisible:
+    id: "return-status-label"
+
+- assertVisible: "Return complete"
+
+# ── 5. Assert action buttons are visible ─────────────────────────────────────
+- assertVisible:
+    id: "btn-rate-rental"
+
+- assertVisible:
+    id: "btn-file-dispute"
+
+- assertVisible:
+    id: "btn-back-to-rentals"
+
+# ── 6. Navigate back to rentals list ─────────────────────────────────────────
+# Scroll down to ensure the button is not hidden behind the tab bar
+- scroll
+
+- tapOn:
+    id: "btn-back-to-rentals"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 8000

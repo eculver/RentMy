@@ -93,6 +93,7 @@ export default function PINEntry({
           {Array.from({ length: PIN_LENGTH }).map((_, i) => (
             <TextInput
               key={i}
+              testID={`input-pin-${i}`}
               ref={(ref) => {
                 inputRefs.current[i] = ref;
               }}

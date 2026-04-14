@@ -1,0 +1,52 @@
+appId: ${APP_ID}
+name: "Handoff - Active rental screen (countdown, navigate, checkout CTA)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running, seed data loaded (setup.sh seeds ACTIVE booking)
+#   - App built with dev client
+#
+# Verifies the active-rental management screen:
+#   - Countdown timer is visible
+#   - "Navigate to return" button is visible
+#   - "Start check-out" button is visible
+#   - "Report an issue" button is visible
+
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 2. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn:
+    text: "Rentals, tab.*"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 5000
+
+# ── 3. Tap the ACTIVE booking row (navigates directly to active-rental) ──────
+- tapOn:
+    id: "status-active"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-active-rental"
+    timeout: 6000
+
+# ── 4. Assert countdown timer is visible ─────────────────────────────────────
+- assertVisible:
+    id: "active-rental-countdown"
+
+# ── 5. Assert action buttons are visible ─────────────────────────────────────
+- assertVisible:
+    id: "btn-navigate-return"
+
+- assertVisible:
+    id: "btn-start-checkout"
+
+- assertVisible:
+    id: "btn-report-issue"

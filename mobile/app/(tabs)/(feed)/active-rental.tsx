@@ -113,7 +113,7 @@ export default function ActiveRentalScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View testID="screen-active-rental" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -150,6 +150,7 @@ export default function ActiveRentalScreen() {
             {isLate ? "Time over by" : "Time remaining"}
           </Text>
           <Text
+            testID="active-rental-countdown"
             className={`text-5xl font-bold font-mono tracking-wider ${
               isLate
                 ? "text-red-600"
@@ -200,6 +201,7 @@ export default function ActiveRentalScreen() {
 
         {/* Navigate to return */}
         <Pressable
+          testID="btn-navigate-return"
           className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
           onPress={handleNavigate}
         >
@@ -211,6 +213,7 @@ export default function ActiveRentalScreen() {
 
         {/* Start check-out */}
         <Pressable
+          testID="btn-start-checkout"
           className="bg-green-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
           onPress={() =>
             router.push({
@@ -227,6 +230,7 @@ export default function ActiveRentalScreen() {
 
         {/* Report issue */}
         <Pressable
+          testID="btn-report-issue"
           className="border border-red-200 rounded-2xl py-3 items-center flex-row justify-center gap-x-2"
           onPress={handleReportIssue}
         >
@@ -236,6 +240,6 @@ export default function ActiveRentalScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

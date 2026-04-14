@@ -301,6 +301,7 @@ export default function BookingStatusScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
+                  testID="btn-start-checkin"
                   className="bg-sky-600 rounded-2xl py-4 items-center flex-row justify-center gap-x-2"
                   onPress={() =>
                     router.push({

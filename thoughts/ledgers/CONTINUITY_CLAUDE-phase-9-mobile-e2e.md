@@ -74,3 +74,19 @@
   - Created `(rentals)/booking-status.tsx` re-export to keep navigation within Rentals tab stack
   - All 5 YAML flows use testID selectors and extendedWaitUntil for async waits
 - **Verification:** `maestro test mobile/e2e/flows/booking/` — 5/5 Flows Passed in 3m 5s. TypeScript clean. Metro bundler clean.
+
+## Task 9.6: E2E Handoff Flows (Check-in, Active, Check-out)
+- **Status:** Completed
+- **Branch:** `task-9.6-e2e-handoff-flows`
+- **Bugs fixed:** 5 (SafeAreaView rendering on 4 screens, GPS proximity coordinate mismatch, React Query stale cache after check-in/check-out, Maestro non-alphabetical execution order causing wrong ACTIVE booking selection, button behind tab bar untappable)
+- **Key decisions:**
+  - Added testIDs to 7 screens/components: CheckInScreen, CheckOutScreen, ActiveRental, ReturnConfirmation, GPSStatus, PINEntry, booking-status (start-checkin button)
+  - Extended `seed_handoff_bookings()` with ACCEPTED (+ host CHECK_IN proof w/ PIN=1234), ACTIVE (+ all CHECK_IN + host CHECK_OUT proofs), COMPLETED (+ all 4 proofs)
+  - Normalized handoff listing GPS coordinates to (34.0522, -118.2437) via `UPDATE listings SET location = ST_SetSRID(ST_MakePoint(...))`
+  - `router.back()` instead of `router.replace("/(tabs)/(rentals)")` for return-confirmation back navigation — more reliable with Expo Router stack
+  - Seed ACTIVE booking has `scheduledStart = NOW()` and ACCEPTED has `scheduledStart = NOW() - 3 hours` — ensures seeded ACTIVE always sorts first in rentals list regardless of Maestro execution order
+  - Added `- scroll` before tapping "Back to rentals" button in flow 04 to avoid tab bar overlap
+  - COMPLETED bookings in rentals index now route to `return-confirmation` instead of `booking-status`
+  - React Query invalidation added to both CheckInScreen and CheckOutScreen `handleComplete` before navigation
+- **Maestro quirk:** `maestro test <dir>` does NOT execute flows alphabetically by filename — it uses its own ordering (03, 04, 02, 01 in our case). This matters when flows mutate DB state.
+- **Verification:** `maestro test mobile/e2e/flows/handoff/` — 4/4 Flows Passed in 2m 49s. TypeScript clean. Metro bundler clean.

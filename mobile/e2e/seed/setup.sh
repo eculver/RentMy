@@ -215,9 +215,9 @@ seed_bookings() {
     return
   fi
 
-  # Get alice's listing IDs (up to 5)
+  # Get alice's listing IDs (first 2 only — listings 3-5 reserved for handoff flows)
   local listing_ids
-  listing_ids=$(run_sql "SELECT id FROM listings WHERE host_id = '${alice_id}' AND status = 'ACTIVE' ORDER BY created_at LIMIT 5;" 2>/dev/null | tr -d ' ')
+  listing_ids=$(run_sql "SELECT id FROM listings WHERE host_id = '${alice_id}' AND status = 'ACTIVE' ORDER BY created_at LIMIT 2;" 2>/dev/null | tr -d ' ')
 
   local count=0
   while IFS= read -r lid; do
@@ -240,14 +240,152 @@ seed_bookings() {
   echo "  Seeded ${count} REQUESTED bookings"
 }
 
-echo "=== Activating listings ==="
-activate_listings
-
 seed_bookings
+
+seed_handoff_bookings() {
+  echo "=== Seeding E2E handoff booking data ==="
+  # Create bookings in ACCEPTED, ACTIVE, and COMPLETED states for handoff flows.
+  # Each uses a different listing to avoid conflicts.
+  # These are separate from the REQUESTED bookings created by seed_bookings().
+
+  local alice_id bob_id
+  alice_id=$(run_sql "SELECT id FROM users WHERE email = 'alice@test.com';" 2>/dev/null | tr -d ' ')
+  bob_id=$(run_sql "SELECT id FROM users WHERE email = 'bob@test.com';" 2>/dev/null | tr -d ' ')
+
+  if [ -z "$alice_id" ] || [ -z "$bob_id" ]; then
+    echo "  ERROR: could not find alice or bob user IDs" >&2
+    return
+  fi
+
+  # Get alice's active listing IDs
+  local listing_ids
+  listing_ids=$(run_sql "SELECT id FROM listings WHERE host_id = '${alice_id}' AND status = 'ACTIVE' ORDER BY created_at;" 2>/dev/null | tr -d ' ')
+
+  # Convert to array
+  local listings=()
+  while IFS= read -r lid; do
+    [ -z "$lid" ] && continue
+    listings+=("$lid")
+  done <<< "$listing_ids"
+
+  if [ "${#listings[@]}" -lt 5 ]; then
+    echo "  WARNING: need at least 5 listings, found ${#listings[@]}" >&2
+    return
+  fi
+
+  # Use listings 3, 4, 5 (0-indexed) for handoff flows (1, 2 are used for REQUESTED)
+  local accepted_listing="${listings[2]}"
+  local active_listing="${listings[3]}"
+  local completed_listing="${listings[4]}"
+
+  # Normalize listing locations to known coordinates so Maestro setLocation
+  # works reliably for GPS proximity verification (≤100m threshold).
+  # Maestro flows use exactly these coordinates.
+  local handoff_lat=34.0522
+  local handoff_lng=-118.2437
+  run_sql "UPDATE listings SET location = ST_SetSRID(ST_MakePoint(${handoff_lng}, ${handoff_lat}), 4326)::geography
+    WHERE id IN ('${accepted_listing}', '${active_listing}', '${completed_listing}');" \
+    && echo "  Set handoff listing locations to (${handoff_lat}, ${handoff_lng})" \
+    || echo "  WARNING: could not update listing locations"
+
+  gen_ulid() {
+    python3 -c "import time,random; t=int(time.time()*1000); chars='0123456789ABCDEFGHJKMNPQRSTVWXYZ'; enc=''.join(chars[(t>>(45-5*i))&31] for i in range(10)); rand=''.join(random.choices(chars,k=16)); print(enc+rand)"
+  }
+
+  # ── ACCEPTED booking (for check-in flow) ──────────────────────────────────
+  local accepted_txn_id
+  accepted_txn_id=$(gen_ulid)
+  local accepted_proof_id
+  accepted_proof_id=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, status, created_at)
+    VALUES ('${accepted_txn_id}', '${bob_id}', '${alice_id}', '${accepted_listing}', 7500, 15000, 30000, 0,
+      NOW() - INTERVAL '3 hours', NOW() + INTERVAL '1 hour', 'ACCEPTED', NOW() - INTERVAL '4 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created ACCEPTED booking ${accepted_txn_id}" \
+    || echo "  WARNING: could not create ACCEPTED booking"
+
+  # Insert host's CHECK_IN proximity proof with PIN=1234 (verified GPS)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, pin, pin_expires_at, created_at)
+    VALUES ('${accepted_proof_id}', '${accepted_txn_id}', '${alice_id}', 'CHECK_IN', 15.0, true, 'GPS', '1234', NOW() + INTERVAL '30 minutes', NOW())
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created host CHECK_IN proof with PIN=1234" \
+    || echo "  WARNING: could not create host CHECK_IN proof"
+
+  # ── ACTIVE booking (for active-rental + check-out flows) ──────────────────
+  local active_txn_id
+  active_txn_id=$(gen_ulid)
+  local active_proof_host_ci active_proof_renter_ci active_proof_host_co
+  active_proof_host_ci=$(gen_ulid)
+  active_proof_renter_ci=$(gen_ulid)
+  active_proof_host_co=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, actual_start, status, created_at)
+    VALUES ('${active_txn_id}', '${bob_id}', '${alice_id}', '${active_listing}', 5000, 10000, 20000, 0,
+      NOW(), NOW() + INTERVAL '24 hours', NOW(), 'ACTIVE', NOW() - INTERVAL '1 minute')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created ACTIVE booking ${active_txn_id}" \
+    || echo "  WARNING: could not create ACTIVE booking"
+
+  # Host CHECK_IN proof (verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, pin, pin_expires_at, created_at)
+    VALUES ('${active_proof_host_ci}', '${active_txn_id}', '${alice_id}', 'CHECK_IN', 10.0, true, 'GPS', '5678', NOW() + INTERVAL '30 minutes', NOW() - INTERVAL '1 hour')
+    ON CONFLICT DO NOTHING;" \
+    || echo "  WARNING: could not create ACTIVE host CHECK_IN proof"
+
+  # Renter CHECK_IN proof (verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, pin, pin_expires_at, created_at)
+    VALUES ('${active_proof_renter_ci}', '${active_txn_id}', '${bob_id}', 'CHECK_IN', 12.0, true, 'GPS', '5678', NOW() + INTERVAL '30 minutes', NOW() - INTERVAL '1 hour')
+    ON CONFLICT DO NOTHING;" \
+    || echo "  WARNING: could not create ACTIVE renter CHECK_IN proof"
+
+  # Host CHECK_OUT proof (pre-verified so renter can complete check-out)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, created_at)
+    VALUES ('${active_proof_host_co}', '${active_txn_id}', '${alice_id}', 'CHECK_OUT', 8.0, true, 'GPS', NOW())
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created ACTIVE booking proofs (host+renter CHECK_IN, host CHECK_OUT)" \
+    || echo "  WARNING: could not create ACTIVE CHECK_OUT proof"
+
+  # ── COMPLETED booking (for return-confirmation flow) ──────────────────────
+  local completed_txn_id
+  completed_txn_id=$(gen_ulid)
+  local completed_proof_hci completed_proof_rci completed_proof_hco completed_proof_rco
+  completed_proof_hci=$(gen_ulid)
+  completed_proof_rci=$(gen_ulid)
+  completed_proof_hco=$(gen_ulid)
+  completed_proof_rco=$(gen_ulid)
+
+  run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, actual_start, actual_end, status, created_at)
+    VALUES ('${completed_txn_id}', '${bob_id}', '${alice_id}', '${completed_listing}', 3000, 6000, 12000, 0,
+      NOW() - INTERVAL '24 hours', NOW() - INTERVAL '20 hours', NOW() - INTERVAL '24 hours', NOW() - INTERVAL '20 hours', 'COMPLETED', NOW() - INTERVAL '25 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created COMPLETED booking ${completed_txn_id}" \
+    || echo "  WARNING: could not create COMPLETED booking"
+
+  # All 4 proximity proofs (verified)
+  run_sql "INSERT INTO proximity_proofs (id, transaction_id, user_id, proof_type, gps_distance, verified, method, created_at) VALUES
+    ('${completed_proof_hci}', '${completed_txn_id}', '${alice_id}', 'CHECK_IN', 5.0, true, 'GPS', NOW() - INTERVAL '24 hours'),
+    ('${completed_proof_rci}', '${completed_txn_id}', '${bob_id}', 'CHECK_IN', 7.0, true, 'GPS', NOW() - INTERVAL '24 hours'),
+    ('${completed_proof_hco}', '${completed_txn_id}', '${alice_id}', 'CHECK_OUT', 6.0, true, 'GPS', NOW() - INTERVAL '20 hours'),
+    ('${completed_proof_rco}', '${completed_txn_id}', '${bob_id}', 'CHECK_OUT', 9.0, true, 'GPS', NOW() - INTERVAL '20 hours')
+    ON CONFLICT DO NOTHING;" \
+    && echo "  Created COMPLETED booking proofs (all 4 verified)" \
+    || echo "  WARNING: could not create COMPLETED proofs"
+
+  echo "  Handoff bookings seeded: ACCEPTED=${accepted_txn_id}, ACTIVE=${active_txn_id}, COMPLETED=${completed_txn_id}"
+}
+
+seed_handoff_bookings
 
 echo "=== Verifying seed data ==="
 ACTIVE_COUNT=$(run_sql "SELECT count(*) FROM listings WHERE host_id = (SELECT id FROM users WHERE email = 'alice@test.com') AND status = 'ACTIVE';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  Active listings for alice: ${ACTIVE_COUNT}"
 BOOKING_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'REQUESTED';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  REQUESTED bookings for bob: ${BOOKING_COUNT}"
+ACCEPTED_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'ACCEPTED';" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  ACCEPTED bookings for bob: ${ACCEPTED_COUNT}"
+ACTIVE_BOOKING_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'ACTIVE';" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  ACTIVE bookings for bob: ${ACTIVE_BOOKING_COUNT}"
+COMPLETED_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'COMPLETED';" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  COMPLETED bookings for bob: ${COMPLETED_COUNT}"
 echo "Done."

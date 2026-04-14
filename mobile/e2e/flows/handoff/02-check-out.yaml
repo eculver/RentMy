@@ -1,0 +1,106 @@
+appId: ${APP_ID}
+name: "Handoff - Check-out (GPS + photos → COMPLETED)"
+env:
+  APP_ID: com.rentmy.app
+  API_URL: http://localhost:8080
+  RENTER_EMAIL: bob@test.com
+  RENTER_PASSWORD: password123
+---
+# Prerequisites:
+#   - Backend running, seed data loaded (setup.sh seeds ACTIVE booking with
+#     host CHECK_OUT proof pre-verified)
+#   - App built with dev client
+#
+# Renter check-out flow:
+#   1. Navigate to ACTIVE booking via Rentals → active-rental screen
+#   2. Tap "Start check-out"
+#   3. Verify GPS (setLocation near listing → real backend verification)
+#   4. Take 3 photos via __DEV__ camera bypass
+#   5. Complete check-out → booking transitions to COMPLETED
+#   6. Return-confirmation screen renders
+
+# ── 1. Set simulator GPS at listing location (matches seed script) ───────────
+- setLocation:
+    latitude: 34.0522
+    longitude: -118.2437
+
+# ── 2. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
+- tapOn:
+    text: "Rentals, tab.*"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
+    timeout: 5000
+
+# ── 4. Tap the ACTIVE rental row → active-rental screen ─────────────────────
+- tapOn:
+    id: "status-active"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-active-rental"
+    timeout: 6000
+
+# ── 5. Tap "Start check-out" → check-out screen ────────────────────────────
+- tapOn:
+    id: "btn-start-checkout"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-check-out"
+    timeout: 5000
+
+# ── 6. Verify GPS (real backend call — simulator location matches listing) ──
+- extendedWaitUntil:
+    visible:
+      id: "btn-verify-location"
+    timeout: 8000
+
+- tapOn:
+    id: "btn-verify-location"
+
+- extendedWaitUntil:
+    visible: "Location verified"
+    timeout: 10000
+
+# ── 7. Take 3 photos via __DEV__ camera bypass ──────────────────────────────
+- tapOn:
+    id: "btn-open-camera"
+
+- extendedWaitUntil:
+    visible:
+      id: "camera-dev-bypass"
+    timeout: 5000
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+- tapOn:
+    id: "btn-use-test-photo"
+
+# Return to check-out screen
+- tapOn:
+    id: "btn-continue-photos"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-check-out"
+    timeout: 5000
+
+# ── 8. Complete check-out ───────────────────────────────────────────────────
+- tapOn:
+    id: "btn-complete-checkout"
+
+# ── 9. Assert booking transitioned — should navigate back to booking-status ──
+# The booking-status screen may briefly show stale ACTIVE data from React Query
+# cache before refetching the now-COMPLETED status from the server.
+- extendedWaitUntil:
+    visible: "Rental completed"
+    timeout: 15000

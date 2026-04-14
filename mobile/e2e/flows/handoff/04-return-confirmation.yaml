@@ -27,7 +27,15 @@ env:
       id: "screen-rentals"
     timeout: 5000
 
-# ── 3. Tap the COMPLETED rental row → return-confirmation ───────────────────
+# ── 3. Scroll down to COMPLETED rental row (sorted below Active/Accepted) ───
+- scroll
+- scroll
+
+- extendedWaitUntil:
+    visible:
+      id: "status-completed"
+    timeout: 8000
+
 - tapOn:
     id: "status-completed"
 

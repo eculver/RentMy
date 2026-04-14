@@ -8,7 +8,10 @@ env:
 # Reusable helper: logs in as the seeded host account.
 # Call with runFlow before flows that require an authenticated host.
 
-# Clear ALL app state + keychain (auth tokens stored via expo-secure-store).
+# Explicitly stop the app process first to let the simulator tear down XPC
+# connections cleanly.  Without this, rapid clearState→launchApp cycles
+# accumulate stale XPC handles that eventually trigger EXC_GUARD crashes.
+- stopApp
 - clearState
 - clearKeychain
 
@@ -39,13 +42,13 @@ env:
     id: "input-email"
 - inputText: ${HOST_EMAIL}
 
-- hideKeyboard
-
 - tapOn:
     id: "input-password"
+- eraseText: 30
 - inputText: ${HOST_PASSWORD}
 
-- hideKeyboard
+- tapOn:
+    point: "50%, 20%"
 
 - tapOn:
     id: "btn-sign-in"
@@ -54,7 +57,10 @@ env:
 - extendedWaitUntil:
     visible: "Not Now"
     timeout: 10000
-- tapOn: "Not Now"
+    optional: true
+- tapOn:
+    text: "Not Now"
+    optional: true
 
 # Wait for the feed screen
 - extendedWaitUntil:

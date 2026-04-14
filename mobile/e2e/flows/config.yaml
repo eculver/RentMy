@@ -1,0 +1,12 @@
+flows:
+  - "auth/*"
+  - "discovery/*"
+  - "listing/*"
+  - "profile/*"
+  - "booking/*"
+  - "handoff/*"
+  - "messaging/*"
+  - "disputes/*"
+  - "ratings/*"
+executionOrder:
+  continueOnFailure: false

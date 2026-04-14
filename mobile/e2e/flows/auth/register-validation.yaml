@@ -52,7 +52,8 @@ env:
     id: "input-email"
 - inputText: "not-an-email"
 
-- hideKeyboard
+- tapOn:
+    point: "50%, 20%"
 
 - tapOn:
     id: "btn-register"

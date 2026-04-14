@@ -19,13 +19,13 @@ env:
 #   5. Complete check-out → booking transitions to COMPLETED
 #   6. Return-confirmation screen renders
 
-# ── 1. Set simulator GPS at listing location (matches seed script) ───────────
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 1b. Set simulator GPS AFTER login (clearState in login helper can reset location reads)
 - setLocation:
     latitude: 34.0522
     longitude: -118.2437
-
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: ../../helpers/login-as-renter.yaml
 
 # ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
 - tapOn:

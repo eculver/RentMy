@@ -18,13 +18,13 @@ env:
 #   5. Take 3 photos via __DEV__ camera bypass
 #   6. Complete check-in → booking transitions to ACTIVE
 
-# ── 1. Set simulator GPS at listing location (matches seed script) ───────────
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
+
+# ── 1b. Set simulator GPS AFTER login (clearState in login helper can reset location reads)
 - setLocation:
     latitude: 34.0522
     longitude: -118.2437
-
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: ../../helpers/login-as-renter.yaml
 
 # ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
 - tapOn:
@@ -35,9 +35,11 @@ env:
       id: "screen-rentals"
     timeout: 5000
 
-# ── 4. Tap the ACCEPTED booking row ─────────────────────────────────────────
+# ── 4. Tap the seeded ACCEPTED booking row (known ID suffix "king0001") ─────
+#       The booking acceptance test creates a second ACCEPTED booking with a
+#       random PIN — we must target the seeded one with PIN=1234.
 - tapOn:
-    id: "status-accepted"
+    id: "rental-row-king0001"
 
 # ── 5. Assert booking-status screen shows "Booking accepted" ────────────────
 - extendedWaitUntil:

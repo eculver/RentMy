@@ -73,7 +73,7 @@ function RentalRow({ booking, currentUserId, onPress, onRate }: RentalRowProps) 
 
   return (
     <Pressable
-      testID="rental-row"
+      testID={`rental-row-${booking.id.slice(-8).toLowerCase()}`}
       className="bg-white rounded-2xl mx-4 mb-3 overflow-hidden border border-gray-100 shadow-sm"
       onPress={onPress}
     >

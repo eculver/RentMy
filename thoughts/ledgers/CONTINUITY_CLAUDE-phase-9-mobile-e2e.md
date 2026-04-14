@@ -118,3 +118,14 @@
   - `SafeAreaView` → `View` on dispute.tsx, dispute-status.tsx, rate.tsx (iOS testID propagation fix)
   - Added testIDs: `screen-dispute`, `dispute-reason-*`, `input-dispute-description`, `btn-submit-dispute`, `btn-cancel-dispute`, `screen-dispute-status`, `dispute-timeline`, `btn-back-to-rentals-dispute`, `screen-rate`, `rating-bubbles-container`, `btn-submit-rating`, `rating-success-message`, `rating-bubble-*`, `btn-view-dispute`
 - **Verification:** `maestro test mobile/e2e/flows/disputes/` — 2/2 Flows Passed in 1m 23s. `maestro test mobile/e2e/flows/ratings/` — 1/1 Flow Passed in 40s. TypeScript clean. Metro bundler clean. go vet clean.
+
+## Task 9.9: Full Regression Suite & Reliability (3 Consecutive Green Runs)
+- **Status:** Completed
+- **Branch:** `task-9.9-regression-reliability` (Graphite mode)
+- **Bugs fixed:** 2 (iOS EXC_GUARD XPC crash after 15+ rapid test cycles, stale Maestro driver processes blocking port 7001)
+- **Key decisions:**
+  - Added `stopApp` before `clearState` in both login helpers to prevent XPC handle accumulation
+  - Added `_e2e-clean-drivers` Makefile prerequisite target that kills stale `maestro-driver` and `xcodebuild` processes before each run
+  - Re-seed data between each run to ensure identical starting state
+- **Results:** 3 consecutive green runs — 28/28 Passed in 18m 25s, 18m 24s, 18m 57s
+- **Verification:** `make test-mobile-e2e` × 3 — all 28/28 Passed. Zero flaky tests.

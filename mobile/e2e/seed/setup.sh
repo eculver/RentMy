@@ -278,14 +278,16 @@ seed_handoff_bookings() {
   local active_listing="${listings[3]}"
   local completed_listing="${listings[4]}"
 
-  # Normalize listing locations to known coordinates so Maestro setLocation
-  # works reliably for GPS proximity verification (≤100m threshold).
-  # Maestro flows use exactly these coordinates.
+  # Normalize ALL of alice's listing locations to known coordinates so Maestro
+  # setLocation works reliably for GPS proximity verification (≤100m threshold).
+  # We update all listings (not just handoff ones) because the booking acceptance
+  # test converts a REQUESTED booking to ACCEPTED — that booking's listing must
+  # also have correct coordinates for the check-in GPS flow.
   local handoff_lat=34.0522
   local handoff_lng=-118.2437
   run_sql "UPDATE listings SET location = ST_SetSRID(ST_MakePoint(${handoff_lng}, ${handoff_lat}), 4326)::geography
-    WHERE id IN ('${accepted_listing}', '${active_listing}', '${completed_listing}');" \
-    && echo "  Set handoff listing locations to (${handoff_lat}, ${handoff_lng})" \
+    WHERE host_id = '${alice_id}';" \
+    && echo "  Set all listing locations to (${handoff_lat}, ${handoff_lng})" \
     || echo "  WARNING: could not update listing locations"
 
   gen_ulid() {
@@ -293,10 +295,10 @@ seed_handoff_bookings() {
   }
 
   # ── ACCEPTED booking (for check-in flow) ──────────────────────────────────
-  local accepted_txn_id
-  accepted_txn_id=$(gen_ulid)
-  local accepted_proof_id
-  accepted_proof_id=$(gen_ulid)
+  # Fixed IDs so the check-in E2E test can target this specific booking by
+  # its testID suffix (last 8 chars → "king0001").
+  local accepted_txn_id="AAAA0000CHECKINBOOKING0001"
+  local accepted_proof_id="AAAA0000CHECKINPROOF000001"
 
   run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, status, created_at)
     VALUES ('${accepted_txn_id}', '${bob_id}', '${alice_id}', '${accepted_listing}', 7500, 15000, 30000, 0,

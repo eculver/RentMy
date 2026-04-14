@@ -33,7 +33,7 @@ env:
     timeout: 5000
 
 - tapOn:
-    id: "rental-row"
+    id: "status-active"
 
 - extendedWaitUntil:
     visible:

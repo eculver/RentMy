@@ -36,13 +36,13 @@ env:
     id: "input-email"
 - inputText: ${RENTER_EMAIL}
 
-- hideKeyboard
-
 - tapOn:
     id: "input-password"
+- eraseText: 30
 - inputText: ${RENTER_PASSWORD}
 
-- hideKeyboard
+- tapOn:
+    point: "50%, 20%"
 
 - tapOn:
     id: "btn-sign-in"
@@ -51,7 +51,10 @@ env:
 - extendedWaitUntil:
     visible: "Not Now"
     timeout: 10000
-- tapOn: "Not Now"
+    optional: true
+- tapOn:
+    text: "Not Now"
+    optional: true
 
 # Wait for the feed screen
 - extendedWaitUntil:

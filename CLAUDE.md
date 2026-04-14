@@ -96,9 +96,10 @@ Every session follows this protocol. No exceptions.
    - Update continuity ledger: `thoughts/ledgers/CONTINUITY_CLAUDE-phase-{N}-{name}.md`
    - Update progress.json: set task `"status": "completed"`, record `commitSha`
    - Validate JSON: `cat .claude/progress.json | python3 -m json.tool > /dev/null`
-   - Push the branch:
+   - Push the branch (best-effort — see [Pushing](#pushing) below):
      - Try: `/opt/homebrew/bin/gt submit --no-edit`
      - If gt fails: `git push -u origin task-{N}.{M}-{short-name}`
+     - **If push fails** (SSH auth, 2FA, network): log "Unpushed commits on branch X" and move on. Do NOT retry with credential helpers, URL rewriting, or any other workaround.
    - **Update PR description** (see [PR Descriptions](#pr-descriptions) below)
 10. **If verification fails:** fix the issue and retry. Do NOT move to the next task
 
@@ -348,6 +349,27 @@ git push -u origin task-1.1-user-service
 - **Use `gt modify` instead of `git commit --amend`** — it automatically restacks descendants
 - **One commit per branch** (use `gt modify` to amend as you iterate)
 - **Always pass `--no-edit`** to `gt submit` to skip interactive prompts
+
+### Committing
+
+- **Never sign commits.** Do not use `-S`, `--gpg-sign`, or any signing flags. If git config has `commit.gpgsign=true`, override it: `git -c commit.gpgsign=false commit ...`
+- Use plain `git commit` — no wrappers, no credential helpers
+
+### Pushing
+
+Pushing is **best-effort**. The human operator has 1Password SSH agent with 2FA approval, which may not be available during autonomous sessions.
+
+- Try `git push` once (or `gt submit --no-edit`)
+- **If it fails for ANY reason** (SSH auth, 2FA, network, permission):
+  - Log: "NOTE: Push failed — unpushed commits on branch `<branch>`"
+  - **Move on.** The task is still complete. The human will push later.
+- **NEVER** work around push failures. Specifically, do NOT:
+  - Swap SSH URLs to HTTPS (`url."https://".insteadOf`)
+  - Inject credential helpers (`credential.helper='!gh auth git-credential'`)
+  - Use `GIT_TERMINAL_PROMPT`, `GIT_SSH_COMMAND`, or similar env overrides
+  - Force-push (`--force`, `--force-with-lease`) to bypass issues
+  - Retry more than once
+- A failed push does NOT block task completion. Record the branch name in the handoff doc so the human can push it.
 
 ### Commit Messages
 

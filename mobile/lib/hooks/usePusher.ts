@@ -29,43 +29,53 @@ export function usePusher(
 
     // Dynamic import keeps Pusher out of the critical bundle path.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const PusherCtor = require("pusher-js/react-native").default as new (
+    const pusherModule = require("pusher-js/react-native");
+    const PusherCtor = (pusherModule.default ?? pusherModule) as new (
       key: string,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       options: Record<string, any>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ) => any;
 
-    if (cancelled) return;
+    if (cancelled || typeof PusherCtor !== "function") return;
 
     const token = useAuthStore.getState().token;
 
-    pusher = new PusherCtor(PUSHER_KEY, {
-      wsHost: PUSHER_HOST,
-      wsPort: PUSHER_PORT,
-      wssPort: PUSHER_PORT,
-      forceTLS: false,
-      disableStats: true,
-      enabledTransports: ["ws"],
-      channelAuthorization: {
-        endpoint: `${API_URL}/api/v1/pusher/auth`,
-        transport: "ajax",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      },
-    });
+    try {
+      pusher = new PusherCtor(PUSHER_KEY, {
+        wsHost: PUSHER_HOST,
+        wsPort: PUSHER_PORT,
+        wssPort: PUSHER_PORT,
+        forceTLS: false,
+        disableStats: true,
+        enabledTransports: ["ws"],
+        channelAuthorization: {
+          endpoint: `${API_URL}/api/v1/pusher/auth`,
+          transport: "ajax",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      });
 
-    const channel = pusher.subscribe(channelName);
-    channel.bind(eventName, (data: unknown) => {
-      onEventRef.current(data);
-    });
+      const channel = pusher.subscribe(channelName);
+      channel.bind(eventName, (data: unknown) => {
+        onEventRef.current(data);
+      });
 
-    return () => {
-      cancelled = true;
-      if (pusher) {
-        channel.unbind(eventName);
-        pusher.unsubscribe(channelName);
-        pusher.disconnect();
-      }
-    };
+      return () => {
+        cancelled = true;
+        if (pusher) {
+          channel.unbind(eventName);
+          pusher.unsubscribe(channelName);
+          pusher.disconnect();
+        }
+      };
+    } catch {
+      // Pusher initialization can fail in dev/simulator environments
+      // (e.g., missing native module, WebSocket server not running).
+      // Gracefully degrade — the screen still works via polling/refetch.
+      return () => {
+        cancelled = true;
+      };
+    }
   }, [channelName, eventName]); // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -7,43 +7,42 @@ env:
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - app built with EXPO_PUBLIC_E2E_MODE=true
+#   - Backend running with seeded data (setup.sh seeds REQUESTED bookings)
+#   - App built with dev client
+#   - bob@test.com has at least one REQUESTED booking (from seed)
 #
-# Creates a booking in REQUESTED state via the test-only API, then logs in as
-# renter and asserts the status screen shows "Waiting for host".
+# Flow: login as renter → Rentals tab → tap a REQUESTED booking row →
+#       assert status shows "Waiting for host" and Cancel button is visible.
 
-# ── 1. Seed a REQUESTED booking via API ──────────────────────────────────────
-- runScript: e2e/scripts/seed-booking.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
 
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
-
-# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
-- tapOn: "Rentals"
-
-- assertVisible:
-    id: "screen-rentals"
-    timeout: 5000
-
-# ── 4. Tap the pending booking row (status = REQUESTED/Pending) ──────────────
+# ── 2. Navigate to Rentals tab ───────────────────────────────────────────────
 - tapOn:
-    id: "rental-row"
+    text: "Rentals, tab.*"
 
-# ── 5. Assert booking status screen shows "Waiting for host" ─────────────────
-- assertVisible:
-    id: "screen-booking-status"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
     timeout: 5000
 
-- assertVisible:
-    id: "booking-status-label"
-    timeout: 3000
+# ── 3. Tap a REQUESTED booking row (use status text to find the right one) ───
+- tapOn:
+    id: "status-requested"
+
+# ── 4. Assert booking status screen shows "Waiting for host" ─────────────────
+- extendedWaitUntil:
+    visible:
+      id: "screen-booking-status"
+    timeout: 5000
+
+- extendedWaitUntil:
+    visible:
+      id: "booking-status-label"
+    timeout: 8000
 
 - assertVisible: "Waiting for host"
 
-# ── 6. Cancel button is visible (booking is still pending) ───────────────────
+# ── 5. Cancel button is visible (booking is still pending) ───────────────────
 - assertVisible:
     id: "btn-cancel-booking"

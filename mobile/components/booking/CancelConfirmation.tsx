@@ -75,6 +75,7 @@ export default function CancelConfirmation({
               </Text>
             </Pressable>
             <Pressable
+              testID="btn-confirm-cancel"
               onPress={handleConfirm}
               disabled={confirming}
               className="flex-1 py-4 items-center"

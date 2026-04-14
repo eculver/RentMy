@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -109,7 +110,16 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	decisionRepo := decision.NewRepository(pool)
 	decisionSvc := decision.NewService(decisionRepo)
 
-	stripeAdapter := payment.NewStripeAdapter(cfg.StripeSecretKey)
+	// Use stub payment adapter in development when Stripe is not configured.
+	// This allows E2E tests to create bookings without real Stripe credentials,
+	// analogous to the __DEV__ camera bypass in the mobile app.
+	var paymentAdapter payment.PaymentAdapter
+	if cfg.StripeSecretKey == "sk_test_placeholder" {
+		slog.Info("using stub payment adapter (Stripe not configured)")
+		paymentAdapter = payment.NewStubAdapter()
+	} else {
+		paymentAdapter = payment.NewStripeAdapter(cfg.StripeSecretKey)
+	}
 	paymentRepo := payment.NewRepository(pool)
 	bookingRepo := booking.NewRepository(pool)
 	notificationRepo := notification.NewRepository(pool)
@@ -163,7 +173,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &riverpkg.TestJobWorker{})
-	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, stripeAdapter))
+	river.AddWorker(workers, payment.NewPayoutJobWorker(paymentRepo, paymentAdapter))
 	river.AddWorker(workers, booking.NewAutoDeclineJobWorker(bookingRepo, notificationSvcPre))
 	river.AddWorker(workers, notification.NewPickupApproachingWorker(notificationSvcPre))
 	river.AddWorker(workers, notification.NewReturnApproachingWorker(notificationSvcPre))
@@ -219,7 +229,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 
 	// Referral system — pre-river (riverClient injected after River starts).
 	referralRepo := referral.NewRepository(pool)
-	referralSvcPre := referral.NewService(referralRepo, stripeAdapter, paymentRepo, referralRepo, nil)
+	referralSvcPre := referral.NewService(referralRepo, paymentAdapter, paymentRepo, referralRepo, nil)
 	river.AddWorker(workers, referral.NewReferralPayoutJobWorker(referralSvcPre))
 	river.AddWorker(workers, referral.NewReferralStripeTransferWorker(referralSvcPre))
 
@@ -311,7 +321,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	})
 	discoveryHandler := discovery.NewHandler(discoverySvc)
 
-	paymentSvc := payment.NewService(paymentRepo, stripeAdapter, riverClient, guaranteeFundSvcPre, payment.Config{
+	paymentSvc := payment.NewService(paymentRepo, paymentAdapter, riverClient, guaranteeFundSvcPre, payment.Config{
 		TakeRateBPS:         cfg.TakeRateBPS,
 		GuaranteeRateBPS:    cfg.GuaranteeRateBPS,
 		DamageReserveRate:   cfg.DamageReserveRate,
@@ -416,7 +426,7 @@ func New(ctx context.Context, deps Deps) (*Server, error) {
 	fraudHandler := fraud.NewHandler(fraudRepo, fraudAgent)
 
 	// Referral system — full service with riverClient.
-	referralSvc := referral.NewService(referralRepo, stripeAdapter, paymentRepo, referralRepo, riverClient)
+	referralSvc := referral.NewService(referralRepo, paymentAdapter, paymentRepo, referralRepo, riverClient)
 	*referralSvcPre = *referralSvc
 	referralHandler := referral.NewHandler(referralSvcPre)
 

@@ -73,6 +73,7 @@ function RentalRow({ booking, currentUserId, onPress, onRate }: RentalRowProps) 
 
   return (
     <Pressable
+      testID="rental-row"
       className="bg-white rounded-2xl mx-4 mb-3 overflow-hidden border border-gray-100 shadow-sm"
       onPress={onPress}
     >
@@ -82,7 +83,7 @@ function RentalRow({ booking, currentUserId, onPress, onRate }: RentalRowProps) 
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <Text className="text-xs font-semibold" style={{ color }}>
+          <Text testID={`status-${booking.status.toLowerCase()}`} className="text-xs font-semibold" style={{ color }}>
             {STATUS_LABEL[booking.status]}
           </Text>
         </View>
@@ -234,7 +235,7 @@ export default function RentalsScreen() {
       });
     } else {
       router.push({
-        pathname: "/(tabs)/(feed)/booking-status" as never,
+        pathname: "/(tabs)/(rentals)/booking-status" as never,
         params: { transactionId: booking.id },
       });
     }
@@ -249,7 +250,7 @@ export default function RentalsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView testID="screen-rentals" className="flex-1 bg-gray-50">
       <View className="px-4 pt-4 pb-3 border-b border-gray-100 bg-white">
         <Text className="text-xl font-bold text-gray-900">My rentals</Text>
       </View>

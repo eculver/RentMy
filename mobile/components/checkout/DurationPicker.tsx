@@ -43,12 +43,14 @@ function nextHour(from: Date): Date {
 // Simple +/- hour step controls — a full calendar library is deferred to Phase 5
 function StepControl({
   label,
+  testIDPrefix,
   date,
   onChange,
   minDate,
   maxDate,
 }: {
   label: string;
+  testIDPrefix?: string;
   date: Date | null;
   onChange: (d: Date) => void;
   minDate?: Date;
@@ -74,18 +76,20 @@ function StepControl({
       <Text className="text-xs text-gray-500 mb-1">{label}</Text>
       <View className="flex-row items-center border border-gray-200 rounded-xl overflow-hidden">
         <Pressable
+          testID={testIDPrefix ? `btn-${testIDPrefix}-decrease` : undefined}
           onPress={() => (date ? step(-1) : initIfNull())}
           disabled={!canDecrease}
           className={`px-3 py-3 ${!canDecrease ? "opacity-30" : ""}`}
         >
           <Ionicons name="remove" size={16} color="#374151" />
         </Pressable>
-        <Pressable onPress={initIfNull} className="flex-1 items-center py-3">
+        <Pressable testID={testIDPrefix ? `lbl-${testIDPrefix}-date` : undefined} onPress={initIfNull} className="flex-1 items-center py-3">
           <Text className="text-sm font-medium text-gray-800 text-center">
             {formatDateLabel(date)}
           </Text>
         </Pressable>
         <Pressable
+          testID={testIDPrefix ? `btn-${testIDPrefix}-increase` : undefined}
           onPress={() => (date ? step(1) : initIfNull())}
           disabled={!canIncrease}
           className={`px-3 py-3 ${!canIncrease ? "opacity-30" : ""}`}
@@ -132,12 +136,14 @@ export default function DurationPicker({
       <View className="flex-row gap-x-3">
         <StepControl
           label="Start"
+          testIDPrefix="start"
           date={start}
           onChange={handleStartChange}
           minDate={now}
         />
         <StepControl
           label="End"
+          testIDPrefix="end"
           date={end}
           onChange={handleEndChange}
           minDate={start ?? now}

@@ -3,54 +3,52 @@ name: "Booking - Host declines booking request"
 env:
   APP_ID: com.rentmy.app
   API_URL: http://localhost:8080
-  RENTER_EMAIL: bob@test.com
   HOST_EMAIL: alice@test.com
   HOST_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#   - Backend running with seeded data (setup.sh seeds REQUESTED bookings)
+#   - App built with dev client
+#   - alice@test.com has at least one REQUESTED booking as host (from seed)
 #
-# Seeds a REQUESTED booking, then logs in as host and declines it.
-# Verifies status changes to DECLINED and renter payment method was not charged.
+# Flow: login as host → Rentals tab → tap a REQUESTED booking → decline →
+#       verify status changes to "Booking declined".
 
-# ── 1. Seed a REQUESTED booking ──────────────────────────────────────────────
-- runScript: e2e/scripts/seed-booking.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
+# ── 1. Login as host ─────────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-host.yaml
 
-# ── 2. Login as host ─────────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-host.yaml
-
-# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
-- tapOn: "Rentals"
-
-- assertVisible:
-    id: "screen-rentals"
-    timeout: 5000
-
-# ── 4. Tap the incoming request row ──────────────────────────────────────────
+# ── 2. Navigate to Rentals tab ───────────────────────────────────────────────
 - tapOn:
-    id: "rental-row"
+    text: "Rentals, tab.*"
 
-- assertVisible:
-    id: "screen-booking-status"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
     timeout: 5000
 
-# ── 5. Decline the booking ───────────────────────────────────────────────────
+# ── 3. Tap a REQUESTED booking row ───────────────────────────────────────────
+- tapOn:
+    id: "status-requested"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-booking-status"
+    timeout: 5000
+
+# ── 4. Decline the booking ───────────────────────────────────────────────────
 - assertVisible:
     id: "btn-decline"
 
 - tapOn:
     id: "btn-decline"
 
-# ── 6. Status changes to "Booking declined" ──────────────────────────────────
-- assertVisible:
-    id: "booking-status-label"
+# ── 5. Status changes to "Booking declined" ──────────────────────────────────
+- extendedWaitUntil:
+    visible: "Booking declined"
     timeout: 8000
 
-- assertVisible: "Booking declined"
+- assertVisible:
+    id: "booking-status-label"
 
-# ── 7. Verify the terminal "Back to feed" button is shown ────────────────────
+# ── 6. Verify the terminal "Back to feed" button is shown ────────────────────
 - assertVisible: "Back to feed"

@@ -60,3 +60,17 @@
   - Referral code auto-generates via GET (404) → POST fallback in `useReferralCode` hook
 - **Flakiness note:** 1/3 suite runs saw transient `kAXErrorInvalidUIElement` from iOS XCTest during Expo Dev Client transition. Not an app issue. Subsequent runs pass cleanly.
 - **Verification:** `maestro test mobile/e2e/flows/profile/` — 3/3 Flows Passed in 1m 41s. Auth regression: 6/6 Passed. Discovery regression: 3/3 Passed. Listing regression: 2/2 Passed.
+
+## Task 9.5: E2E Booking Request & Status Flows
+- **Status:** Completed
+- **Branch:** `task-9.4-profile-referral-flows` (stacked)
+- **Bugs fixed:** 5 (SafeAreaView+ScrollView rendering bug, fraud new-to-new lockout, FK cascade delete for seed cleanup, cancel modal tap ambiguity, feed empty after clearState)
+- **Key decisions:**
+  - SafeAreaView replaced with View in booking-status.tsx and checkout.tsx — RN 0.81.5 bug with tab headerShown:true causes ScrollView content to not render inside SafeAreaView
+  - Created `backend/internal/payment/stub.go` — stub payment adapter auto-selected when StripeSecretKey == "sk_test_placeholder", no global E2E_MODE
+  - `PaymentMethodSelector.native.tsx` auto-selects __DEV__ bypass payment method
+  - Seed script cascade-deletes from 10 child FK tables (agent_decisions, media, proximity_proofs, messages, ratings, guarantee_fund_entries, risk_scores, agreements, disputes, late_returns) before deleting transactions
+  - Backdate alice's created_at by 60 days to bypass fraud velocity "new-to-new lockout" (30-day threshold)
+  - Created `(rentals)/booking-status.tsx` re-export to keep navigation within Rentals tab stack
+  - All 5 YAML flows use testID selectors and extendedWaitUntil for async waits
+- **Verification:** `maestro test mobile/e2e/flows/booking/` — 5/5 Flows Passed in 3m 5s. TypeScript clean. Metro bundler clean.

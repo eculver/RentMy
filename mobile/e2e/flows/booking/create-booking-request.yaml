@@ -7,16 +7,21 @@ env:
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with seeded data AND E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - Backend running (stub payment adapter active when Stripe not configured)
+#   - App built with dev client: npx expo run:ios
 #   - alice@test.com has at least one active listing visible in the feed
-#   - bob@test.com identity_status = VERIFIED (migration 016 ensures this)
+#   - bob@test.com stripe_customer_id set (seed/setup.sh ensures this)
 #
-# Flow: login → feed → tap listing → Rent Now → checkout (KYC passes, E2E payment
-# auto-selected) → select dates → confirm → booking confirmation screen.
+# Flow: login → feed → tap listing → Rent Now → checkout → select dates →
+# payment auto-selected (__DEV__ bypass) → confirm → booking-status screen.
+
+# ── 0. Set simulator GPS so the feed can resolve nearby listings ──────────────
+- setLocation:
+    latitude: 34.0522
+    longitude: -118.2437
 
 # ── 1. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
+- runFlow: ../../helpers/login-as-renter.yaml
 
 # ── 2. Navigate to Feed tab (already there post-login) ───────────────────────
 - assertVisible:
@@ -26,8 +31,9 @@ env:
 - tapOn:
     id: "listing-card"
 
-- assertVisible:
-    id: "screen-listing-detail"
+- extendedWaitUntil:
+    visible:
+      id: "screen-listing-detail"
     timeout: 5000
 
 # ── 4. Tap "Rent Now" ────────────────────────────────────────────────────────
@@ -35,8 +41,9 @@ env:
     id: "btn-rent-now"
 
 # ── 5. Assert checkout screen ────────────────────────────────────────────────
-- assertVisible:
-    id: "screen-checkout"
+- extendedWaitUntil:
+    visible:
+      id: "screen-checkout"
     timeout: 5000
 
 # ── 6. Select start date: tap centre of start label to initialise, then
@@ -66,16 +73,24 @@ env:
 - tapOn:
     id: "btn-end-increase"
 
-# ── 8. E2E payment method is auto-selected (no Stripe sheet shown) ───────────
-- assertVisible:
-    id: "payment-method-selected"
+# ── 8. Payment method auto-selected in __DEV__ (no Stripe sheet shown) ───────
+- extendedWaitUntil:
+    visible:
+      id: "payment-method-selected"
     timeout: 3000
 
 # ── 9. Confirm booking ───────────────────────────────────────────────────────
 - tapOn:
     id: "btn-confirm-booking"
 
-# ── 10. Assert booking confirmation screen ───────────────────────────────────
-- assertVisible:
-    id: "screen-booking-confirmation"
+# ── 10. Assert booking-status screen with "Waiting for host" ─────────────────
+#  The checkout redirects to booking-status after successful creation.
+- extendedWaitUntil:
+    visible:
+      id: "screen-booking-status"
     timeout: 10000
+
+- assertVisible:
+    id: "booking-status-label"
+
+- assertVisible: "Waiting for host"

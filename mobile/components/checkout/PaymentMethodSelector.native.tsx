@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useStripe } from "@stripe/stripe-react-native";
@@ -20,6 +20,16 @@ export default function PaymentMethodSelector({
 }: PaymentMethodSelectorProps) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [isLoading, setIsLoading] = useState(false);
+
+  // __DEV__ bypass: auto-select a stub payment method on the simulator.
+  // Maestro cannot interact with the native Stripe payment sheet, so in
+  // development builds we skip it and pass a placeholder payment method ID.
+  // The backend's stub payment adapter accepts any payment method ID.
+  useEffect(() => {
+    if (__DEV__ && !selectedPaymentMethodId) {
+      onPaymentMethodSelected("pm_stub_dev");
+    }
+  }, []);
 
   const openPaymentSheet = async () => {
     setIsLoading(true);
@@ -68,7 +78,7 @@ export default function PaymentMethodSelector({
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
           Payment method
         </Text>
-        <View className="flex-row items-center justify-between border border-gray-200 rounded-xl px-4 py-3">
+        <View testID="payment-method-selected" className="flex-row items-center justify-between border border-gray-200 rounded-xl px-4 py-3">
           <View className="flex-row items-center gap-x-3">
             <Ionicons name="card-outline" size={20} color="#374151" />
             <Text className="text-sm font-medium text-gray-800">

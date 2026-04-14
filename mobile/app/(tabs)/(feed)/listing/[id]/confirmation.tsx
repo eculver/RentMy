@@ -35,7 +35,7 @@ export default function ConfirmationScreen() {
   const params = useLocalSearchParams<ConfirmationParams>();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView testID="screen-booking-confirmation" className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center px-8">
         {/* Success icon */}
         <View className="w-20 h-20 bg-green-100 rounded-full items-center justify-center mb-6">

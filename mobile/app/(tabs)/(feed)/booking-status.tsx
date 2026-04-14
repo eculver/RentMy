@@ -182,7 +182,7 @@ export default function BookingStatusScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View testID="screen-booking-status" className="flex-1 bg-white">
       {/* Header */}
       <View className="flex-row items-center px-4 pt-4 pb-3 border-b border-gray-100">
         <Pressable onPress={() => router.back()} hitSlop={8}>
@@ -210,7 +210,7 @@ export default function BookingStatusScreen() {
           >
             <Ionicons name={iconName} size={36} color={iconColor} />
           </View>
-          <Text className="text-xl font-bold text-gray-900 text-center">
+          <Text testID="booking-status-label" className="text-xl font-bold text-gray-900 text-center">
             {STATUS_LABEL[booking.status]}
           </Text>
           <Text className="text-sm text-gray-500 text-center mt-1 px-4 leading-relaxed">
@@ -353,6 +353,7 @@ export default function BookingStatusScreen() {
             {/* Cancel (available while REQUESTED or ACCEPTED) */}
             {(booking.status === "REQUESTED" || booking.status === "ACCEPTED") && (
               <Pressable
+                testID="btn-cancel-booking"
                 className="py-3 items-center"
                 onPress={() => setCancelModalVisible(true)}
               >
@@ -383,6 +384,6 @@ export default function BookingStatusScreen() {
         onConfirm={handleCancel}
         onDismiss={() => setCancelModalVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }

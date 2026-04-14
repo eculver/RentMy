@@ -104,6 +104,13 @@ echo "=== Seeding E2E test accounts ==="
 register_user "Alice Host"  "alice@test.com" "password123"
 register_user "Bob Renter"  "bob@test.com"   "password123"
 
+# Backdate alice's account so the fraud velocity "new-to-new" rule doesn't
+# block booking creation (threshold is 30 days — at least one party must have
+# an established account).
+echo "  Backdating alice's account for fraud-check bypass..."
+run_sql "UPDATE users SET created_at = NOW() - INTERVAL '60 days' WHERE email = 'alice@test.com';" \
+  || echo "  WARNING: could not backdate alice (non-fatal)"
+
 # Check if alice already has listings (skip creation if so)
 LISTING_COUNT=$(run_sql "SELECT count(*) FROM listings WHERE host_id = (SELECT id FROM users WHERE email = 'alice@test.com');" 2>/dev/null | tr -d ' ' || echo "0")
 
@@ -145,10 +152,102 @@ else
     30 6 34.0525 -118.2445
 fi
 
+ensure_stripe_customers() {
+  echo "=== Ensuring Stripe customer IDs for test users ==="
+  # The stub payment adapter requires a non-empty stripe_customer_id.
+  # Set placeholder IDs so CreateBooking doesn't fail with ErrNoPaymentMethod.
+  run_sql "UPDATE users SET stripe_customer_id = 'cus_stub_alice' WHERE email = 'alice@test.com' AND (stripe_customer_id IS NULL OR stripe_customer_id = '');" \
+    && echo "  Set stripe_customer_id for alice" \
+    || echo "  WARNING: could not set stripe_customer_id for alice"
+  run_sql "UPDATE users SET stripe_customer_id = 'cus_stub_bob' WHERE email = 'bob@test.com' AND (stripe_customer_id IS NULL OR stripe_customer_id = '');" \
+    && echo "  Set stripe_customer_id for bob" \
+    || echo "  WARNING: could not set stripe_customer_id for bob"
+}
+
 echo "=== Activating listings ==="
 activate_listings
+
+ensure_stripe_customers
+
+seed_bookings() {
+  echo "=== Seeding E2E booking data ==="
+  # Create REQUESTED bookings from bob → alice's listings for E2E booking flows.
+  # Each booking flow needs its own REQUESTED booking so they don't interfere.
+  # We create one booking per alice listing, using the real transactions table.
+  #
+  # Always clear ALL of bob's bookings and re-seed fresh.  Previous test runs
+  # may have left bookings in ACCEPTED / CANCELLED / etc. states that block
+  # listing availability for new bookings.
+  # Child tables have foreign keys to transactions — delete them first.
+  run_sql "
+    DO \$\$
+    DECLARE
+      bob_txn_ids text[];
+    BEGIN
+      SELECT array_agg(t.id) INTO bob_txn_ids
+      FROM transactions t
+      JOIN users u ON t.renter_id = u.id
+      WHERE u.email = 'bob@test.com';
+
+      IF bob_txn_ids IS NOT NULL THEN
+        DELETE FROM agent_decisions WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM media WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM proximity_proofs WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM messages WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM ratings WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM guarantee_fund_entries WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM risk_scores WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM agreements WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM disputes WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM late_returns WHERE transaction_id = ANY(bob_txn_ids);
+        DELETE FROM transactions WHERE id = ANY(bob_txn_ids);
+      END IF;
+    END\$\$;
+  " || echo "  WARNING: could not clear stale bookings (non-fatal)"
+
+  # Get alice and bob user IDs
+  local alice_id bob_id
+  alice_id=$(run_sql "SELECT id FROM users WHERE email = 'alice@test.com';" 2>/dev/null | tr -d ' ')
+  bob_id=$(run_sql "SELECT id FROM users WHERE email = 'bob@test.com';" 2>/dev/null | tr -d ' ')
+
+  if [ -z "$alice_id" ] || [ -z "$bob_id" ]; then
+    echo "  ERROR: could not find alice or bob user IDs" >&2
+    return
+  fi
+
+  # Get alice's listing IDs (up to 5)
+  local listing_ids
+  listing_ids=$(run_sql "SELECT id FROM listings WHERE host_id = '${alice_id}' AND status = 'ACTIVE' ORDER BY created_at LIMIT 5;" 2>/dev/null | tr -d ' ')
+
+  local count=0
+  while IFS= read -r lid; do
+    [ -z "$lid" ] && continue
+    # Generate a ULID-like ID (26 chars, alphanumeric uppercase)
+    local txn_id
+    txn_id=$(python3 -c "import time,random,string; t=int(time.time()*1000); chars='0123456789ABCDEFGHJKMNPQRSTVWXYZ'; enc=''.join(chars[(t>>(45-5*i))&31] for i in range(10)); rand=''.join(random.choices(chars,k=16)); print(enc+rand)")
+
+    # Schedule start = tomorrow + count hours, end = start + 4 hours
+    local start_offset=$((24 + count * 6))
+    local end_offset=$((start_offset + 4))
+
+    run_sql "INSERT INTO transactions (id, renter_id, host_id, listing_id, rental_fee, hold_amount, item_value, guarantee_gap, scheduled_start, scheduled_end, status, created_at) VALUES ('${txn_id}', '${bob_id}', '${alice_id}', '${lid}', 0, 0, 0, 0, NOW() + INTERVAL '${start_offset} hours', NOW() + INTERVAL '${end_offset} hours', 'REQUESTED', NOW()) ON CONFLICT DO NOTHING;" \
+      && echo "  Created REQUESTED booking ${txn_id} for listing ${lid}" \
+      || echo "  WARNING: could not create booking for listing ${lid}"
+
+    count=$((count + 1))
+  done <<< "$listing_ids"
+
+  echo "  Seeded ${count} REQUESTED bookings"
+}
+
+echo "=== Activating listings ==="
+activate_listings
+
+seed_bookings
 
 echo "=== Verifying seed data ==="
 ACTIVE_COUNT=$(run_sql "SELECT count(*) FROM listings WHERE host_id = (SELECT id FROM users WHERE email = 'alice@test.com') AND status = 'ACTIVE';" 2>/dev/null | tr -d ' ' || echo "?")
 echo "  Active listings for alice: ${ACTIVE_COUNT}"
+BOOKING_COUNT=$(run_sql "SELECT count(*) FROM transactions WHERE renter_id = (SELECT id FROM users WHERE email = 'bob@test.com') AND status = 'REQUESTED';" 2>/dev/null | tr -d ' ' || echo "?")
+echo "  REQUESTED bookings for bob: ${BOOKING_COUNT}"
 echo "Done."

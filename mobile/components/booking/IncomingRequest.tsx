@@ -107,6 +107,7 @@ export default function IncomingRequest({
             color={remaining > 0 ? "#b45309" : "#9ca3af"}
           />
           <Text
+            testID="incoming-request-timer"
             className={`text-xs font-medium ${
               remaining > 0 ? "text-amber-700" : "text-gray-500"
             }`}
@@ -147,6 +148,7 @@ export default function IncomingRequest({
       {/* Action buttons */}
       <View className="flex-row gap-x-3">
         <Pressable
+          testID="btn-decline"
           onPress={handleDecline}
           disabled={busy}
           className="flex-1 border border-gray-200 rounded-xl py-3 items-center"
@@ -158,6 +160,7 @@ export default function IncomingRequest({
           )}
         </Pressable>
         <Pressable
+          testID="btn-accept"
           onPress={handleAccept}
           disabled={busy}
           className={`flex-1 rounded-xl py-3 items-center ${busy ? "bg-gray-200" : "bg-sky-600"}`}

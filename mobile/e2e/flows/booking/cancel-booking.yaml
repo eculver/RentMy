@@ -7,57 +7,54 @@ env:
   RENTER_PASSWORD: password123
 ---
 # Prerequisites:
-#   - Backend running with E2E_MODE=true
-#   - App built with EXPO_PUBLIC_E2E_MODE=true
+#   - Backend running with seeded data (setup.sh seeds REQUESTED bookings)
+#   - App built with dev client
+#   - bob@test.com has at least one REQUESTED booking (from seed)
 #
-# Seeds a REQUESTED booking, then logs in as renter and cancels it.
-# Verifies status changes to CANCELLED.
+# Flow: login as renter → Rentals tab → tap a REQUESTED booking row →
+#       cancel → confirm in modal → verify status changes to "Booking cancelled".
 
-# ── 1. Seed a REQUESTED booking ──────────────────────────────────────────────
-- runScript: e2e/scripts/seed-booking.js
-  env:
-    API_URL: ${API_URL}
-    RENTER_EMAIL: ${RENTER_EMAIL}
+# ── 1. Login as renter ───────────────────────────────────────────────────────
+- runFlow: ../../helpers/login-as-renter.yaml
 
-# ── 2. Login as renter ───────────────────────────────────────────────────────
-- runFlow: e2e/helpers/login-as-renter.yaml
-
-# ── 3. Navigate to Rentals tab ───────────────────────────────────────────────
-- tapOn: "Rentals"
-
-- assertVisible:
-    id: "screen-rentals"
-    timeout: 5000
-
-# ── 4. Tap the pending booking row ───────────────────────────────────────────
+# ── 2. Navigate to Rentals tab ───────────────────────────────────────────────
 - tapOn:
-    id: "rental-row"
+    text: "Rentals, tab.*"
 
-- assertVisible:
-    id: "screen-booking-status"
+- extendedWaitUntil:
+    visible:
+      id: "screen-rentals"
     timeout: 5000
 
-# ── 5. Tap "Cancel booking" ──────────────────────────────────────────────────
+# ── 3. Tap a REQUESTED booking row ───────────────────────────────────────────
+- tapOn:
+    id: "status-requested"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-booking-status"
+    timeout: 5000
+
+# ── 4. Tap "Cancel booking" ──────────────────────────────────────────────────
 - assertVisible:
     id: "btn-cancel-booking"
 
 - tapOn:
     id: "btn-cancel-booking"
 
-# ── 6. Confirm cancellation in the modal ─────────────────────────────────────
+# ── 5. Confirm cancellation in the modal ─────────────────────────────────────
 # The CancelConfirmation modal has "Keep booking" (dismiss) and "Cancel booking" (confirm).
-# Two elements with text "Cancel booking" exist: the original button and the modal button.
-# Use index 1 to target the modal's confirm button (index 0 is behind the modal).
-- assertVisible: "Cancel this booking?"
+- extendedWaitUntil:
+    visible: "Cancel this booking?"
     timeout: 3000
 
 - tapOn:
-    text: "Cancel booking"
-    index: 1
+    id: "btn-confirm-cancel"
 
-# ── 7. Status changes to "Booking cancelled" ─────────────────────────────────
-- assertVisible:
-    id: "booking-status-label"
+# ── 6. Status changes to "Booking cancelled" ─────────────────────────────────
+- extendedWaitUntil:
+    visible: "Booking cancelled"
     timeout: 8000
 
-- assertVisible: "Booking cancelled"
+- assertVisible:
+    id: "booking-status-label"

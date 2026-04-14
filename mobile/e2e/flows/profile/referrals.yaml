@@ -6,11 +6,13 @@ env:
 # Login as renter
 - runFlow: ../../helpers/login-as-renter.yaml
 
-# Navigate to Profile tab
-- tapOn: "Profile"
+# Navigate to Profile tab (accessibility text: "Profile, tab, 6 of 6")
+- tapOn:
+    text: "Profile, tab.*"
 
-- assertVisible:
-    id: "screen-profile"
+- extendedWaitUntil:
+    visible:
+      id: "screen-profile"
     timeout: 6000
 
 # Tap the "Invite Friends" button to navigate to the referrals screen
@@ -18,13 +20,15 @@ env:
     id: "btn-invite-friends"
 
 # Referrals screen loads
-- assertVisible:
-    id: "screen-referrals"
+- extendedWaitUntil:
+    visible:
+      id: "screen-referrals"
     timeout: 6000
 
 # The referral code card loads from the API — wait for it
-- assertVisible:
-    id: "referral-code"
+- extendedWaitUntil:
+    visible:
+      id: "referral-code"
     timeout: 8000
 
 # Share button is always visible alongside the code

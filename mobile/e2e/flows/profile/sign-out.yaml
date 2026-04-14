@@ -6,11 +6,13 @@ env:
 # Login as renter
 - runFlow: ../../helpers/login-as-renter.yaml
 
-# Navigate to Profile tab
-- tapOn: "Profile"
+# Navigate to Profile tab (accessibility text: "Profile, tab, 6 of 6")
+- tapOn:
+    text: "Profile, tab.*"
 
-- assertVisible:
-    id: "screen-profile"
+- extendedWaitUntil:
+    visible:
+      id: "screen-profile"
     timeout: 6000
 
 # Tap Sign Out
@@ -18,12 +20,17 @@ env:
     id: "btn-sign-out"
 
 # Root layout detects isAuthenticated=false and redirects to login screen
-- assertVisible:
-    id: "screen-login"
+- extendedWaitUntil:
+    visible:
+      id: "screen-login"
     timeout: 6000
 
 # Auth gate is active — tabs and authenticated screens are not visible
-- assertNotVisible:
-    id: "screen-feed"
-- assertNotVisible:
-    id: "screen-profile"
+- extendedWaitUntil:
+    notVisible:
+      id: "screen-feed"
+    timeout: 4000
+- extendedWaitUntil:
+    notVisible:
+      id: "screen-profile"
+    timeout: 4000

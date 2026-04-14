@@ -47,3 +47,16 @@
   - Keyboard dismiss for numeric fields: tap "Listing Details" heading (far from inputs) instead of nearby labels
   - Listing detail route refactored from `[id].tsx` to `[id]/index.tsx` directory for future checkout route
 - **Verification:** `maestro test mobile/e2e/flows/listing/` — 2/2 Flows Passed in 1m 55s. Auth regression: 6/6 Passed. Discovery regression: 3/3 Passed.
+
+## Task 9.4: E2E Profile & Referral Flows
+- **Status:** Completed
+- **Branch:** `task-9.4-profile-referral-flows`
+- **Bugs fixed:** 0 app bugs. All fixes were missing testIDs and invalid Maestro syntax in pre-existing YAML templates.
+- **Key decisions:**
+  - Added 7 testIDs across profile screen (`profile-name`, `profile-email`, `btn-invite-friends`, `profile-listings-empty`) and referrals screen (`screen-referrals`, `referral-code`, `btn-share-referral`)
+  - Added `referrals` route to profile Stack layout (was relying on implicit Expo Router auto-routing without proper header)
+  - Fixed all 3 YAML flows: `assertVisible` → `extendedWaitUntil`, `assertNotVisible` → `extendedWaitUntil: notVisible`, `tapOn: "Profile"` → `tapOn: text: "Profile, tab.*"` (consistent with patterns from 9.1)
+  - No overrides needed — profile/referral flows work entirely against real app + real backend
+  - Referral code auto-generates via GET (404) → POST fallback in `useReferralCode` hook
+- **Flakiness note:** 1/3 suite runs saw transient `kAXErrorInvalidUIElement` from iOS XCTest during Expo Dev Client transition. Not an app issue. Subsequent runs pass cleanly.
+- **Verification:** `maestro test mobile/e2e/flows/profile/` — 3/3 Flows Passed in 1m 41s. Auth regression: 6/6 Passed. Discovery regression: 3/3 Passed. Listing regression: 2/2 Passed.

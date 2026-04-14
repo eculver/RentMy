@@ -27,8 +27,8 @@ export default function ProfileScreen() {
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-xl font-bold text-gray-900">{user?.name || "Profile"}</Text>
-            <Text className="text-sm text-gray-400 mt-0.5">{user?.email}</Text>
+            <Text testID="profile-name" className="text-xl font-bold text-gray-900">{user?.name || "Profile"}</Text>
+            <Text testID="profile-email" className="text-sm text-gray-400 mt-0.5">{user?.email}</Text>
           </View>
         </View>
 
@@ -41,6 +41,7 @@ export default function ProfileScreen() {
         </Pressable>
 
         <Pressable
+          testID="btn-invite-friends"
           className="mt-3 w-full border border-sky-300 py-3 rounded-xl items-center"
           onPress={() => router.push("/(tabs)/(profile)/referrals")}
         >
@@ -87,7 +88,7 @@ export default function ProfileScreen() {
         )}
 
         {!isLoading && !isError && listings.length === 0 && (
-          <Text className="text-sm text-gray-400 text-center mt-8">
+          <Text testID="profile-listings-empty" className="text-sm text-gray-400 text-center mt-8">
             No listings yet. Tap "Create Listing" to get started.
           </Text>
         )}

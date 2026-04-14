@@ -35,3 +35,15 @@
   - Extended seed script to create 5 keyword-rich listings (camera, tent, etc.) near LA and activate them via `docker exec` SQL
   - Added `testID="screen-listing-detail"` to all 3 render states (loading, error, success)
 - **Verification:** `maestro test mobile/e2e/flows/discovery/` — 3/3 Flows Passed in 1m 57s. Auth regression: 6/6 Passed in 2m 51s.
+
+## Task 9.3: E2E Listing Flows (View Detail + Create Listing)
+- **Status:** Completed
+- **Branch:** `task-9.3-e2e-listing-flows`
+- **Bugs fixed:** 3 new (API response wrapper mismatch, lat/lng keyboard dismiss, continue button z-index) + 2 from prior WIP session (missing testIDs on ListingForm, listing detail route refactored)
+- **Key decisions:**
+  - `__DEV__ && !device` camera bypass in `AngleEnforcedCamera.native.tsx` — writes real JPEG to cache, goes through normal media-upload pipeline. No global E2E_MODE.
+  - Fixed `MediaResponse` and `ListingResponse` types to match backend's `{ media: {...} }` / `{ listing: {...} }` wrapper pattern
+  - Moved "Continue without AI suggestions" button to `z-20 absolute` positioning above the `AIAutofillOverlay` (z-10 absolute)
+  - Keyboard dismiss for numeric fields: tap "Listing Details" heading (far from inputs) instead of nearby labels
+  - Listing detail route refactored from `[id].tsx` to `[id]/index.tsx` directory for future checkout route
+- **Verification:** `maestro test mobile/e2e/flows/listing/` — 2/2 Flows Passed in 1m 55s. Auth regression: 6/6 Passed. Discovery regression: 3/3 Passed.

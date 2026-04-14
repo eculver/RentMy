@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { router } from "expo-router";
 import { HTTPError } from "ky";
 import { api } from "../../lib/api";
@@ -17,14 +17,18 @@ import { useAppraisal } from "../../lib/hooks/useAppraisal";
 type Step = "camera" | "form";
 
 interface MediaResponse {
-  id: string;
-  url: string;
-  thumbnailUrl: string;
+  media: {
+    id: string;
+    url: string;
+    thumbnailUrl: string;
+  };
 }
 
 interface ListingResponse {
-  id: string;
-  title: string;
+  listing: {
+    id: string;
+    title: string;
+  };
 }
 
 // 2x threshold: if host price/day exceeds 2x AI estimated daily value, prompt for override
@@ -96,14 +100,14 @@ export default function CreateListingScreen() {
           name: "photo.jpg",
         } as unknown as Blob);
         fd.append("orientation", JSON.stringify(capture.orientation));
-        const media = await api
+        const resp = await api
           .post("api/v1/media/upload", { body: fd })
           .json<MediaResponse>();
-        mediaIds.push(media.id);
+        mediaIds.push(resp.media.id);
       }
 
       // 2. Create the listing (triggers AI appraisal via River job on the backend)
-      const listing = await api
+      const { listing } = await api
         .post("api/v1/listings", {
           json: {
             title: formData.title,
@@ -165,7 +169,7 @@ export default function CreateListingScreen() {
 
   if (step === "camera") {
     return (
-      <View className="flex-1 bg-black">
+      <View className="flex-1 bg-black" testID="screen-create-listing">
         <AngleEnforcedCamera
           captures={captures}
           onCapture={handleCapture}
@@ -193,13 +197,13 @@ export default function CreateListingScreen() {
             isLoading={false}
             error={appraisal?.failureReason ?? "Unknown error"}
           />
-          <View className="px-6 pb-10 mt-auto">
-            <Text
-              className="text-center text-sky-600 text-sm font-semibold py-3"
-              onPress={handleContinueAfterAppraisal}
-            >
-              Continue without AI suggestions
-            </Text>
+          {/* z-20 to float above the AIAutofillOverlay (z-10 absolute) */}
+          <View className="absolute bottom-10 left-0 right-0 px-6 z-20 items-center">
+            <Pressable onPress={handleContinueAfterAppraisal}>
+              <Text className="text-center text-sky-600 text-sm font-semibold py-3">
+                Continue without AI suggestions
+              </Text>
+            </Pressable>
           </View>
         </View>
       );
@@ -213,7 +217,7 @@ export default function CreateListingScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white" testID="screen-create-listing">
       {apiError && (
         <View className="px-6 pt-4">
           <Text className="text-red-500 text-sm text-center">{apiError}</Text>

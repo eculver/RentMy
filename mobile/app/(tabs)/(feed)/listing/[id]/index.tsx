@@ -4,17 +4,16 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  SafeAreaView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useListing } from "../../../../lib/hooks/useListing";
-import { useHoldEstimate } from "../../../../lib/hooks/useDiscovery";
-import { useAuthStore } from "../../../../lib/auth";
-import PhotoGallery from "../../../../components/listing/PhotoGallery";
-import HostInfoCard from "../../../../components/listing/HostInfoCard";
-import HoldExplainer from "../../../../components/listing/HoldExplainer";
-import AvailabilityCalendar from "../../../../components/listing/AvailabilityCalendar";
+import { useListing } from "../../../../../lib/hooks/useListing";
+import { useHoldEstimate } from "../../../../../lib/hooks/useDiscovery";
+import { useAuthStore } from "../../../../../lib/auth";
+import PhotoGallery from "../../../../../components/listing/PhotoGallery";
+import HostInfoCard from "../../../../../components/listing/HostInfoCard";
+import HoldExplainer from "../../../../../components/listing/HoldExplainer";
+import AvailabilityCalendar from "../../../../../components/listing/AvailabilityCalendar";
 
 // Route params passed from feed / search / map preview cards.
 type ListingParams = {
@@ -85,7 +84,6 @@ export default function ListingDetailScreen() {
 
   return (
     <View className="flex-1 bg-white" testID="screen-listing-detail">
-    <SafeAreaView className="flex-1 bg-white">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -171,6 +169,7 @@ export default function ListingDetailScreen() {
           </Pressable>
         ) : (
           <Pressable
+            testID="btn-rent-now"
             className="bg-sky-600 rounded-2xl py-4 items-center"
             onPress={() =>
               router.push({
@@ -185,7 +184,6 @@ export default function ListingDetailScreen() {
           </Pressable>
         )}
       </View>
-    </SafeAreaView>
     </View>
   );
 }

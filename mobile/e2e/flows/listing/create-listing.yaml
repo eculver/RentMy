@@ -1,89 +1,142 @@
 appId: ${APP_ID}
-name: "Listing - Create listing (E2E_MODE camera bypass)"
+name: "Listing - Create listing (__DEV__ camera bypass)"
 env:
   APP_ID: com.rentmy.app
 ---
 # Prerequisites:
-#   - App built with EXPO_PUBLIC_E2E_MODE=true (enables camera bypass).
-#     Build: EXPO_PUBLIC_E2E_MODE=true npx expo run:ios
+#   - App running in iOS Simulator (dev client build).
 #   - Backend running with seeded data (alice@test.com is the host).
+#
+# Camera override justification:
+#   The create-listing flow requires AngleEnforcedCamera which needs hardware
+#   camera access. The iOS Simulator has no camera, so in __DEV__ mode the
+#   component shows a bypass panel that writes a real JPEG to the temp directory
+#   and feeds it through the normal media-upload pipeline. This bypass is gated
+#   behind `__DEV__ && !device` — it only activates when no camera hardware is
+#   detected (i.e., simulator). Production builds and real-device dev builds
+#   still use the real camera.
 
 # Login as host — alice@test.com owns existing listings and can create new ones.
 - runFlow: ../../helpers/login-as-host.yaml
 
 # Navigate to the Profile tab
-- tapOn: "Profile"
+- tapOn:
+    text: "Profile.*"
 
-- assertVisible:
-    id: "screen-profile"
+- extendedWaitUntil:
+    visible:
+      id: "screen-profile"
     timeout: 6000
 
 # Tap "Create Listing" navigation button in the profile header
 - tapOn:
     id: "btn-create-listing-nav"
 
-# Create listing screen loads — camera step first (E2E bypass active)
-- assertVisible:
-    id: "screen-create-listing"
+# Create listing screen loads — camera step (dev bypass active in simulator)
+- extendedWaitUntil:
+    visible:
+      id: "screen-create-listing"
     timeout: 8000
 
-# E2E bypass: use the fixture photo button instead of native camera
-- assertVisible:
-    id: "camera-e2e-bypass"
+# Dev camera bypass: tap "Use test photo" to generate a fixture JPEG
+- extendedWaitUntil:
+    visible:
+      id: "camera-dev-bypass"
+    timeout: 5000
 
 - tapOn:
-    id: "btn-e2e-use-fixture"
+    id: "btn-use-test-photo"
 
-# Continue button appears after one fixture photo is provided
-- assertVisible:
-    id: "btn-e2e-continue"
+# Continue button appears after one test photo is added
+- extendedWaitUntil:
+    visible:
+      id: "btn-continue-photos"
     timeout: 4000
 
 - tapOn:
-    id: "btn-e2e-continue"
+    id: "btn-continue-photos"
 
 # Form step renders
-- assertVisible:
-    id: "screen-create-listing"
+- extendedWaitUntil:
+    visible:
+      id: "screen-create-listing"
     timeout: 6000
 
 # Fill in the listing title
 - tapOn:
     id: "input-listing-title"
-- clearText
 - inputText: "E2E Test Power Drill"
+
+- hideKeyboard
 
 # Fill in the description
 - tapOn:
     id: "input-listing-description"
-- clearText
 - inputText: "A reliable power drill available for short-term rental. Good condition."
 
-# Fill in price per day
+- hideKeyboard
+
+# Fill in price per day (decimal-pad has no Done key — tap static text to dismiss)
 - tapOn:
     id: "input-listing-price-per-day"
-- clearText
 - inputText: "20"
+
+- tapOn:
+    text: "Listing Details"
+
+# Scroll down to reveal location fields
+- scroll
 
 # Fill in latitude (Los Angeles — matches seeded listing coordinates)
 - tapOn:
     id: "input-listing-lat"
-- clearText
 - inputText: "34.0522"
+
+# Dismiss numeric keyboard by tapping the "Listing Details" heading at the
+# top of the form. This is far from any input, so the keyboard reliably
+# dismisses. Tapping "Location.*" was too close to the lat input and the
+# keyboard stayed up, causing lng text to go into the lat field.
+- tapOn:
+    text: "Listing Details"
 
 # Fill in longitude
 - tapOn:
     id: "input-listing-lng"
-- clearText
 - inputText: "-118.2437"
+
+# Dismiss the numeric keyboard by tapping the "Listing Details" heading again.
+- tapOn:
+    text: "Listing Details"
+
+# Scroll down to reveal the Create Listing button below the location fields.
+- swipe:
+    direction: UP
+    duration: 500
+
+- swipe:
+    direction: UP
+    duration: 500
 
 # Submit the form
 - tapOn:
     id: "btn-create-listing"
 
-# After submit, AI appraisal begins — the overlay or the form disappears.
-# We wait for the app to navigate back to the profile screen once done.
-# The appraisal overlay may display briefly before resolving.
-- assertVisible:
-    id: "screen-profile"
-    timeout: 20000
+# After submit, the listing is created via the real API. The app:
+# 1. Uploads the test photo to the media endpoint
+# 2. Creates the listing (triggers AI appraisal)
+# 3. Attaches the media to the listing
+# 4. Polls for appraisal — which fails in the test env (no AI configured)
+# 5. Shows "Continue without AI suggestions" button
+# Wait for the appraisal failure screen, then continue to profile.
+- extendedWaitUntil:
+    visible:
+      text: "Continue without AI suggestions"
+    timeout: 30000
+
+- tapOn:
+    text: "Continue without AI suggestions"
+
+- extendedWaitUntil:
+    visible:
+      id: "screen-profile"
+    timeout: 10000
